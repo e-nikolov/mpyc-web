@@ -1,36 +1,9 @@
-packages = [
-    "numpy",
-    "gmpy2",
-    "ssl",
-    "pandas",
-    "matplotlib",
-    "scipy",
-    "lifelines",
-    "setuptools",
-    "rich"
-]
-
-# "https://e-nikolov.github.io/mpyc/py/mpyc-0.8.8-py3-none-any.whl"
-# "http://localhost:5173/mpyc/py/mpyc-0.8.8-py3-none-any.whl"
-# "/pyodide/mpyc-0.8.8-py3-none-any.whl"
-# 
-# packages = ["numpy", "gmpy2", "ssl", "aiortc"]
-# xterm = true
-
-# plugins = ["py-terminal.py"]
-# plugins = ["py-term.js"]
-# plugins = ["py-term.py"] 
-# [[fetch]]
-# from = "./py/"
-# to_folder = "./"
-# files = ["logging_setup.py"]
-
+packages = ["numpy", "gmpy2", "rich", "pyyaml"]
 [[fetch]]
 from = "./py/mpycweb"
 to_folder = "./mpycweb"
 files = [
     "__init__.py",
-    "debug.py",
     "patches.py",
     "peerjs.py",
     "transport.py",
@@ -39,6 +12,11 @@ files = [
     "log.py",
     "stats.py"
 ]
+
+[[fetch]]
+from = "./py/"
+to_folder = "./"
+files = ["main.py"]
 
 [[fetch]]
 from = "./py/mpyc/demos"

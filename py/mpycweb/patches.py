@@ -1,29 +1,32 @@
-from asyncio import Future
+"""
+patches.py
+"""
+
 import time
 import types
-
-from .debug import *
-
-from .transport import *
-from .worker import *
-from mpyc.runtime import mpc, Runtime
 import datetime
 import logging
+from asyncio import Future
+import asyncio
 
-logger = logging.getLogger(__name__)
+# pylint: disable=import-error
+import js
 
 # pyright: reportMissingImports=false
 from polyscript import xworker
+
 from pyodide.code import run_js
-import pyodide.webloop as webloop
 
-import js
+from pyodide import webloop
 
-from pyodide.ffi import create_once_callable
-from rich import print
+from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
+from mpyc.runtime import mpc, Runtime  # pylint: disable=import-error,disable=no-name-in-module
+
 
 from . import peerjs
 from .stats import stats
+
+logger = logging.getLogger(__name__)
 
 # https://github.com/pyodide/pyodide/issues/4006
 # The pyodide Webloop relies onsetTimeout(), which has a minimum delay of 4ms
@@ -31,8 +34,6 @@ from .stats import stats
 # This monkey patch replaces setTimeout() with a faster version that uses MessageChannel
 run_js("""
 //import genericPool from 'https://cdn.jsdelivr.net/npm/generic-pool@3.9.0/+esm'
-
-console.log(globalThis.pyodide)
 
 const oldSetTimeout = setTimeout;
 
@@ -82,9 +83,6 @@ function fastSetTimeout(callback, delay) {
 //     }
 // }
 
-
-
-console.warn("test pyodide worker")
         """)
 webloop.setTimeout = js.fastSetTimeout
 
@@ -103,9 +101,9 @@ def run(self, f):
     """Run the given coroutine or future until it is done."""
     logger.debug(f"monkey patched run() {f.__class__.__name__}")
 
-    if self._loop.is_running():
+    if self._loop.is_running():  # pylint: disable=protected-access
         if not asyncio.iscoroutine(f):
-            f = asyncoro._wrap_in_coro(f)
+            f = asyncoro._wrap_in_coro(f)  # pylint: disable=protected-access
             while True:
                 try:
                     f.send(None)
@@ -114,27 +112,27 @@ def run(self, f):
         else:
             return asyncio.ensure_future(f)
     # TODO await in JS? https://github.com/pyodide/pyodide/issues/1219
-    return self._loop.run_until_complete(f)
+    return self._loop.run_until_complete(f)  # pylint: disable=protected-access
 
 
 mpc.run = types.MethodType(run, mpc)
 
 
+# TODO refactor runtime.start() to work with multiple transports
 # The regular start() starts TCP connections, which don't work in the browser.
 # We monkey patch it to use PeerJS instead.
 async def start(runtime: Runtime) -> None:
-    loop = runtime._loop
-
-    pjs = peerjs.Client(xworker.sync, loop)
-
-    # TODO refactor runtime.start() to work with multiple transports
     """Start the MPyC runtime with a PeerJS transport.
 
     Open connections with other parties, if any.
     """
+    loop = runtime._loop  # pylint: disable=protected-access
+
+    pjs = peerjs.Client(xworker.sync, loop)
+
     logger.debug("monkey patched start()")
     logger.info(f"Start MPyC runtime v{runtime.version} with a PeerJS transport")
-    logger.info(f"{len(mpc.parties)} parties, threshold={mpc.options.threshold}, no_async={mpc.options.no_async}")
+    logger.info(f"parties={len(mpc.parties)}, threshold={mpc.options.threshold}, no_async={mpc.options.no_async}")
     runtime.start_time = time.time()
 
     m = len(runtime.parties)
@@ -143,7 +141,7 @@ async def start(runtime: Runtime) -> None:
 
     # m > 1
     for peer in runtime.parties:
-        peer.protocol = asyncio.Future(loop=loop) if peer.pid == runtime.pid else None
+        peer.protocol = Future(loop=loop) if peer.pid == runtime.pid else None
 
     # Listen for all parties < runtime.pid.
 
@@ -157,28 +155,46 @@ async def start(runtime: Runtime) -> None:
         while True:
             try:
                 if peer.pid > runtime.pid:
-                    factory = lambda: asyncoro.MessageExchanger(runtime, peer.pid)
+                    factory = messageExchangerFactory(runtime, peer.pid)
                     listener = False
                 else:
-                    factory = lambda: asyncoro.MessageExchanger(runtime)
+                    factory = messageExchangerFactory(runtime)
                     listener = True
 
                 logger.debug(f"Creating peerjs connection to {peer.pid} (listener: {listener})...")
 
-                await pjs.create_connection(factory, runtime._loop, peer.pid, listener)
+                await pjs.create_connection(factory, runtime._loop, peer.pid, listener)  # pylint: disable=protected-access
 
                 logger.debug(f"Creating peerjs connection to {peer.pid} (listener: {listener})... done")
                 break
-            except asyncio.CancelledError:
+            except asyncio.CancelledError:  # pylint: disable=try-except-raise
                 raise
 
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-exception-caught
                 logger.debug(exc)
             await asyncio.sleep(1)
 
     logger.info("Waiting for all parties to connect")
     await runtime.parties[runtime.pid].protocol
     logger.info(f"All {m} parties connected.")
+
+
+def messageExchangerFactory(runtime: Runtime, pid: int | None = None):
+    """
+    Factory function that returns a MessageExchanger object for the given runtime and process ID.
+
+    Args:
+        runtime (Runtime): The runtime object to use for the MessageExchanger.
+        pid (int | None): The process ID to use for the MessageExchanger. Defaults to None.
+
+    Returns:
+        MessageExchanger: A MessageExchanger object for the given runtime and process ID.
+    """
+
+    def _exchanger():
+        return asyncoro.MessageExchanger(runtime, pid)
+
+    return _exchanger
 
 
 mpc.start = types.MethodType(start, mpc)
@@ -192,7 +208,7 @@ async def shutdown(self):
     # Wait for all parties behind a barrier.
     logger.debug("monkey patched shutdown()")
 
-    while self._pc_level > self._program_counter[1]:
+    while self._pc_level > self._program_counter[1]:  # pylint: disable=protected-access
         await asyncio.sleep(0)
     elapsed = time.time() - self.start_time
     logger.info(f"Stop MPyC runtime -- elapsed time: {datetime.timedelta(seconds=elapsed)}")
@@ -201,7 +217,7 @@ async def shutdown(self):
         return
 
     # m > 1
-    self.parties[self.pid].protocol = Future(loop=self._loop)
+    self.parties[self.pid].protocol = Future(loop=self._loop)  # pylint: disable=protected-access
     logger.info("Synchronize with all parties before shutdown")
     await self.gather(self.transfer(self.pid))
 

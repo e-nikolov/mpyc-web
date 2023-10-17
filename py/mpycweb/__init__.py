@@ -1,26 +1,44 @@
+"""
+This module provides the main functionality of the mpyc-web package, which allows for secure multi-party computation
+in a web environment.
+"""
+
+# pylint: disable=wrong-import-position,wrong-import-order
+
 import time
 import asyncio
 
-old_time_sleep = time.sleep
 
-from polyscript import xworker
+from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 
 
 loop = asyncio.get_event_loop()
 
 
 def sleep_logger(secs: float) -> None:
+    """
+    Sleeps for a given number of seconds and logs a warning message.
+
+    Args:
+        secs (float): The number of seconds to sleep for.
+    """
     loop.call_soon(xworker.sync.logWarn, f"sleeping for {secs} seconds")
+    # xworker.sync.logWarn(f"sleeping for {secs} seconds")
+
     old_time_sleep(secs)
 
 
+old_time_sleep = time.sleep
 time.sleep = sleep_logger
 
 from .worker_init import *
+from . import worker_init
+
 
 worker_init.load_env()
 
 from .log import *
+from . import log
 
 import sys
 
@@ -28,10 +46,7 @@ sys.stdout = TermWriter()
 sys.stderr = TermWriter()
 
 
-# pyright: reportMissingImports=false
-from polyscript import xworker
-
-rich._console = log.console
+rich._console = log.console  # pylint: disable=protected-access
 import builtins
 
 builtins.print = rich.print
@@ -44,20 +59,26 @@ pprint.pprint = rich.pretty.pprint
 
 set_log_level(DEBUG)
 
+import pyodide
+
+# import pyscript
+
+
+# logging.debug(f"PyScript {pyscript.version =}")
+# logging.debug(f"Polyscript {polyscript.version =}")
+
+logging.debug(f"Python version={sys.version}")
+logging.debug(f"Pyodide version={pyodide.__version__}")
+
+import mpyc
+
+logging.debug(
+    f"MPyC version={mpyc.__version__}"  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=no-member,c-extension-no-member
+)
+
 from .transport import *
 from .worker import *
 from .patches import *
-
-
-from .worker import *
-
-# # from . import peerjs
-
-# from mpyc.runtime import mpc, Runtime
-
-# # pyright: reportMissingImports=false
-# from polyscript import xworker
-
 
 __all__ = [
     "log",
@@ -73,3 +94,7 @@ __all__ = [
     "ERROR",
     "CRITICAL",
 ]
+
+xworker.sync.log("pyscript ready")
+
+asyncio.get_event_loop().call_soon(xworker.sync.onWorkerReady)
