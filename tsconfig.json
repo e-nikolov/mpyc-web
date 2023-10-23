@@ -21,7 +21,7 @@
     "strict": true,
   },
   "include": [
-    "./mpyc-web/src/**/*" // and your source files
+    "./mpyc-web-demo/src/**/*" // and your source files
   ],
   "exclude": [
     // "./node_modules/**/*",

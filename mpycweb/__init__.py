@@ -52,7 +52,6 @@ import builtins
 builtins.print = rich.print
 import pprint
 
-
 import rich.pretty
 
 pprint.pprint = rich.pretty.pprint
@@ -60,6 +59,17 @@ pprint.pprint = rich.pretty.pprint
 set_log_level(DEBUG)
 
 import pyodide
+
+# import micropip
+from pyodide.code import run_js
+
+# import pyodide_js
+
+
+# await micropip.install("emfs:./mpyc-0.9-py3-none-any.whl")
+
+# rich.inspect(pyodide_js)
+
 
 # import pyscript
 
@@ -87,6 +97,7 @@ __all__ = [
     "transport",
     "worker",
     "set_log_level",
+    "print_tree",
     "NOTSET",
     "DEBUG",
     "INFO",

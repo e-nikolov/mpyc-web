@@ -109,3 +109,6 @@ patch dep version='':
 	@echo {{version}}
 
 	"{{justfile_directory()}}/scripts/patch-{{dep}}.sh" {{if version == "" { "" } else { "@" } }}{{version}}
+
+build:
+	yarn build

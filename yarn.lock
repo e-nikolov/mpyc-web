@@ -997,6 +997,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"coincident@npm:^0.13.10":
+  version: 0.13.10
+  resolution: "coincident@npm:0.13.10"
+  dependencies:
+    "@ungap/structured-clone": ^1.2.0
+    "@ungap/with-resolvers": ^0.1.0
+    ws: ^8.14.2
+  dependenciesMeta:
+    ws:
+      optional: true
+  checksum: e3333027fac2e9efc76f46a7ce7ee46954567a62c6d66ac23699b401c7d0ac2bad467dc7580126bbf031422da6380c444830972db86746eff40a0e9f94b19e1d
+  languageName: node
+  linkType: hard
+
 "coincident@npm:^0.13.9":
   version: 0.13.9
   resolution: "coincident@npm:0.13.9"
@@ -1976,7 +1990,7 @@ __metadata:
     git-rev-sync: ^3.0.2
     material-icons: ^1.13.9
     peerjs: ^1.5.1
-    polyscript: ^0.4.18
+    polyscript: ^0.4.19
     qrcode: ^1.5.3
     rollup: ^3.29.4
     sass: ^1.68.0
@@ -2256,7 +2270,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"polyscript@npm:^0.4.16, polyscript@npm:^0.4.18":
+"polyscript@npm:^0.4.16":
   version: 0.4.18
   resolution: "polyscript@npm:0.4.18"
   dependencies:
@@ -2268,6 +2282,21 @@ __metadata:
     html-escaper: ^3.0.3
     sticky-module: ^0.1.0
   checksum: f31b8f03a046d06ee83cb1cff8801c31afc7bf9a8b8821e156833eb31b5ef487a9002a51d9ff39134df1c5d3d71b5522a9a643a443d5eceaf86758647b61ff31
+  languageName: node
+  linkType: hard
+
+"polyscript@npm:^0.4.19":
+  version: 0.4.19
+  resolution: "polyscript@npm:0.4.19"
+  dependencies:
+    "@ungap/structured-clone": ^1.2.0
+    "@ungap/with-resolvers": ^0.1.0
+    basic-devtools: ^0.1.6
+    codedent: ^0.1.2
+    coincident: ^0.13.10
+    html-escaper: ^3.0.3
+    sticky-module: ^0.1.0
+  checksum: 9611599c1b34cf22212e6570d886162c2a14e92b23ef5d89b522d408b1d9629b13bd5315ed998671f680a1ba9f62ace551dfdc88c94ebc8c59d22205351b4909
   languageName: node
   linkType: hard
 

@@ -1,11 +1,21 @@
 [tool.poetry]
 name = "mpyc-web"
-version = "0.9.4"
+version = "0.3.0"
 description = "MPyC for Multiparty Computation in Python"
 authors = ["Berry Schoenmakers <berry@win.tue.nl>"]
-readme = "README.md"
-
+packages = [
+    { include = "./mpycweb" },
+    { include = "./mpyc", from = "./mpyc" },
+    { include = "./demos/*.py", from = "./mpyc" }
+]
     [tool.poetry.dependencies]
+    python = "^3.11,<3.13"
+    rich = "^13.5.3"
+    numpy = "^1.25.2"
+    gmpy2 = "^2.1.5"
+    pyyaml = "^6.0.1"
+
+    [tool.poetry.group.dev.dependencies]
     python = "^3.11,<3.13"
     # didcomm = "0.3.0"
     # peerdid = "0.4.0"
@@ -21,7 +31,7 @@ readme = "README.md"
     rich = "^13.5.3"
 
     mpyc = { path = "./mpyc/", develop = true }
-    matplotlib = "^3.8.0"
+    matplotlib = "^3.5.2"
     pandas = "1.5.3"
     scipy = "1.11.2"
     lifelines = "^0.27.8"

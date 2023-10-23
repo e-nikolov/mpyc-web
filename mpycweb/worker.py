@@ -12,6 +12,8 @@ import importlib
 from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 import pyodide.code
 import micropip  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+from .log import *
+
 
 from mpyc.runtime import Party, mpc  # pyright: ignore[reportMissingImports] pylint: disable=import-error,disable=no-name-in-module
 from .stats import stats
@@ -47,10 +49,7 @@ async def run_mpc(options):
     # reinitialize the mpyc runtime with the new parties
     mpc.__init__(options.pid, parties, mpc.options)  # pylint: disable=unnecessary-dunder-call
 
-    try:
-        await pyodide.code.eval_code_async(options.code, globals() | {"__name__": "__main__"})
-    except Exception as e:
-        logger.error(e)
+    await pyodide.code.eval_code_async(options.code, globals() | {"__name__": "__main__"})
 
     # await run_code_async(options.code)
 

@@ -1,12 +1,12 @@
 from mpyc.runtime import mpc
-import secretsanta
+import demos.secretsanta
 
 
 async def main():
     """
     Runs the main function of the program, which executes the secretsanta module.
     """
-    await secretsanta.main()
+    await demos.secretsanta.main()
 
 
 mpc.run(main())

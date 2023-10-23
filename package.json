@@ -1,13 +1,14 @@
 {
   "name": "mpyc-web",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "packageManager": "yarn@3.6.3",
   "scripts": {
     "dev": "APP_DEPLOYMENT=dev vite --debug",
-    "build": "tsc && vite build",
+    "build": "tsc && poetry build -f wheel && mv ./dist/*.whl ./mpyc-web-demo/public/py/ && vite build",
     "preview": "vite preview",
     "static": "python -m http.server -d dist",
+    "ghp": "gh-pages -d dist -t true",
     "gh-pages": "APP_DEPLOYMENT='' yarn build && gh-pages -d dist -t true",
     "gh-pages-test": "APP_DEPLOYMENT='test' yarn build && gh-pages -d dist -t true --remote test",
     "gh-pages-mpyc": "APP_DEPLOYMENT='' yarn build && gh-pages -d dist -t true --remote mpyc"
@@ -55,7 +56,7 @@
     "generic-pool": "^3.9.0",
     "material-icons": "^1.13.9",
     "peerjs": "^1.5.1",
-    "polyscript": "^0.4.18",
+    "polyscript": "^0.4.19",
     "qrcode": "^1.5.3",
     "rollup": "^3.29.4",
     "split.js": "^1.6.5",

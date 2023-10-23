@@ -1,6 +1,7 @@
 import { defineConfig, PluginOption, loadEnv } from 'vite'
 import git from 'git-rev-sync'
 import topLevelAwait from "vite-plugin-top-level-await";
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -16,7 +17,7 @@ export default defineConfig(({ command, mode }) => {
     define: {
       "__BUILD_INFO__": { version: env.npm_package_version, dirty: git.isDirty(), deployment: env.APP_DEPLOYMENT, timestamp: Date.now(), time: new Date().toLocaleString("en-IE", { hour12: false }), revision: git.short("./") },
     },
-    root: "./mpyc-web/",
+    root: "./mpyc-web-demo/",
     publicDir: "./public",
     base: "./",
     build: {
@@ -26,6 +27,10 @@ export default defineConfig(({ command, mode }) => {
       target: 'esnext',
       rollupOptions: {
         // external: ['@pyscript/core'],
+        // input: {
+        //   main: resolve(__dirname, 'mpyc-web-demo/index.html'),
+        //   bench: resolve(__dirname, 'mpyc-web-demo/bench.html'),
+        // }
       }
     },
     cacheDir: "../.vite",

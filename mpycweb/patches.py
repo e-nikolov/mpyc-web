@@ -1,23 +1,27 @@
 """
 patches.py
 """
-
+# pylint: disable=import-error
+from io import TextIOWrapper
 import time
 import types
 import datetime
 import logging
 from asyncio import Future
 import asyncio
+import builtins
 
-# pylint: disable=import-error
 import js
+import io
 
 # pyright: reportMissingImports=false
 from polyscript import xworker
 
+
 from pyodide.code import run_js
 
 from pyodide import webloop
+from pyodide.http import pyfetch
 
 from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
 from mpyc.runtime import mpc, Runtime  # pylint: disable=import-error,disable=no-name-in-module
@@ -233,5 +237,39 @@ async def shutdown(self):
 
     stats.print_stats()
 
+
+old_open = builtins.open
+
+import rich
+import os
+
+
+def open_fetch(*args, **kwargs):
+    """
+    A function that wraps around the built-in open() function and fetches the file content from a remote server if the file is not found locally.
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Returns:
+        The content of the file as a BytesIO object.
+
+    Raises:
+        FileNotFoundError: If the file is not found locally or remotely.
+    """
+    try:
+        return old_open(*args, **kwargs)
+    except FileNotFoundError as e:
+        data = xworker.sync.fetch(e.filename).to_py()
+        os.makedirs(os.path.dirname(e.filename), exist_ok=True)
+        f = old_open(e.filename, "wb+")
+        f.write(data)
+        f.close()
+
+        return old_open(*args, **kwargs)
+
+
+builtins.open = open_fetch
 
 mpc.shutdown = types.MethodType(shutdown, mpc)

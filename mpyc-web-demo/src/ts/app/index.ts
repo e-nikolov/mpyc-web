@@ -125,7 +125,7 @@ export class Controller {
         mpyc.on('worker:ready', () => {
             console.log("PyScript runtime ready.")
             this.term.success(`${format.green("PyScript")} runtime ready.`);
-            setTimeout(this.pingWorker, 3000);
+            // setTimeout(this.pingWorker, 3000);
         });
         mpyc.on('peerjs:conn:data:mpyc:ready', () => { this.updatePeersDiv(mpyc); });
     }

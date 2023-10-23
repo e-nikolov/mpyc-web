@@ -153,6 +153,13 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
 
         // allow the python worker to send PeerJS messages via the main thread
 
+        worker.sync.fetch = async (url: string) => {
+            console.log("fetching", url)
+            let res = await fetch("./" + url);
+            let ab = await res.arrayBuffer();
+            return new Uint8Array(ab);
+        };
+
         worker.sync.sendReadyMessage = this.sendReadyMessage;
         worker.sync.sendRuntimeMessage = this.sendRuntimeMessage;
         worker.sync.getEnv = () => { return this.env; }

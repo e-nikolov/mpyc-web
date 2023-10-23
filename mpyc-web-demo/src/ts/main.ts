@@ -1,21 +1,12 @@
-/*
- *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
-
 'use strict';
 
 import '../scss/style.scss';
 
 import { MPyCManager } from './mpyc';
-
 import * as app from './app';
 
-window.onload = () => {
 
+function main() {
     app.ensureStorageSchema(18);
     let peerID = app.loadPeerID();
 
@@ -42,5 +33,6 @@ window.onload = () => {
         splitPanelSelectors: ['.split-0', '.split-1'],
         versionSelector: "#version",
     });
-
 }
+
+main()

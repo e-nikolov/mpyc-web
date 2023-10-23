@@ -90,10 +90,14 @@ class Client(AbstractClient):
 
     @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     def send_runtime_message(self, pid: int, message: bytes):
+        logger.debug(message)
         # self.loop.call_soon(self.worker.sendRuntimeMessage, pid, message)
         self.worker.sendRuntimeMessage(pid, message)
 
-    @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message.to_py()))
+    @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
+    def _on_runtime_message(self, pid: int, message: bytes):
+        self.transports[pid].on_runtime_message(message)
+
     def on_runtime_message(self, pid: int, message: JsProxy):
         """
         Handle a runtime message from a peer.
@@ -102,4 +106,4 @@ class Client(AbstractClient):
             pid (int): The ID of the peer sending the message.
             message (JsProxy): The message received from the peer.
         """
-        self.transports[pid].on_runtime_message(message.to_py())
+        self._on_runtime_message(pid, message.to_py())
