@@ -90,7 +90,7 @@ class Client(AbstractClient):
 
     @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     def send_runtime_message(self, pid: int, message: bytes):
-        logger.debug(message)
+        # logger.debug(message)
         # self.loop.call_soon(self.worker.sendRuntimeMessage, pid, message)
         self.worker.sendRuntimeMessage(pid, message)
 
