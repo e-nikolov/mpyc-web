@@ -23,6 +23,7 @@ from rich.style import Style
 
 
 from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+from pyodide.ffi import JsProxy, to_js
 from .stats import stats
 
 
@@ -138,7 +139,19 @@ def display(msg):
     Args:
         msg (str): The message to display.
     """
-    xworker.sync.display(msg)
+    xworker.postMessage(to_js(["display", msg]))
+    # xworker.sync.display(msg)
+
+
+def display_error(msg):
+    """
+    Displays a message.
+
+    Args:
+        msg (str): The message to display.
+    """
+    xworker.postMessage(to_js(["display:error", msg]))
+    # xworker.sync.displayError(msg)
 
 
 class TermWriter(io.StringIO):
@@ -146,12 +159,15 @@ class TermWriter(io.StringIO):
     A custom class that extends io.StringIO and overrides the write and writelines methods to display text in the notebook.
     """
 
+    def __init__(self, print_fn) -> None:
+        self.print_fn = print_fn
+
     def write(self, text):
-        display(text)
+        self.print_fn(text)
 
     def writelines(self, __lines: Iterable[str]) -> None:
         for line in __lines:
-            display(f"{line}\n")
+            self.print_fn(f"{line}\n")
 
 
 def print_tree(path_str=".", prefix="", text=""):

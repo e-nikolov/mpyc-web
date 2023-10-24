@@ -42,8 +42,8 @@ from . import log
 
 import sys
 
-sys.stdout = TermWriter()
-sys.stderr = TermWriter()
+sys.stdout = TermWriter(display)
+sys.stderr = TermWriter(display_error)
 
 
 rich._console = log.console  # pylint: disable=protected-access

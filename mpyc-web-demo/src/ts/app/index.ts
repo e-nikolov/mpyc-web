@@ -122,6 +122,7 @@ export class Controller {
         mpyc.on('worker:messageerror', (err: MessageEvent) => { this.term.error(err.data); });
         mpyc.on('worker:run', (mpyc: MPyCManager) => { this.updatePeersDiv(mpyc); });
         mpyc.on('worker:display', (message: string) => { this.term.write(message); });
+        mpyc.on('worker:display:error', (message: string) => { this.term.error(message); console.error(message) });
         mpyc.on('worker:ready', () => {
             console.log("PyScript runtime ready.")
             this.term.success(`${format.green("PyScript")} runtime ready.`);

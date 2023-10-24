@@ -7,13 +7,14 @@ import logging
 from typing import Any, Callable
 
 # pyright: reportMissingImports=false
-from pyodide.ffi import JsProxy
+from pyodide.ffi import JsProxy, to_js
 from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
 from .transport import PeerJSTransport, AbstractClient
 from .stats import stats
-
+from polyscript import xworker
 
 logger = logging.getLogger(__name__)
+import rich
 
 
 class Client(AbstractClient):
@@ -37,14 +38,23 @@ class Client(AbstractClient):
         on_runtime_message(pid, message): Receives a runtime message from a peer.
     """
 
-    def __init__(self, worker: Any, loop: AbstractEventLoop):
-        self.worker = worker
+    def __init__(self, loop: AbstractEventLoop):
         self.loop = loop
 
-        self.worker.on_ready_message = self.on_ready_message
-        self.worker.on_runtime_message = self.on_runtime_message
-
         self.transports = {}
+        xworker.onmessage = self._on_message
+
+    def _on_message(self, event):
+        # rich.inspect(event)
+        # rich.inspect(message.data)
+        [message_type, pid, message] = event.data
+
+        if message_type == "ready":
+            self.on_ready_message(pid, message)
+        elif message_type == "runtime":
+            self.on_runtime_message(pid, message)
+        else:
+            logger.warning(f"Received unknown message type {message_type}")
 
     async def create_connection(
         self, protocol_factory: Callable[[], asyncoro.MessageExchanger], loop: AbstractEventLoop, pid: int, listener: bool
@@ -68,8 +78,7 @@ class Client(AbstractClient):
 
     @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     def send_ready_message(self, pid: int, message: str):
-        # self.loop.call_soon(self.worker.sendReadyMessage, pid, message)
-        self.worker.sendReadyMessage(pid, message)
+        xworker.postMessage(to_js(["ready", pid, message]))
 
     @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     def on_ready_message(self, pid: int, message: str):
@@ -90,9 +99,9 @@ class Client(AbstractClient):
 
     @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     def send_runtime_message(self, pid: int, message: bytes):
-        logger.debug(message)
-        # self.loop.call_soon(self.worker.sendRuntimeMessage, pid, message)
-        self.worker.sendRuntimeMessage(pid, message)
+        # logger.debug(message)
+        # xworker.postMessage(to_js(["runtime", pid, message]), to_js(message))
+        xworker.postMessage(to_js(["runtime", pid, message]))
 
     @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     def _on_runtime_message(self, pid: int, message: bytes):
@@ -106,4 +115,19 @@ class Client(AbstractClient):
             pid (int): The ID of the peer sending the message.
             message (JsProxy): The message received from the peer.
         """
-        self._on_runtime_message(pid, message.to_py())
+        # logger.info(message.to_py())
+        # logger.info(message.to_memoryview())
+        # logger.info(message.to_bytes())
+        # logger.info(type(message))
+        self._on_runtime_message(pid, message.to_bytes())
+
+
+# x = to_js([1, 2, 3])
+# y = to_js(["test1", "test2"])
+# xworker.postMessage(x, y)
+
+
+# def on_message(args):
+#     print("before on message")
+#     print(args)
+#     print("after on message")

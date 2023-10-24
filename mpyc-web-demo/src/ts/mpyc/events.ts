@@ -6,6 +6,7 @@ export type MPyCEvents = {
     'worker:messageerror': (err: MessageEvent, mpyc: MPyCManager) => void
     'worker:run': (mpyc: MPyCManager) => void;
     'worker:display': (message: string, mpyc: MPyCManager) => void;
+    'worker:display:error': (message: string, mpyc: MPyCManager) => void;
     'worker:ready': (mpyc: MPyCManager) => void;
 
 

@@ -132,7 +132,7 @@ async def start(runtime: Runtime) -> None:
     """
     loop = runtime._loop  # pylint: disable=protected-access
 
-    pjs = peerjs.Client(xworker.sync, loop)
+    pjs = peerjs.Client(loop)
 
     logger.debug("monkey patched start()")
     logger.info(f"Start MPyC runtime v{runtime.version} with a PeerJS transport")
