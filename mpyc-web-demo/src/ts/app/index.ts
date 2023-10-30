@@ -94,6 +94,9 @@ export class Controller {
     }
 
     setupMPyCEvents(mpyc: MPyCManager) {
+        addEventListener("error", (e) => {
+            this.term.error(e.error);
+        });
         mpyc.on('peerjs:ready', (peerID: string) => {
             this.myPeerIDEl.value = app.safe(peerID);
             app.setTabState('myPeerID', peerID);
@@ -117,7 +120,7 @@ export class Controller {
         mpyc.on('peerjs:conn:disconnected', this.onPeerDisconnectedHook);
         mpyc.on('peerjs:conn:error', this.onPeerConnectionErrorHook);
         mpyc.on('peerjs:conn:data:user:chat', this.processChatMessage);
-        mpyc.on('worker:error', (err: ErrorEvent) => { this.term.error(err.message); });
+        mpyc.on('worker:error', (err: ErrorEvent) => { this.term.error(err.error); });
         mpyc.on('worker:message', (e: MessageEvent) => { this.term.writeln(e.data); });
         mpyc.on('worker:messageerror', (err: MessageEvent) => { this.term.error(err.data); });
         mpyc.on('worker:run', (mpyc: MPyCManager) => { this.updatePeersDiv(mpyc); });

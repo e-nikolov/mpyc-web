@@ -39,6 +39,10 @@ logger = logging.getLogger(__name__)
 run_js("""
 //import genericPool from 'https://cdn.jsdelivr.net/npm/generic-pool@3.9.0/+esm'
 
+addEventListener("error", (e) => {
+    console.warn(e.error);
+});
+
 const oldSetTimeout = setTimeout;
 
 function fastSetTimeout(callback, delay) {

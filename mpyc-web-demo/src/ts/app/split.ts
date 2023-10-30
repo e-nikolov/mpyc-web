@@ -13,6 +13,8 @@ export function makeSplitJS(selectors: string[]) {
     Split(selectors, {
         sizes: sizes,
         direction: 'vertical',
+        minSize: 0,
+        expandToMin: true,
         gutterSize: 18,
         onDragEnd: function (sizes) {
             localStorage.setItem('split-sizes', JSON.stringify(sizes))
