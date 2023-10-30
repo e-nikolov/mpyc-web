@@ -12,9 +12,9 @@ import { Unicode11Addon } from 'xterm-addon-unicode11';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
 import { loadWebFont } from './xterm-webfont'
 
-import { $, debounce } from '../utils';
+import { $, debounce } from '../lib/utils';
 import { format } from './format';
-import { MPyCManager } from '../mpyc';
+import { MPyCManager } from '../lib/mpyc';
 
 export class Term extends Terminal {
     fitAddon: FitAddon;
@@ -152,8 +152,15 @@ export class Term extends Terminal {
     info(message: string) {
         // this.log(message, format.yellow(format.symbols.info));
         // this.log(message, format.yellow("ℹ"));
-        this.log(message, format.yellow("🛈"));
+        this.log(format.greenBright(message), format.greenBright("🛈"));
     }
+
+
+    // trace(message: string) {
+    //     // this.log(message, format.yellow(format.symbols.info));
+    //     // this.log(message, format.yellow("ℹ"));
+    //     this.log(format.purple(message), format.purple("⚒"));
+    // }
 
     success(message: string) {
         this.log(message, format.green(format.symbols.check));

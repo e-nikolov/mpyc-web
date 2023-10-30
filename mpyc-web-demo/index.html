@@ -7,10 +7,10 @@
   <script type="module">
     document.title = "MPyC Web" + (__BUILD_INFO__.deployment ? ` (${__BUILD_INFO__.deployment})` : "");
   </script>
-  <script src="/coi-serviceworker.js"></script>
-  <!-- <script src="/mini-coi.js"></script> -->
   <link rel="icon" href="/favicon.ico" />
-  <script defer type="module" src="/src/ts/main.ts"></script>
+  <!-- <script src="/mini-coi.js"></script> -->
+  <script src="/coi-serviceworker.js"></script>
+  <script defer async type="module" src="/src/ts/main.ts"></script>
 </head>
 
 <body>

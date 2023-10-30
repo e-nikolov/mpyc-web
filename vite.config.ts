@@ -27,10 +27,12 @@ export default defineConfig(({ command, mode }) => {
       target: 'esnext',
       rollupOptions: {
         // external: ['@pyscript/core'],
-        // input: {
-        //   main: resolve(__dirname, 'mpyc-web-demo/index.html'),
-        //   bench: resolve(__dirname, 'mpyc-web-demo/bench.html'),
-        // }
+        input: {
+          main: resolve(__dirname, 'mpyc-web-demo/index.html'),
+          bench_serializers: resolve(__dirname, 'mpyc-web-demo/bench/serializers/index.html'),
+          bench_timeouts: resolve(__dirname, 'mpyc-web-demo/bench/timeouts/index.html'),
+          bench_all: resolve(__dirname, 'mpyc-web-demo/bench/all/index.html'),
+        }
       }
     },
     cacheDir: "../.vite",

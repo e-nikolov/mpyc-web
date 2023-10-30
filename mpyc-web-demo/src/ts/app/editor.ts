@@ -6,9 +6,9 @@ import { keymap } from '@codemirror/view';
 import { copyLineDown, defaultKeymap, deleteLine, moveLineDown, moveLineUp, redo } from '@codemirror/commands';
 import { birdsOfParadise } from 'thememirror';
 import { indentWithTab, } from "@codemirror/commands"
-import { MPyCManager } from '../mpyc';
+import { MPyCManager } from '../lib/mpyc';
 import { Controller } from '.';
-import { debounce } from '../utils';
+import { debounce } from '../lib/utils';
 
 export class Editor extends EditorView {
     constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPyCManager) {

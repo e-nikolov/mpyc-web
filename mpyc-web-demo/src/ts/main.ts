@@ -2,7 +2,7 @@
 
 import '../scss/style.scss';
 
-import { MPyCManager } from './mpyc';
+import { MPyCManager } from './lib/mpyc';
 import * as app from './app';
 
 

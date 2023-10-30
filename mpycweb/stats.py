@@ -16,15 +16,15 @@ about the arguments passed to a function.
 
 The `__init__` function at the end of the module initializes a global `stats` object of type `StatsCollector`.
 """
-
 import logging
 
 from typing import TypeVar, Callable, ParamSpec
 from functools import wraps
-import yaml
-import re
 import json
-import rich
+import asyncio
+import gc
+from . import log_levels
+import yaml
 
 # pyright: reportMissingImports=false
 logger = logging.getLogger(__name__)
@@ -180,13 +180,35 @@ class BaseStatsCollector:
         """
         Prints the collected statistics.
         """
+
         if self.enabled:
-            stats_yaml = yaml.safe_load(json.dumps(self.stats))
-            rich.print(yaml.safe_dump(stats_yaml))
+            self.dump("mpyc", self.stats)
 
+            if logger.isEnabledFor(log_levels.TRACE):
+                self.dump("asyncio", {"tasks": len(asyncio.all_tasks())}, level=log_levels.TRACE)
+                gc.collect()
+                self.dump("gc", gc.get_stats(), level=log_levels.TRACE)
 
-pattern = re.compile(r".*")
-yaml.add_implicit_resolver("!python/object/new:mpycweb.stats.DeepCounter", pattern)
+    def dumps(self, name, stats_data):
+        """
+        Convert stats_data to YAML format using json.dumps and yaml.safe_dump.
+
+        Args:
+            stats_data (dict): A dictionary containing statistics data.
+
+        Returns:
+            str: A YAML-formatted string representation of the stats_data dictionary.
+        """
+        return f"====== {name} ======\n{yaml.safe_dump(yaml.safe_load(json.dumps(stats_data)))}"
+
+    def dump(self, name, stats_data, level=logging.DEBUG):
+        """
+        Dump the given stats data to the logger in JSON format.
+
+        Args:
+            stats_data (dict): A dictionary containing the stats data to be logged.
+        """
+        logger.log(level, self.dumps(name, stats_data), stacklevel=2)
 
 
 class StatsCollector(BaseStatsCollector):

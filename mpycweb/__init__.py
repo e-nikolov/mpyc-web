@@ -7,9 +7,9 @@ in a web environment.
 
 import time
 import asyncio
-
-
 from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+
+from .bootstrap import *
 
 
 loop = asyncio.get_event_loop()
@@ -50,23 +50,37 @@ rich._console = log.console  # pylint: disable=protected-access
 import builtins
 
 builtins.print = rich.print
+
 import pprint
 
 import rich.pretty
 
 pprint.pprint = rich.pretty.pprint
+log.setup()
 
-set_log_level(DEBUG)
+lvl = DEBUG
+sys.argv = ["main.py", "--log-level", f"{logging.getLevelName(lvl)}"]
+set_log_level(lvl)
 
-import pyodide
+import logging
 
-# import micropip
+logger = log.getLogger(__name__)
+
+
+def exceptHook(*args):
+    logging.exception(
+        *args,
+        exc_info=True,
+        stack_info=True,
+    )
+
+
+sys.excepthook = exceptHook
+
 from pyodide.code import run_js
 
 # import pyodide_js
 
-
-# await micropip.install("emfs:./mpyc-0.9-py3-none-any.whl")
 
 # rich.inspect(pyodide_js)
 
@@ -74,21 +88,22 @@ from pyodide.code import run_js
 # import pyscript
 
 
-# logging.debug(f"PyScript {pyscript.version =}")
-# logging.debug(f"Polyscript {polyscript.version =}")
+# logger.debug(f"PyScript {pyscript.version =}")
+# logger.debug(f"Polyscript {polyscript.version =}")
 
-logging.debug(f"Python version={sys.version}")
-logging.debug(f"Pyodide version={pyodide.__version__}")
+import pyodide
+
+logger.debug(f"Python version={sys.version}")
+logger.debug(f"Pyodide version={pyodide.__version__}")
 
 import mpyc
 
-logging.debug(
-    f"MPyC version={mpyc.__version__}"  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=no-member,c-extension-no-member
-)
+logger.debug(f"MPyC version={mpyc.__version__}")  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=no-member,c-extension-no-member
 
 from .transport import *
 from .worker import *
 from .patches import *
+from .bench import *
 
 __all__ = [
     "log",
@@ -96,8 +111,12 @@ __all__ = [
     "patches",
     "transport",
     "worker",
+    "bootstrap",
+    "run_code",
+    "run_file",
     "set_log_level",
     "print_tree",
+    "bench",
     "NOTSET",
     "DEBUG",
     "INFO",

@@ -2,18 +2,15 @@
 worker.py
 """
 
-
 import asyncio
-import logging
-import types
-import ast
 import importlib
+import logging
 
 from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 import pyodide.code
 import micropip  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 from .log import *
-
+from .bootstrap import *
 
 from mpyc.runtime import Party, mpc  # pyright: ignore[reportMissingImports] pylint: disable=import-error,disable=no-name-in-module
 from .stats import stats
@@ -21,37 +18,69 @@ from .stats import stats
 logger = logging.getLogger(__name__)
 
 
-async def run_mpc(options):
+async def run_file(file: str):
     """
-    Runs an mpyc execution with the given options.
+    Executes the given Python file asynchronously, loading any missing packages first.
 
     Args:
-        options (Namespace): The options for the mpyc execution.
+        file (string): The Python file to execute.
 
     Returns:
         None
     """
-    await load_missing_packages(options.code)
 
-    logger.debug("starting mpyc execution...")
+    try:
+        with open(file, "r", encoding="utf-8") as f:
+            code = f.read()
+            return await run_code(code)
+    except Exception as e:
+        logging.error(
+            e,
+            exc_info=True,
+            stack_info=True,
+        )
+        raise e
 
-    m = len(options.parties)
-    mpc.options.threshold = (m - 1) // 2
-    mpc.options.no_async = m == 1 and options.no_async
-    stats.reset()
-    assert 2 * mpc.options.threshold < m, f"threshold {mpc.options.threshold} too large for {m} parties"
 
-    parties = []
-    for pid, peerID in enumerate(options.parties):
-        parties.append(Party(pid, peerID))
-    mpc.options.parties = parties
+async def run_code_async(source: str):
+    """
+    Compiles and runs the given Python source code asynchronously.
 
-    # reinitialize the mpyc runtime with the new parties
-    mpc.__init__(options.pid, parties, mpc.options)  # pylint: disable=unnecessary-dunder-call
+    Args:
+        source (str): The Python source code to compile and run.
 
-    await pyodide.code.eval_code_async(options.code, globals() | {"__name__": "__main__"})
+    Returns:
+        The result of running the compiled code.
+    """
+    code = compile(source, "_mpc_run_compiled.py", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+    func = types.FunctionType(code, globals() | {"__name__": "__main__"})
+    if asyncio.iscoroutinefunction(func):
+        return await func()
 
-    # await run_code_async(options.code)
+    return func()
+
+
+async def run_code(code: str):
+    """
+    Executes the given Python code asynchronously, loading any missing packages first.
+
+    Args:
+        code (str): The Python code to execute.
+
+    Returns:
+        None
+    """
+    try:
+        await load_missing_packages(code)
+        # await run_code_async(code)
+        await pyodide.code.eval_code_async(code, globals() | {"__name__": "__main__"}, filename="main.py")
+    except Exception as e:
+        logging.error(
+            e,
+            exc_info=True,
+            stack_info=True,
+        )
+        raise e
 
 
 async def load_missing_packages(code: str):
@@ -72,40 +101,74 @@ async def load_missing_packages(code: str):
             logging.info(f"Loading packages: {imports}")
             await micropip.install(imports, keep_going=True)
         except Exception as e:
-            print(e)
+            logging.error(
+                e,
+                exc_info=True,
+                stack_info=True,
+            )
+            raise e
 
 
-def run_code(source: str):
+async def run_mpc(options):
     """
-    Compiles and executes the given Python source code.
+    Runs an mpyc execution with the given options.
 
     Args:
-        source (str): The Python source code to execute.
+        options (Namespace): The options for the mpyc execution.
 
     Returns:
-        The result of executing the code.
+        None
     """
-    code = compile(source, "_mpc_run_compiled.py", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
-    func = types.FunctionType(code, globals() | {"__name__": "__main__"})
-    return func()  # pylint: disable=not-callable
+    logger.debug("starting mpyc execution...")
+
+    m = len(options.parties)
+    mpc.options.threshold = (m - 1) // 2
+    mpc.options.no_async = m == 1 and options.no_async
+    stats.reset()
+    assert 2 * mpc.options.threshold < m, f"threshold {mpc.options.threshold} too large for {m} parties"
+
+    parties = []
+    for pid, peerID in enumerate(options.parties):
+        parties.append(Party(pid, peerID))
+    mpc.options.parties = parties
+
+    # reinitialize the mpyc runtime with the new parties
+    mpc.__init__(options.pid, parties, mpc.options)  # pylint: disable=unnecessary-dunder-call
+
+    return await run_code(options.code)
 
 
-async def run_code_async(source: str):
-    """
-    Compiles and runs the given Python source code asynchronously.
+# def run_code(source: str):
+#     """
+#     Compiles and executes the given Python source code.
 
-    Args:
-        source (str): The Python source code to compile and run.
+#     Args:
+#         source (str): The Python source code to execute.
 
-    Returns:
-        The result of running the compiled code.
-    """
-    code = compile(source, "_mpc_run_compiled.py", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
-    func = types.FunctionType(code, globals() | {"__name__": "__main__"})
-    if asyncio.iscoroutinefunction(func):
-        return await func()  # pylint: disable=not-callable
+#     Returns:
+#         The result of executing the code.
+#     """
+#     code = compile(source, "_mpc_run_compiled.py", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+#     func = types.FunctionType(code, globals() | {"__name__": "__main__"})
+#     return func()  # pylint: disable=not-callable
 
-    return func()  # pylint: disable=not-callable
+
+# async def run_code_async(source: str):
+#     """
+#     Compiles and runs the given Python source code asynchronously.
+
+#     Args:
+#         source (str): The Python source code to compile and run.
+
+#     Returns:
+#         The result of running the compiled code.
+#     """
+#     code = compile(source, "_mpc_run_compiled.py", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+#     func = types.FunctionType(code, globals() | {"__name__": "__main__"})
+#     if asyncio.iscoroutinefunction(func):
+#         return await func()  # pylint: disable=not-callable
+
+#     return func()  # pylint: disable=not-callable
 
 
 # asyncio.shield()

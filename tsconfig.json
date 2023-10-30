@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     // "allowJs": true,
+    "experimentalDecorators": true,
     "checkJs": false,
     "target": "ESNext",
     "module": "ESNext",
@@ -22,6 +23,8 @@
   },
   "include": [
     "./mpyc-web-demo/src/**/*" // and your source files
+    ,
+    "mpyc-web-demo/bench"
   ],
   "exclude": [
     // "./node_modules/**/*",

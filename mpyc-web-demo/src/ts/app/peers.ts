@@ -1,5 +1,5 @@
 import { Controller } from ".";
-import { MPyCManager } from "../mpyc";
+import { MPyCManager } from '../lib/mpyc';
 import DOMPurify from "dompurify";
 
 import { format } from "./format";

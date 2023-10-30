@@ -1,4 +1,4 @@
-import { MPyCManager } from '../mpyc';
+import { MPyCManager } from '../lib/mpyc';
 import * as app from '.';
 import { Tooltip } from 'bootstrap';
 import { EditorView } from '@codemirror/view';
@@ -12,7 +12,7 @@ export * from './editor';
 export * from './tabs';
 import { format } from "./format";
 
-import { $, $$, withTimeout, channelPool, toTitleCase } from '../utils';
+import { $, $$, withTimeout, channelPool, toTitleCase } from '../lib/utils';
 import { ControllerOptions } from './elements';
 
 // import * as polyscript from "polyscript";
@@ -117,12 +117,12 @@ export class Controller {
         mpyc.on('peerjs:conn:disconnected', this.onPeerDisconnectedHook);
         mpyc.on('peerjs:conn:error', this.onPeerConnectionErrorHook);
         mpyc.on('peerjs:conn:data:user:chat', this.processChatMessage);
-        mpyc.on('worker:error', (err: ErrorEvent) => { console.log(err, err.error); this.term.error(err.message); });
+        mpyc.on('worker:error', (err: ErrorEvent) => { this.term.error(err.message); });
         mpyc.on('worker:message', (e: MessageEvent) => { this.term.writeln(e.data); });
         mpyc.on('worker:messageerror', (err: MessageEvent) => { this.term.error(err.data); });
         mpyc.on('worker:run', (mpyc: MPyCManager) => { this.updatePeersDiv(mpyc); });
         mpyc.on('worker:display', (message: string) => { this.term.write(message); });
-        mpyc.on('worker:display:error', (message: string) => { this.term.error(message); console.error(message) });
+        mpyc.on('worker:display:error', (message: string) => { this.term.error(message) });
         mpyc.on('worker:ready', () => {
             console.log("PyScript runtime ready.")
             this.term.success(`${format.green("PyScript")} runtime ready.`);

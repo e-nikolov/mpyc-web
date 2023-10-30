@@ -45,8 +45,6 @@ class Client(AbstractClient):
         xworker.onmessage = self._on_message
 
     def _on_message(self, event):
-        # rich.inspect(event)
-        # rich.inspect(message.data)
         [message_type, pid, message] = event.data
 
         if message_type == "ready":

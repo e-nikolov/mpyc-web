@@ -10,11 +10,15 @@ files = [
     "transport.py",
     "worker_init.py",
     "worker.py",
+    "log_levels.py",
+    "bench.py",
     "log.py",
-    "stats.py"
+    "stats.py",
+    "bootstrap.py",
+    "benches/__init__.py"
 ]
 
 [[fetch]]
 from = "./py/"
 to_folder = "./"
-files = ["main.py", "mpyc_web-0.3.0-py3-none-any.whl"]
+files = ["main.py", "mpyc_web-0.3.0-py3-none-any.whl", "test.py"]

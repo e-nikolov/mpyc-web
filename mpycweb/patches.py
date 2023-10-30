@@ -211,31 +211,31 @@ async def shutdown(self):
     """
     # Wait for all parties behind a barrier.
     logger.debug("monkey patched shutdown()")
+    try:
+        while self._pc_level > self._program_counter[1]:  # pylint: disable=protected-access
+            await asyncio.sleep(0)
+        elapsed = time.time() - self.start_time
+        logger.info(f"Stop MPyC runtime -- elapsed time: {datetime.timedelta(seconds=elapsed)}")
+        m = len(self.parties)
+        if m == 1:
+            return
 
-    while self._pc_level > self._program_counter[1]:  # pylint: disable=protected-access
-        await asyncio.sleep(0)
-    elapsed = time.time() - self.start_time
-    logger.info(f"Stop MPyC runtime -- elapsed time: {datetime.timedelta(seconds=elapsed)}")
-    m = len(self.parties)
-    if m == 1:
-        return
+        # m > 1
+        self.parties[self.pid].protocol = Future(loop=self._loop)  # pylint: disable=protected-access
+        logger.info("Synchronize with all parties before shutdown")
+        await self.gather(self.transfer(self.pid))
 
-    # m > 1
-    self.parties[self.pid].protocol = Future(loop=self._loop)  # pylint: disable=protected-access
-    logger.info("Synchronize with all parties before shutdown")
-    await self.gather(self.transfer(self.pid))
-
-    # Close connections to all parties > self.pid.
-    logger.info("Closing connections with other parties")
-    # TODO refactor to make this work with closing only the connections to peers with pid > self.pid
-    for peer in self.parties:
-        if peer.pid == self.pid:
-            continue
-        logger.debug("Closing connection with peer %d", peer.pid)
-        peer.protocol.close_connection()
-    await self.parties[self.pid].protocol
-
-    stats.print_stats()
+        # Close connections to all parties > self.pid.
+        logger.info("Closing connections with other parties")
+        # TODO refactor to make this work with closing only the connections to peers with pid > self.pid
+        for peer in self.parties:
+            if peer.pid == self.pid:
+                continue
+            logger.debug("Closing connection with peer %d", peer.pid)
+            peer.protocol.close_connection()
+        await self.parties[self.pid].protocol
+    finally:
+        stats.print_stats()
 
 
 old_open = builtins.open
