@@ -23,8 +23,10 @@ from functools import wraps
 import json
 import asyncio
 import gc
+
 from . import log_levels
 import yaml
+from rich.tree import Tree
 
 # pyright: reportMissingImports=false
 logger = logging.getLogger(__name__)
@@ -114,6 +116,7 @@ class BaseStatsCollector:
         enabled (bool): A flag indicating whether the statistics collection is enabled.
     """
 
+    func: str = "$func"
     stats = DeepCounter[str]({})
     enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
@@ -136,8 +139,8 @@ class BaseStatsCollector:
             def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
                 if self.enabled:
                     d = counter_func(*args, **kwargs)
-                    if "$func" in d:
-                        d["$func"] = {func.__name__: d.pop("$func")}
+                    if self.func in d:
+                        d[self.func] = {func.__name__: d.pop(self.func)}
                     ff()(d)
                 return func(*args, **kwargs)
 
@@ -169,11 +172,24 @@ class BaseStatsCollector:
         """
         return self.dec(counter_func, lambda: self.stats.update)
 
+    def time(self, counter_func: Callable[P, NestedDict[str, Numeric]]) -> Callable[[Callable[P, R]], Callable[P, R]]:
+        """
+        A decorator function for accumulating statistics.
+
+        Args:
+            counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
+
+        Returns:
+            Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
+        """
+        return self.dec(counter_func, lambda: self.stats.update)
+
     def reset(self):
         """
         Resets the statistics counter and enables statistics collection.
         """
         self.stats = DeepCounter[str]()
+        self.max_tasks = 0
         self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
     def print_stats(self):
@@ -185,9 +201,60 @@ class BaseStatsCollector:
             self.dump("mpyc", self.stats)
 
             if logger.isEnabledFor(log_levels.TRACE):
-                self.dump("asyncio", {"tasks": len(asyncio.all_tasks())}, level=log_levels.TRACE)
+                self.dump("asyncio", self.asyncio_stats(), level=log_levels.TRACE)
                 gc.collect()
-                self.dump("gc", gc.get_stats(), level=log_levels.TRACE)
+                self.dump("garbage_collector", self.gc_stats(), level=log_levels.TRACE)
+
+    max_tasks = 0
+
+    # @set(lambda self: {"asyncio": {"tasks": len(asyncio.all_tasks()), "max_tasks": self.stats.asyncio.max_tasks}})
+    def asyncio_stats(self):
+        tasks = len(asyncio.all_tasks())
+        if tasks > self.max_tasks:
+            self.max_tasks = tasks
+        return {
+            "tasks": tasks,
+            "max_tasks": self.max_tasks,
+        }
+
+    def gc_stats(self):
+        return gc.get_stats()
+
+    def to_tree(self):
+        tree = Tree("Stats", style="gray50")
+
+        self._to_tree(self.stats, tree.add("mpyc"))
+        self._to_tree(self.asyncio_stats(), tree.add("asyncio"))
+        self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
+
+        # if logger.isEnabledFor(log_levels.TRACE):
+        return tree
+
+    def _to_tree(self, s: dict | list[dict], tree: Tree):
+        if isinstance(s, dict):
+            for k, v in s.items():
+                if isinstance(v, dict | list):
+                    self._to_tree(v, tree.add(k))
+                else:
+                    tree.add(f"{k}: {v}")
+        if isinstance(s, list):
+            for index, item in enumerate(s):
+                tree.add(f"[{index}]: {json.dumps(item)}")
+
+    def to_string(self):
+        """
+        Returns the collected statistics.
+        """
+        txt = ""
+        if self.enabled:
+            txt += f"{self.dumps('mpyc', self.stats)}\n"
+
+            if logger.isEnabledFor(log_levels.TRACE):
+                txt += f"{self.dumps('mpyc', self.stats)}\n"
+                txt += f"{self.dumps('asyncio', {'tasks': len(asyncio.all_tasks())})}\n"
+                gc.collect()
+                txt += f"{self.dumps('gc', gc.get_stats())}\n"
+        return txt
 
     def dumps(self, name, stats_data):
         """
@@ -239,11 +306,11 @@ class StatsCollector(BaseStatsCollector):
 
     def total_calls(self) -> NestedDict[str, float]:
         """
-        Returns a dictionary with a single key-value pair, where the key is "$func" and the value is another dictionary
+        Returns a dictionary with a single key-value pair, where the key is "self.func" and the value is another dictionary
         with a single key-value pair, where the key is "calls" and the value is +1. This method is used to track the total
         number of calls to a function.
         """
-        return {"$func": {"calls": +1}}
+        return {self.func: {"calls": +1}}
 
     def sent_to(self, pid: int, msg: bytes) -> NestedDict[str, float]:
         """
@@ -258,9 +325,9 @@ class StatsCollector(BaseStatsCollector):
         """
         return {
             "total_messages_sent": +1,
-            f"messages_sent_to[{pid}]": +1,
+            # f"messages_sent_to[{pid}]": +1,
             "total_bytes_sent": +len(msg),
-            f"bytes_sent_to[{pid}]": +len(msg),
+            # f"bytes_sent_to[{pid}]": +len(msg),
         }
 
     def received_from(self, pid: int, msg: bytes) -> NestedDict[str, float]:
@@ -280,9 +347,9 @@ class StatsCollector(BaseStatsCollector):
         """
         return {
             "total_messages_received": +1,
-            f"messages_received_from[{pid}]": +1,
+            # f"messages_received_from[{pid}]": +1,
             "total_bytes_received": +len(msg),
-            f"bytes_received_from[{pid}]": +len(msg),
+            # f"bytes_received_from[{pid}]": +len(msg),
         }
 
 

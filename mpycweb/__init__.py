@@ -79,18 +79,6 @@ sys.excepthook = exceptHook
 
 from pyodide.code import run_js
 
-# import pyodide_js
-
-
-# rich.inspect(pyodide_js)
-
-
-# import pyscript
-
-
-# logger.debug(f"PyScript {pyscript.version =}")
-# logger.debug(f"Polyscript {polyscript.version =}")
-
 import pyodide
 
 logger.debug(f"Python version={sys.version}")
@@ -128,3 +116,15 @@ __all__ = [
 xworker.sync.log("pyscript ready")
 
 asyncio.get_event_loop().call_soon(xworker.sync.onWorkerReady)
+
+from rich.live import Live
+
+
+async def stats_printer():
+    with Live(auto_refresh=False, get_renderable=stats.to_tree) as live:
+        while True:
+            live.refresh()
+            await asyncio.sleep(1)
+
+
+asyncio.ensure_future(stats_printer())

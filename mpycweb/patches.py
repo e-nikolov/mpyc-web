@@ -239,8 +239,37 @@ async def shutdown(self):
             peer.protocol.close_connection()
         await self.parties[self.pid].protocol
     finally:
-        stats.print_stats()
+        pass
 
+
+# async def shutdown(self):
+#     """Shutdown the MPyC runtime.
+
+#     Close all connections, if any.
+#     """
+#     # Wait for all parties behind a barrier.
+#     while self._pc_level > self._program_counter[1]:
+#         await asyncio.sleep(0)
+#     elapsed = time.time() - self.start_time
+#     elapsed = str(datetime.timedelta(seconds=elapsed))  # format: YYYY-MM-DDTHH:MM:SS[.ffffff]
+#     elapsed = elapsed[:-3] if elapsed[-7] == '.' else elapsed + '.000'  # keep milliseconds .fff
+#     nbytes = [peer.protocol.nbytes_sent if peer.pid != self.pid else 0 for peer in self.parties]
+#     logging.info(f'Stop MPyC -- elapsed time: {elapsed}|bytes sent: {sum(nbytes)}')
+#     logging.debug(f'Bytes sent per party: {" ".join(map(str, nbytes))}')
+#     m = len(self.parties)
+#     if m == 1:
+#         return
+
+#     # m > 1
+#     self.parties[self.pid].protocol = Future(loop=self._loop)
+#     logging.debug('Synchronize with all parties before shutdown')
+#     await self.gather(self.transfer(self.pid))
+
+#     # Close connections to all parties > self.pid.
+#     logging.debug('Closing connections with other parties')
+#     for peer in self.parties[self.pid + 1:]:
+#         peer.protocol.close_connection()
+#     await self.parties[self.pid].protocol
 
 old_open = builtins.open
 

@@ -15,7 +15,7 @@ import { loadWebFont } from './xterm-webfont'
 import { $, debounce } from '../lib/utils';
 import { format } from './format';
 import { MPyCManager } from '../lib/mpyc';
-
+import { Controller, safe } from ".";
 export class Term extends Terminal {
     fitAddon: FitAddon;
     searchAddon: SearchAddon;
@@ -73,7 +73,7 @@ export class Term extends Terminal {
         this.mpyc = mpyc;
 
         this.onResize((_) => {
-            this.updateColumnsEnv();
+            this.updateTermSizeEnv();
         });
         this.fitAddon = new FitAddon();
         this.searchAddon = new SearchAddon();
@@ -146,13 +146,13 @@ export class Term extends Terminal {
 
     debug(message: string) {
         // this.log(format.italic.grey(message), format.gray("🛠"));
-        this.log(format.italic.grey(message), format.gray("⚒"));
+        this._log(format.italic.grey(message), format.gray("⚒"));
     }
 
     info(message: string) {
         // this.log(message, format.yellow(format.symbols.info));
         // this.log(message, format.yellow("ℹ"));
-        this.log(format.greenBright(message), format.greenBright("🛈"));
+        this._log(format.greenBright(message), format.greenBright("🛈"));
     }
 
 
@@ -163,29 +163,51 @@ export class Term extends Terminal {
     // }
 
     success(message: string) {
-        this.log(message, format.green(format.symbols.check));
+        this._log(message, format.green(format.symbols.check));
     }
 
-    log(message: string, icon: string = " ") {
-        this.writeln(`${this.time()}  ${icon}  ${message}`);
+    _log(message: string, icon: string = " ") {
+        message = `${this.time()}  ${icon}  ${message}`
+
+        if (this.mpyc.workerReady) {
+            this.mpyc.print(message)
+        } else {
+            this.writeln(message);
+        }
     }
 
     warn(message: string) {
-        this.log(format.italic(message), format.yellow(format.symbols.warning));
+        this._log(format.italic(message), format.yellow(format.symbols.warning));
+    }
+    chatMe(message: string) {
+        message = `${format.green('Me')}: ${safe(message)}`
+        this._log(message);
+    }
+    chat(peerID: string, message: string) {
+        message = `${format.peerID(safe(peerID))}: ${safe(message)}`
+        this._log(message);
+    }
+    error(message: string) {
+        this._log(format.redBright(message), format.red(format.symbols.cross));
     }
 
-    error(message: string) {
-        this.log(format.redBright(message), format.red(format.symbols.cross));
+    display(message: string) {
+        this.writeln(message);
+    }
+    displayError(message: string) {
+        message = `${this.time()}  ${format.red(format.symbols.cross)}  ${format.redBright(message)}`
+        this.writeln(message);
     }
 
     fit = () => {
         console.log("fitting terminal");
         this.fitAddon.fit();
-        this.updateColumnsEnv();
+        this.updateTermSizeEnv();
     }
 
-    updateColumnsEnv = () => {
-        console.log("updating columns env: " + this.cols);
+    updateTermSizeEnv = () => {
+        console.log("updating terminal size env: ", this.cols, this.rows);
         this.mpyc.updateEnv("COLUMNS", this.cols.toString())
+        this.mpyc.updateEnv("LINES", this.rows.toString())
     }
 }

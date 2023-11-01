@@ -58,10 +58,15 @@ def get_env() -> dict[str, str]:
 
 def __update_environ(env):
     assert isinstance(env, dict)
-    environ.update(env)
-    cols = os.environ.get("COLUMNS")
-    if cols and rich._console:  # pylint: disable=protected-access
-        rich._console.width = int(cols)  # pylint: disable=protected-access
+    if rich._console:  # pylint: disable=protected-access
+        environ.update(env)
+        cols = os.environ.get("COLUMNS")
+        lines = os.environ.get("LINES")
+
+        if cols:
+            rich._console.width = int(cols)  # pylint: disable=protected-access
+        if lines:
+            rich._console.height = int(lines)  # pylint: disable=protected-access
 
 
 xworker.sync.ping = ping

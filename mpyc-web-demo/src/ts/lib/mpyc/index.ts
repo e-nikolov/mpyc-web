@@ -190,11 +190,20 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
             worker.onmessage = (e: MessageEvent) => {
                 let data = e.data as [string, ...any]
                 const [type, ...args] = data
+                // console.log(e.data, typeof e.data)
 
                 switch (type) {
+                    case "test":
+                        break;
+
                     case "ready":
                     case "runtime":
                         let [pid, message] = args
+                        // console.log(message, typeof message)
+                        // if (message.getBuffer) {
+                        //     console.log("message is a buffer", message.getBuffer)
+                        //     message = message.getBuffer()
+                        // }
                         this.sendMPyCMessage(type, pid, message)
                         break;
                     case "display":
@@ -315,6 +324,10 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
         }
         let pid = this.peerIDToPID.get(peerID)!;
         this.postMessage(["runtime", pid, message], [message])
+    }
+
+    print(message: string) {
+        this.postMessage(["print", message])
     }
 
     postMessage = async (message: any, transfer?: Transferable[]) => {

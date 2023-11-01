@@ -1,4 +1,4 @@
-packages = ["emfs:./mpyc_web-0.3.0-py3-none-any.whl"]
+packages = ["emfs:./mpyc_web-0.4.0-py3-none-any.whl"]
 
 [[fetch]]
 from = "./py/mpycweb"
@@ -21,4 +21,4 @@ files = [
 [[fetch]]
 from = "./py/"
 to_folder = "./"
-files = ["main.py", "mpyc_web-0.3.0-py3-none-any.whl", "test.py"]
+files = ["main.py", "mpyc_web-0.4.0-py3-none-any.whl", "test.py"]

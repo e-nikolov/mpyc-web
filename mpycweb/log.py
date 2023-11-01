@@ -126,9 +126,10 @@ def set_log_level(level, verbosity=0):
     logging.basicConfig(**opts)
     stats.reset()
 
+    if level <= TRACE:
+        gc.set_debug(gc.DEBUG_LEAK)
     if level <= TRACE - 1:
         gc.set_debug(gc.DEBUG_STATS | gc.DEBUG_LEAK)
-        pyodide
     else:
         gc.set_debug(0)
 

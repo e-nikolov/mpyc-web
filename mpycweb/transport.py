@@ -139,7 +139,11 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
             case "ready?":
                 logging.debug(f"party {self.pid} asks if we are ready to start")
                 if self.ready_for_next_run:
-                    self._protocol.connection_made(self)
+                    try:
+                        self._protocol.connection_made(self)
+                    except Exception as e:
+                        logging.error(e, exc_info=True, stack_info=True)
+                        raise e
                     self.client.send_ready_message(self.pid, "ready_ack")
                     self.ready_for_next_run = False
 
