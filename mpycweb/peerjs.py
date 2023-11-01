@@ -2,7 +2,7 @@
 This module provides a client for establishing connections with other peers using the PeerJS protocol.
 """
 
-from asyncio import AbstractEventLoop, Protocol, Transport
+from asyncio import AbstractEventLoop, Protocol, Transport, get_event_loop
 import logging
 from typing import Any, Callable
 
@@ -21,6 +21,9 @@ def noop():
     pass
 
 
+loop = get_event_loop()
+
+
 def _on_message(on_ready_message=noop, on_runtime_message=noop):
     def __on_message(event):
         [message_type, *rest] = event.data
@@ -28,13 +31,14 @@ def _on_message(on_ready_message=noop, on_runtime_message=noop):
         match message_type:
             case "print":
                 [message] = rest
-                rich.print(rich.text.Text(message))
+
+                loop.call_soon(rich.print, rich.text.Text(message))
             case "ready":
                 [pid, message] = rest
-                on_ready_message(pid, message)
+                loop.call_soon(on_ready_message, pid, message)
             case "runtime":
                 [pid, message] = rest
-                on_runtime_message(pid, message)
+                loop.call_soon(on_runtime_message, pid, message)
             case _:
                 logger.warning(f"Received unknown message type {message_type}")
 
