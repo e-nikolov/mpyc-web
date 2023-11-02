@@ -1,5 +1,3 @@
-import { get } from "http";
-
 export function ensureStorageSchema(gen: number) {
     console.log("Storage schema generation:", localStorage.gen)
     localStorage.gen ||= 0;

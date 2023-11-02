@@ -26,10 +26,11 @@ import gc
 import time
 import io
 
-from . import log_levels
 import yaml
 from rich.tree import Tree
 from rich.text import Text
+
+import mpycweb.lib.log_levels
 
 # pyright: reportMissingImports=false
 logger = logging.getLogger(__name__)

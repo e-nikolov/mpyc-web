@@ -6,12 +6,15 @@
 import logging
 import asyncio
 import pyodide
-from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 
 
 try:
-    from mpycweb.bootstrap import *
     from mpycweb import *
+
+    # from mpycweb.bootstrap import *
+    # from mpycweb import *
+    if IN_WORKER:
+        import polyscript.xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 
     await run_file("test.py")  # pyright: ignore
 except Exception as e:

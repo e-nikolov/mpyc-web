@@ -12,10 +12,8 @@ import asyncio
 import builtins
 
 import js
-import io
 
 # pyright: reportMissingImports=false
-from polyscript import xworker
 
 
 from pyodide.code import run_js
@@ -28,7 +26,8 @@ from mpyc.runtime import mpc, Runtime  # pylint: disable=import-error,disable=no
 
 
 from . import peerjs
-from .stats import stats
+from .lib.stats import stats
+from . import api
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +39,11 @@ run_js("""
 //import genericPool from 'https://cdn.jsdelivr.net/npm/generic-pool@3.9.0/+esm'
 
 addEventListener("error", (e) => {
-    console.warn(e.error);
+    console.warn("pyscript", e.error);
 });
 
 const oldSetTimeout = setTimeout;
-
-function fastSetTimeout(callback, delay) {
+function _fastSetTimeout(callback, delay) {
     if (delay == undefined || isNaN(delay) || delay < 0) {
         delay = 0;
     }
@@ -57,6 +55,16 @@ function fastSetTimeout(callback, delay) {
         oldSetTimeout(callback, delay);
     }
 }
+
+
+let fastSetTimeout = oldSetTimeout;
+
+if(!navigator.userAgent.toLowerCase().includes('firefox')) {
+    console.log("Using fast setTimeout")
+    fastSetTimeout = _fastSetTimeout;
+}
+
+self.fastSetTimeout = fastSetTimeout;
 
 
 // import pool from 'generic-pool'
@@ -92,17 +100,8 @@ function fastSetTimeout(callback, delay) {
 // }
 
         """)
+
 webloop.setTimeout = js.fastSetTimeout
-
-
-# async def stats_printer():
-#     while True:
-#         xworker.sync.log(f"Python Worker Stats")
-#         xworker.sync.log(f"{stats.stats}")
-#         await asyncio.sleep(5)
-
-
-# asyncio.ensure_future(stats_printer())
 
 
 def run(self, f):
@@ -294,7 +293,7 @@ def open_fetch(*args, **kwargs):
     try:
         return old_open(*args, **kwargs)
     except FileNotFoundError as e:
-        data = xworker.sync.fetch(e.filename).to_py()
+        data = api.fetch(e.filename)
         os.makedirs(os.path.dirname(e.filename), exist_ok=True)
         f = old_open(e.filename, "wb+")
         f.write(data)

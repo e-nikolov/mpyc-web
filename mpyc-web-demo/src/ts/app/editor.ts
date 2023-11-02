@@ -12,8 +12,6 @@ import { debounce } from '../lib/utils';
 
 export class Editor extends EditorView {
     constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPyCManager) {
-        // let parent = document.querySelector(selector)?.attachShadow({ mode: 'open' });
-
         const languageConf = new Compartment();
         let extensions = [
             indentUnit.of('    '),

@@ -105,16 +105,16 @@ export class Term extends Terminal {
             // this.loadAddon(ligaturesAddon);
             this.fit();
         });
-        this.mpyc.worker.sync.readline = (prompt: string): Promise<string> => {
-            return new Promise((resolve, reject) => {
-                this.readlineAddon.read(prompt).then((input: string) => {
-                    this.writeln("readline: " + input);
-                    resolve(input);
-                }).catch((e: Error) => {
-                    reject(e)
-                });
-            })
-        }
+        // this.mpyc.worker.sync.readline = (prompt: string): Promise<string> => {
+        //     return new Promise((resolve, reject) => {
+        //         this.readlineAddon.read(prompt).then((input: string) => {
+        //             this.writeln("readline: " + input);
+        //             resolve(input);
+        //         }).catch((e: Error) => {
+        //             reject(e)
+        //         });
+        //     })
+        // }
 
         this.attachCustomKeyEventHandler((e: KeyboardEvent) => {
             // console.log(e.key)
@@ -139,10 +139,8 @@ export class Term extends Terminal {
             }
         });
 
-        // debounce resize
         let ro = new ResizeObserver(debounce(() => { this.fit(); }, 50));
         ro.observe(document.querySelector(".split-1")!)
-        // this.fit();
     }
 
 
@@ -157,22 +155,9 @@ export class Term extends Terminal {
 
 
     info(message: string) {
-
-        // this.log(message, format.yellow(format.symbols.info));
-        // this.log(message, format.yellow("ℹ"));
         this._log(format.greenBright(message), format.greenBright("🛈"));
     }
 
-
-    // _log(message: string, icon: string = " ") {
-    //     message = `${this.time()}  ${icon}  ${message}`
-
-    //     if (this.mpyc.workerReady) {
-    //         this.mpyc.print(message)
-    //     } else {
-    //         this.writeln(message);
-    //     }
-    // }
     _log(message: string, icon: string = " ") {
         message = `${this.time()}  ${icon}  ${message}`
 
@@ -196,13 +181,11 @@ export class Term extends Terminal {
     }
 
     _control(message: string) {
-        // return `${CARRIAGE_RETURN}${CURSOR_UP.repeat(this._height(message))}${ERASE_IN_LINE.repeat(this._height(message))}`
         if (message == "") {
             return ""
         }
 
         return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
-        // return `${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message))}`
     }
 
     live(message: string) {
@@ -210,29 +193,6 @@ export class Term extends Terminal {
         this.writeln(this._control(this.livePanel) + message)
         this.livePanel = message;
     }
-
-    // EraseInLine: f"\x1b[{param}K"
-    // CARRIAGE_RETURN: f"\r"
-    // CURSOR_UP: f"\x1b[{param}A"
-    // _, height = self._shape
-    // return Control(
-    //     ControlType.CARRIAGE_RETURN,
-    //     (ControlType.ERASE_IN_LINE, 2),
-    //     *(
-    //         (
-    //             (ControlType.CURSOR_UP, 1),
-    //             (ControlType.ERASE_IN_LINE, 2),
-    //         )
-    //         * (height - 1)
-    //     )
-    // )
-
-
-    // trace(message: string) {
-    //     // this.log(message, format.yellow(format.symbols.info));
-    //     // this.log(message, format.yellow("ℹ"));
-    //     this.log(format.purple(message), format.purple("⚒"));
-    // }
 
     success(message: string) {
         this._log(message, format.green(format.symbols.check));

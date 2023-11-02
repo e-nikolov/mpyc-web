@@ -6,7 +6,7 @@ import { XWorker, Hook } from "polyscript";
 import { EventEmitter } from 'eventemitter3'
 import { MPyCEvents, PeerJSData } from './events'
 import { callSoon_pool, channelPool, sleep } from '../utils'
-
+import { define } from "polyscript";
 
 type ConnMap = Map<string, DataConnection>;
 
@@ -51,12 +51,19 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
     workerReady = false;
     running = false;
     env: { [key: string]: string } = {}
+    #wrap: any;
+    type: string = ""
 
 
-    constructor(peerID: string | null, shimFilePath: string, configFilePath: string, env: any = {}) {
+    constructor(peerID: string | null, shimFilePath: string, configFilePath: string, env: any = {}, type = "worker") {
         super();
+        this.type = type
         this.peer = this.newPeerJS(peerID);
-        this.worker = this.newWorker(shimFilePath, configFilePath)
+        if (type === "interpreter") {
+            this.newInterpreter(shimFilePath, configFilePath)
+        } else {
+            this.worker = this.newWorker(shimFilePath, configFilePath)
+        }
         this.shimFilePath = shimFilePath;
         this.configFilePath = configFilePath;
 
@@ -113,13 +120,29 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
         this.peersReady.set(this.peer.id, true);
 
         try {
-            await this.worker.sync.run_mpc({
-                pid: pid,
-                parties: peers,
-                is_async: is_async,
-                no_async: !is_async,
-                code: code,
-            })
+            if (this.type === "worker") {
+                await this.worker.sync.run_mpc({
+                    pid: pid,
+                    parties: peers,
+                    is_async: is_async,
+                    no_async: !is_async,
+                    code: code,
+                })
+            } else {
+                await this.#wrap.interpreter.runPythonAsync(`
+                    from mpycweb.mpc import run_mpc
+
+                    await run_mpc(
+                        {
+                            'pid': ${pid},
+                            'parties': ${peers},
+                            'is_async': ${is_async ? 'True' : 'False'},
+                            'no_async': ${is_async ? 'False' : 'True'},
+                            'code': "${code}",
+                        }
+                    )
+                `)
+            }
         } catch (err) {
             console.error(err)
             this.emit('worker:error', new ErrorEvent('worker:error', { error: err }), this)
@@ -151,6 +174,8 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
         return peer;
     }
 
+    onWorkerReady = () => { this.workerReady = true; this.emit('worker:ready', this) }
+
     newWorker(shimFilePath: string, configFilePath: string) {
         try {
             let worker = MPyWorker(shimFilePath, configFilePath);
@@ -164,7 +189,7 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
 
             worker.sync.getEnv = () => { return this.env; }
             // UI callbacks
-            worker.sync.onWorkerReady = () => { this.workerReady = true; this.emit('worker:ready', this) };
+            worker.sync.onWorkerReady = this.onWorkerReady;
             worker.sync.log = (...args: any) => {
                 console.log(...args);
             };
@@ -178,13 +203,8 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
             worker.sync.logWarn = (...args: any) => {
                 console.warn(...args);
             }
-            worker.sync.display = (message: string) => {
-                this.emit('worker:display', message, this);
-            };
-            worker.sync.displayError = (message: string) => {
-                console.error(message)
-                this.emit('worker:display:error', message, this);
-            };
+            worker.sync.display = this.display
+            worker.sync.displayError = this.displayError
             worker.onerror = (err: ErrorEvent) => { console.error(err.error); this.emit('worker:error', err, this) };
 
             worker.onmessage = (e: MessageEvent) => {
@@ -227,6 +247,65 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
             this.emit('worker:error', new ErrorEvent('worker:error', { error: err }), this)
             throw err;
         }
+    }
+    updateStats(stats: string) {
+        this.emit('worker:stats', stats, this);
+    }
+    newInterpreter(shimFilePath: string, configFilePath: string) {
+        return new Promise((resolve, reject) => {
+            define(null, {
+                interpreter: "pyodide",
+                config: configFilePath,
+                hooks: {
+                    main: {
+                        onReady: async (wrap: any) => {
+                            console.log(wrap)
+
+                            await wrap.interpreter.runPythonAsync(
+                                `
+                                    """
+                                        Shim for the PyScript port of MPyC.
+                                    """
+                                    # pyright: reportMissingImports=false
+                                    
+                                    import logging
+                                    import asyncio
+                                    import pyodide
+                                    
+                                    
+                                    try:
+                                        from mpycweb import *
+                                    
+                                        # from mpycweb.bootstrap import *
+                                        # from mpycweb import *
+                                        if IN_WORKER:
+                                            import polyscript.xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+                                    
+                                        await run_file("test.py")  # pyright: ignore
+                                    except Exception as e:
+                                        logging.error(
+                                            e,
+                                            exc_info=True,
+                                            stack_info=True,
+                                        )
+                            
+                            `);
+                            this.#wrap = wrap;
+                            resolve(wrap);
+                        },
+                    },
+                },
+            });
+        });
+    }
+
+    displayError = (message: string) => {
+        console.error(message)
+        this.emit('worker:display:error', message, this);
+    }
+
+    display = (message: string) => {
+        this.emit('worker:display', message, this);
     }
 
     sendMPyCMessage(type: string, pid: number, message: any) {
@@ -329,10 +408,6 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
         }
         let pid = this.peerIDToPID.get(peerID)!;
         this.postMessage(["runtime", pid, message], [message])
-    }
-
-    print(message: string) {
-        this.postMessage(["print", message])
     }
 
     postMessage = async (message: any, transfer?: Transferable[]) => {
