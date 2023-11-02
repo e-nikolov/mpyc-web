@@ -12,6 +12,10 @@ import { Unicode11Addon } from 'xterm-addon-unicode11';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
 import { loadWebFont } from './xterm-webfont'
 
+const CARRIAGE_RETURN = "\r"
+const CURSOR_UP = "\x1b[1A"
+const ERASE_IN_LINE = "\x1b[2K"
+
 import { $, debounce } from '../lib/utils';
 import { format } from './format';
 import { MPyCManager } from '../lib/mpyc';
@@ -24,6 +28,8 @@ export class Term extends Terminal {
     webLinksAddon: WebLinksAddon;
     readlineAddon: Readline;
     mpyc: MPyCManager;
+
+    livePanel: string = "";
 
 
 
@@ -149,11 +155,77 @@ export class Term extends Terminal {
         this._log(format.italic.grey(message), format.gray("⚒"));
     }
 
+
     info(message: string) {
+
         // this.log(message, format.yellow(format.symbols.info));
         // this.log(message, format.yellow("ℹ"));
         this._log(format.greenBright(message), format.greenBright("🛈"));
     }
+
+
+    // _log(message: string, icon: string = " ") {
+    //     message = `${this.time()}  ${icon}  ${message}`
+
+    //     if (this.mpyc.workerReady) {
+    //         this.mpyc.print(message)
+    //     } else {
+    //         this.writeln(message);
+    //     }
+    // }
+    _log(message: string, icon: string = " ") {
+        message = `${this.time()}  ${icon}  ${message}`
+
+        this._write_liveln(message)
+    }
+    _write_liveln(message: string) {
+        this.writeln(this._control(this.livePanel) + message)
+        if (this.livePanel != "") {
+            this.writeln(this.livePanel)
+        }
+    }
+    _write_live(message: string) {
+        this.write(this._control(this.livePanel) + message)
+        if (this.livePanel != "") {
+            this.writeln(this.livePanel)
+        }
+    }
+
+    _height(message: string) {
+        return message.split(/\r\n|\r|\n/).length
+    }
+
+    _control(message: string) {
+        // return `${CARRIAGE_RETURN}${CURSOR_UP.repeat(this._height(message))}${ERASE_IN_LINE.repeat(this._height(message))}`
+        if (message == "") {
+            return ""
+        }
+
+        return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
+        // return `${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message))}`
+    }
+
+    live(message: string) {
+        message = `${this.time()}\n${format.grey50(message)}`
+        this.writeln(this._control(this.livePanel) + message)
+        this.livePanel = message;
+    }
+
+    // EraseInLine: f"\x1b[{param}K"
+    // CARRIAGE_RETURN: f"\r"
+    // CURSOR_UP: f"\x1b[{param}A"
+    // _, height = self._shape
+    // return Control(
+    //     ControlType.CARRIAGE_RETURN,
+    //     (ControlType.ERASE_IN_LINE, 2),
+    //     *(
+    //         (
+    //             (ControlType.CURSOR_UP, 1),
+    //             (ControlType.ERASE_IN_LINE, 2),
+    //         )
+    //         * (height - 1)
+    //     )
+    // )
 
 
     // trace(message: string) {
@@ -164,16 +236,6 @@ export class Term extends Terminal {
 
     success(message: string) {
         this._log(message, format.green(format.symbols.check));
-    }
-
-    _log(message: string, icon: string = " ") {
-        message = `${this.time()}  ${icon}  ${message}`
-
-        if (this.mpyc.workerReady) {
-            this.mpyc.print(message)
-        } else {
-            this.writeln(message);
-        }
     }
 
     warn(message: string) {
@@ -192,11 +254,12 @@ export class Term extends Terminal {
     }
 
     display(message: string) {
-        this.writeln(message);
+        this._write_live(message);
     }
+
     displayError(message: string) {
         message = `${this.time()}  ${format.red(format.symbols.cross)}  ${format.redBright(message)}`
-        this.writeln(message);
+        this._write_live(message);
     }
 
     fit = () => {

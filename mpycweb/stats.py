@@ -23,10 +23,13 @@ from functools import wraps
 import json
 import asyncio
 import gc
+import time
+import io
 
 from . import log_levels
 import yaml
 from rich.tree import Tree
+from rich.text import Text
 
 # pyright: reportMissingImports=false
 logger = logging.getLogger(__name__)
@@ -105,6 +108,14 @@ class DeepCounter(NestedDict[K, Numeric]):
 
 P = ParamSpec("P")
 R = TypeVar("R")
+
+
+def print_to_string(*args, **kwargs):
+    output = io.StringIO()
+    print(*args, file=output, **kwargs)
+    contents = output.getvalue()
+    output.close()
+    return contents
 
 
 class BaseStatsCollector:
@@ -228,7 +239,8 @@ class BaseStatsCollector:
         self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
 
         # if logger.isEnabledFor(log_levels.TRACE):
-        return tree
+
+        return print_to_string(tree)
 
     def _to_tree(self, s: dict | list[dict], tree: Tree):
         if isinstance(s, dict):

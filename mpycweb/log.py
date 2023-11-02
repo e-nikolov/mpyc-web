@@ -12,12 +12,12 @@ import sys
 from logging import LogRecord
 import logging
 import asyncio
+import gc
+import os
 
 from rich.console import Console
 from rich.logging import RichHandler
 
-import gc
-import os
 
 from rich import print
 from rich.style import Style
@@ -31,8 +31,7 @@ from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: 
 from pyodide.ffi import JsProxy, to_js
 
 from .log_levels import *
-
-from .stats import stats
+from .stats import stats, print_to_string
 
 console = Console(
     color_system="truecolor",
@@ -260,14 +259,6 @@ def print_tree2(path_str=".", prefix="", text=""):
         print(f"{prefix}├── {item.name}\n")
         if item.is_dir():
             print_tree2(item, prefix + "│   ", text)
-
-
-def print_to_string(*args, **kwargs):
-    output = io.StringIO()
-    print(*args, file=output, **kwargs)
-    contents = output.getvalue()
-    output.close()
-    return contents
 
 
 def print_tree(directory: str = ".", depth=0):

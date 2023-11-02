@@ -196,6 +196,11 @@ export class MPyCManager extends EventEmitter<MPyCEvents> {
                     case "test":
                         break;
 
+                    case "stats":
+                        let [stats] = args
+                        this.emit('worker:stats', stats, this);
+                        break;
+
                     case "ready":
                     case "runtime":
                         let [pid, message] = args

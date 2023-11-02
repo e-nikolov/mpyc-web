@@ -8,6 +8,7 @@ export type MPyCEvents = {
     'worker:display': (message: string, mpyc: MPyCManager) => void;
     'worker:display:error': (message: string, mpyc: MPyCManager) => void;
     'worker:ready': (mpyc: MPyCManager) => void;
+    'worker:stats': (stats: string, mpyc: MPyCManager) => void;
 
 
     'peerjs:ready': (peer: string, mpyc: MPyCManager) => void;

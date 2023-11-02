@@ -121,10 +121,13 @@ from rich.live import Live
 
 
 async def stats_printer():
-    with Live(auto_refresh=False, get_renderable=stats.to_tree) as live:
-        while True:
-            live.refresh()
-            await asyncio.sleep(1)
+    while True:
+        xworker.postMessage(to_js(["stats", str(stats.to_tree())]))
+        await asyncio.sleep(1)
+    # with Live(auto_refresh=False, get_renderable=stats.to_tree) as live:
+    #     while True:
+    #         live.refresh()
+    #         await asyncio.sleep(1000)
 
 
 asyncio.ensure_future(stats_printer())
