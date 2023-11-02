@@ -14,16 +14,16 @@
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
-    // "allowImportingTsExtensions": true,
-    // "isolatedModules": true,
-    // "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
     "noEmit": true,
     /* Linting */
-    "strict": true,
+    "strict": false,
   },
   "include": [
-    "./mpyc-web-demo/src/**/*" // and your source files
-    ,
+    "./mpyc-web-demo/src/**/*", // and your source files
+    "./mpyc-web-demo/src/**/*.whl", // and your source files
     "mpyc-web-demo/bench"
   ],
   "exclude": [

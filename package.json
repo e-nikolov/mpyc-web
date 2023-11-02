@@ -5,7 +5,7 @@
   "packageManager": "yarn@3.6.3",
   "scripts": {
     "dev": "APP_DEPLOYMENT=dev vite --debug",
-    "build:py": "poetry build -f wheel && mv ./dist/*.whl ./mpyc-web-demo/public/py/",
+    "build:py": "poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py/ && cp ./dist/*.whl ./dist/py/",
     "build": "tsc && yarn build:py && vite build",
     "preview": "vite preview",
     "static": "python -m http.server -d dist",
@@ -15,6 +15,7 @@
     "gh-pages-mpyc": "APP_DEPLOYMENT='' yarn build && gh-pages -d dist -t true --remote mpyc"
   },
   "devDependencies": {
+    "@pyodide/webpack-plugin": "^1.2.0",
     "@types/gh-pages": "^5.0.0",
     "@types/git-rev-sync": "^2.0.1",
     "coi-serviceworker": "^0.1.7",
@@ -26,6 +27,10 @@
     "vite": "^4.5.0",
     "vite-plugin-externalize-dependencies": "^0.10.0"
   },
+  "files": [
+    "lib/**/*.whl",
+    "lib/**/*.py"
+  ],
   "dependencies": {
     "@codemirror/commands": "^6.3.0",
     "@codemirror/lang-python": "^6.1.3",
@@ -59,13 +64,18 @@
     "generic-pool": "^3.9.0",
     "material-icons": "^1.13.12",
     "msgpackr": "^1.9.9",
+    "node-fetch": "^3.3.2",
     "peerjs": "^1.5.1",
     "polyscript": "^0.5.5",
+    "promisify": "^0.0.3",
+    "pyodide": "^0.24.1",
     "qrcode": "^1.5.3",
     "reflect-metadata": "^0.1.13",
     "rollup": "^4.1.5",
     "split.js": "^1.6.5",
     "thememirror": "^2.0.1",
+    "to-json-callback": "^0.1.1",
+    "vite-plugin-run": "^0.5.1",
     "vite-plugin-top-level-await": "^1.3.1",
     "xterm": "^5.3.0",
     "xterm-addon-fit": "^0.8.0",

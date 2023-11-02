@@ -18,8 +18,9 @@ const ERASE_IN_LINE = "\x1b[2K"
 
 import { $, debounce } from '../lib/utils';
 import { format } from './format';
-import { MPyCManager } from '../lib/mpyc';
+import { MPCManager } from '../lib/mpyc';
 import { Controller, safe } from ".";
+import { MPCRuntimeBase } from '../lib/runtimes/MPCRuntimeBase';
 export class Term extends Terminal {
     fitAddon: FitAddon;
     searchAddon: SearchAddon;
@@ -27,13 +28,27 @@ export class Term extends Terminal {
     searchBarAddon: SearchBarAddon;
     webLinksAddon: WebLinksAddon;
     readlineAddon: Readline;
-    mpyc: MPyCManager;
+    mpyc: MPCManager;
 
+    isLivePanelVisible = true
     livePanel: string = "";
+    toggleLivePanel(flag?: boolean) {
+        this.isLivePanelVisible = !this.isLivePanelVisible
+
+        if (flag != undefined) {
+            this.isLivePanelVisible = flag
+        }
+
+        if (!this.isLivePanelVisible) {
+            this.writeln(this._control(this.livePanel))
+        }
+
+        return;
+    }
 
 
 
-    constructor(sel: string, mpyc: MPyCManager) {
+    constructor(sel: string, mpyc: MPCManager) {
         let el = $(sel);
 
         super({
@@ -105,32 +120,42 @@ export class Term extends Terminal {
             // this.loadAddon(ligaturesAddon);
             this.fit();
         });
-        this.mpyc.worker.sync.readline = (prompt: string): Promise<string> => {
+
+
+        this.mpyc.runtime.setReadlineFn((prompt: string): Promise<string> => {
             return new Promise((resolve, reject) => {
                 this.readlineAddon.read(prompt).then((input: string) => {
-                    this.writeln("readline: " + input);
                     resolve(input);
                 }).catch((e: Error) => {
                     reject(e)
                 });
             })
-        }
+        })
 
         this.attachCustomKeyEventHandler((e: KeyboardEvent) => {
             // console.log(e.key)
-            if (e.ctrlKey && e.key == "c") {
-                if (this.hasSelection()) {
-                    navigator.clipboard.writeText(this.getSelection())
-                    this.clearSelection();
+            if (e.type === 'keydown') {
+
+                if (e.ctrlKey && e.key == "c") {
+                    if (this.hasSelection()) {
+                        navigator.clipboard.writeText(this.getSelection())
+                        this.clearSelection();
+                        return false
+                    }
+                }
+                if (e.ctrlKey && e.key == "b") {
+                    this.toggleLivePanel()
+                    e.preventDefault()
+                    return false
+                }
+                if (e.ctrlKey && e.key == "f") {
+                    this.searchBarAddon.show();
+                    e.preventDefault();
                     return false
                 }
             }
-            if (e.ctrlKey && e.key == "f") {
-                this.searchBarAddon.show();
-                e.preventDefault();
-                return false
-            }
-            return true;
+
+            return true
         });
 
         document.addEventListener('keyup', (e: KeyboardEvent) => {
@@ -139,10 +164,8 @@ export class Term extends Terminal {
             }
         });
 
-        // debounce resize
         let ro = new ResizeObserver(debounce(() => { this.fit(); }, 50));
         ro.observe(document.querySelector(".split-1")!)
-        // this.fit();
     }
 
 
@@ -157,37 +180,28 @@ export class Term extends Terminal {
 
 
     info(message: string) {
-
-        // this.log(message, format.yellow(format.symbols.info));
-        // this.log(message, format.yellow("ℹ"));
         this._log(format.greenBright(message), format.greenBright("🛈"));
     }
 
-
-    // _log(message: string, icon: string = " ") {
-    //     message = `${this.time()}  ${icon}  ${message}`
-
-    //     if (this.mpyc.workerReady) {
-    //         this.mpyc.print(message)
-    //     } else {
-    //         this.writeln(message);
-    //     }
-    // }
     _log(message: string, icon: string = " ") {
         message = `${this.time()}  ${icon}  ${message}`
 
         this._write_liveln(message)
     }
     _write_liveln(message: string) {
-        this.writeln(this._control(this.livePanel) + message)
-        if (this.livePanel != "") {
-            this.writeln(this.livePanel)
+        if (this.isLivePanelVisible) {
+            this.writeln(this._control(this.livePanel) + message)
+            if (this.livePanel != "") {
+                this.writeln(this.livePanel)
+            }
         }
     }
     _write_live(message: string) {
-        this.write(this._control(this.livePanel) + message)
-        if (this.livePanel != "") {
-            this.writeln(this.livePanel)
+        if (this.isLivePanelVisible) {
+            this.write(this._control(this.livePanel) + message)
+            if (this.livePanel != "") {
+                this.writeln(this.livePanel)
+            }
         }
     }
 
@@ -196,43 +210,21 @@ export class Term extends Terminal {
     }
 
     _control(message: string) {
-        // return `${CARRIAGE_RETURN}${CURSOR_UP.repeat(this._height(message))}${ERASE_IN_LINE.repeat(this._height(message))}`
         if (message == "") {
             return ""
         }
 
         return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
-        // return `${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message))}`
     }
 
     live(message: string) {
-        message = `${this.time()}\n${format.grey50(message)}`
-        this.writeln(this._control(this.livePanel) + message)
-        this.livePanel = message;
+        if (this.isLivePanelVisible) {
+            // message = `${this.time()}\n${format.grey50(message)}`
+            message = `\n${message}`
+            this.writeln(this._control(this.livePanel) + message)
+            this.livePanel = message;
+        }
     }
-
-    // EraseInLine: f"\x1b[{param}K"
-    // CARRIAGE_RETURN: f"\r"
-    // CURSOR_UP: f"\x1b[{param}A"
-    // _, height = self._shape
-    // return Control(
-    //     ControlType.CARRIAGE_RETURN,
-    //     (ControlType.ERASE_IN_LINE, 2),
-    //     *(
-    //         (
-    //             (ControlType.CURSOR_UP, 1),
-    //             (ControlType.ERASE_IN_LINE, 2),
-    //         )
-    //         * (height - 1)
-    //     )
-    // )
-
-
-    // trace(message: string) {
-    //     // this.log(message, format.yellow(format.symbols.info));
-    //     // this.log(message, format.yellow("ℹ"));
-    //     this.log(format.purple(message), format.purple("⚒"));
-    // }
 
     success(message: string) {
         this._log(message, format.green(format.symbols.check));
@@ -270,7 +262,7 @@ export class Term extends Terminal {
 
     updateTermSizeEnv = () => {
         console.log("updating terminal size env: ", this.cols, this.rows);
-        this.mpyc.updateEnv("COLUMNS", this.cols.toString())
-        this.mpyc.updateEnv("LINES", this.rows.toString())
+        this.mpyc.runtime.updateEnv("COLUMNS", this.cols.toString())
+        this.mpyc.runtime.updateEnv("LINES", this.rows.toString())
     }
 }

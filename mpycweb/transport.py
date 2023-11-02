@@ -121,7 +121,6 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
         Args:
             message (bytes): The message received from the runtime.
         """
-        # print(f"data_received {message}")
         self._protocol.data_received(message)
 
     def on_ready_message(self, message: str):

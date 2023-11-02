@@ -19,7 +19,6 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 
-from rich import print
 from rich.style import Style
 from rich.filesize import decimal
 from rich.markup import escape
@@ -27,11 +26,8 @@ from rich.text import Text
 from rich.tree import Tree
 
 
-from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
-from pyodide.ffi import JsProxy, to_js
-
-from .log_levels import *
-from .stats import stats, print_to_string
+from mpycweb.lib.log_levels import *
+from mpycweb.lib.stats import stats, print_to_string
 
 console = Console(
     color_system="truecolor",
@@ -204,28 +200,6 @@ class Handler(RichHandler):
 
 
 loop = asyncio.get_event_loop()
-
-
-def display(msg):
-    """
-    Displays a message.
-
-    Args:
-        msg (str): The message to display.
-    """
-    xworker.postMessage(to_js(["display", msg]))
-    # xworker.sync.display(msg)
-
-
-def display_error(msg):
-    """
-    Displays a message.
-
-    Args:
-        msg (str): The message to display.
-    """
-    xworker.postMessage(to_js(["display:error", msg]))
-    # xworker.sync.displayError(msg)
 
 
 class TermWriter(io.StringIO):

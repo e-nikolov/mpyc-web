@@ -1,6 +1,7 @@
 """
 patches.py
 """
+
 # pylint: disable=import-error
 from io import TextIOWrapper
 import time
@@ -12,10 +13,8 @@ import asyncio
 import builtins
 
 import js
-import io
 
 # pyright: reportMissingImports=false
-from polyscript import xworker
 
 
 from pyodide.code import run_js
@@ -27,82 +26,11 @@ from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: di
 from mpyc.runtime import mpc, Runtime  # pylint: disable=import-error,disable=no-name-in-module
 
 
-from . import peerjs
-from .stats import stats
+from . import proxy
+from .lib.stats import stats
+from . import api
 
 logger = logging.getLogger(__name__)
-
-# https://github.com/pyodide/pyodide/issues/4006
-# The pyodide Webloop relies onsetTimeout(), which has a minimum delay of 4ms
-# this slows down code that uses await asyncio.sleep(0)
-# This monkey patch replaces setTimeout() with a faster version that uses MessageChannel
-run_js("""
-//import genericPool from 'https://cdn.jsdelivr.net/npm/generic-pool@3.9.0/+esm'
-
-addEventListener("error", (e) => {
-    console.warn(e.error);
-});
-
-const oldSetTimeout = setTimeout;
-
-function fastSetTimeout(callback, delay) {
-    if (delay == undefined || isNaN(delay) || delay < 0) {
-        delay = 0;
-    }
-    if (delay < 1) {
-        const channel = new MessageChannel();
-        channel.port1.onmessage = () => { callback() };
-        channel.port2.postMessage('');
-    } else {
-        oldSetTimeout(callback, delay);
-    }
-}
-
-
-// import pool from 'generic-pool'
-
-// const channelPool = pool.createPool(
-//     {
-//         create: async () => {
-//             return new MessageChannel();
-//         },
-//         destroy: async (channel) => {
-//             channel.port1.close();
-//             channel.port2.close();
-//         }
-//     },
-//     {
-//         max: 100,
-//         min: 30,
-//     }
-// )
-
-// export function callSoon(callback: () => void, delay: number = 0) {
-//     if (delay == undefined || isNaN(delay) || delay < 0) {
-//         delay = 0;
-//     }
-//     if (delay < 1) {
-//         channelPool.acquire().then(channel => {
-//             channel.port1.onmessage = () => { channelPool.release(channel); callback() };
-//             channel.port2.postMessage('');
-//         });
-//     } else {
-//         setTimeout(callback, delay);
-//     }
-// }
-
-        """)
-webloop.setTimeout = js.fastSetTimeout
-
-
-# async def stats_printer():
-#     while True:
-#         xworker.sync.log(f"Python Worker Stats")
-#         xworker.sync.log(f"{stats.stats}")
-#         await asyncio.sleep(5)
-
-
-# asyncio.ensure_future(stats_printer())
 
 
 def run(self, f):
@@ -136,7 +64,7 @@ async def start(runtime: Runtime) -> None:
     """
     loop = runtime._loop  # pylint: disable=protected-access
 
-    pjs = peerjs.Client(loop)
+    pjs = proxy.Client(loop)
 
     logger.debug("monkey patched start()")
     logger.info(f"Start MPyC runtime v{runtime.version} with a PeerJS transport")
@@ -271,10 +199,55 @@ async def shutdown(self):
 #         peer.protocol.close_connection()
 #     await self.parties[self.pid].protocol
 
+builtins.input = api.readline
+
 old_open = builtins.open
 
 import rich
 import os
+import js
+
+from pyodide.code import run_js
+
+run_js("""
+       
+    function stringToArrayBuffer(str) {
+        var buf = new ArrayBuffer(str.length);
+        var bufView = new Uint8Array(buf);
+
+        for (var i=0, strLen=str.length; i<strLen; i++) {
+            bufView[i] = str.charCodeAt(i);
+        }
+
+        return buf;
+    }
+    
+    function js_fetch2(url) {
+        url = "/./" + url;
+        
+        console.log("fetching", url)
+        const request = new XMLHttpRequest();
+        request.open("GET", url, false); // `false` makes the request synchronous
+        //request.responseType = "arraybuffer";
+        request.send(null);
+
+        if (request.status === 200) {
+            
+            return stringToArrayBuffer(request.response);
+        }
+        throw new Error("Could not fetch " + url);
+    }
+    
+    async function js_fetch(url) {
+        console.log("fetching", url)
+        let res = await fetch("./" + url);
+        let ab = await res.arrayBuffer();
+        return new Uint8Array(ab);
+    };
+    
+    """)
+
+from polyscript import xworker
 
 
 def open_fetch(*args, **kwargs):
@@ -294,10 +267,12 @@ def open_fetch(*args, **kwargs):
     try:
         return old_open(*args, **kwargs)
     except FileNotFoundError as e:
-        data = xworker.sync.fetch(e.filename).to_py()
+        # data = api.fetch(e.filename)
+        # data = js.js_fetch(e.filename)
+        data = xworker.sync.fetch(e.filename)
         os.makedirs(os.path.dirname(e.filename), exist_ok=True)
         f = old_open(e.filename, "wb+")
-        f.write(data)
+        f.write(data.to_py())
         f.close()
 
         return old_open(*args, **kwargs)

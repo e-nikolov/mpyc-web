@@ -12,8 +12,8 @@ export const channelPool = pool.createPool(
         }
     },
     {
-        max: 100,
-        min: 30,
+        min: 1000,
+        max: 10000,
         //         // maxWaitingClients: 1000,
         //         // testOnBorrow: true,
         //         // testOnReturn: true,
@@ -28,7 +28,7 @@ export const channelPool = pool.createPool(
     }
 )
 
-export const callSoon = callSoon_new
+export const callSoon = callSoon_pool
 
 export function callSoon_pool(callback: (args: void) => void, delay?: number) {
     if (delay == undefined || isNaN(delay) || delay < 0) {
