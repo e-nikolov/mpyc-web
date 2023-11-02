@@ -1,4 +1,4 @@
-import { MPyCManager } from '../lib/mpyc';
+import { MPCManager } from '../lib/mpyc';
 import * as app from '.';
 import { Tooltip } from 'bootstrap';
 import { EditorView } from '@codemirror/view';
@@ -17,9 +17,10 @@ import { ControllerOptions } from './elements';
 
 // import * as polyscript from "polyscript";
 import { makeSplitJS } from './split';
+import { MPCRuntimeBase } from '../lib/runtimes/MPCRuntimeBase';
 
 export class Controller {
-    mpyc: MPyCManager;
+    mpyc: MPCManager;
 
     editor: app.Editor;
     term: app.Term;
@@ -39,7 +40,7 @@ export class Controller {
     scanQRInput: HTMLInputElement;
     versionDiv: HTMLDivElement;
 
-    constructor(mpyc: MPyCManager, opts: ControllerOptions) {
+    constructor(mpyc: MPCManager, opts: ControllerOptions) {
         this.mpyc = mpyc;
 
         this.demoSelect = $<HTMLSelectElement>(opts.demoSelectSelector);
@@ -64,9 +65,9 @@ export class Controller {
         this.init(mpyc, opts);
     }
 
-    init(mpyc: MPyCManager, opts: ControllerOptions) {
+    init(mpyc: MPCManager, opts: ControllerOptions) {
         this.term.info(`Initializing ${format.green('PeerJS')}...`);
-        this.term.info(`Initializing ${format.green('PyScript')} runtime...`);
+        this.term.info(`Initializing ${format.green(mpyc.runtime.type())} runtime...`);
 
         this.updateHostPeerIDInput();
 
@@ -80,24 +81,11 @@ export class Controller {
         this.setupGlobals();
     }
 
-    pingWorker = () => {
-        withTimeout(this.mpyc.worker.sync.ping()).then(
-            res => {
-                if (!res) {
-                    console.warn("PyScript runtime is not responding.");
-                    // this.term.error("PyScript runtime is not responding.");
-                }
-            }
-        )
-
-        setTimeout(this.pingWorker, 5000)
-    }
-
-    setupMPyCEvents(mpyc: MPyCManager) {
+    setupMPyCEvents(mpyc: MPCManager) {
         addEventListener("error", (e) => {
             this.term.error(e.error);
         });
-        mpyc.on('peerjs:ready', (peerID: string) => {
+        mpyc.on('transport:ready', (peerID: string) => {
             this.myPeerIDEl.value = app.safe(peerID);
             app.setTabState('myPeerID', peerID);
 
@@ -105,45 +93,49 @@ export class Controller {
             this.term.success(`${format.green("PeerJS")} ready with ID: ${format.peerID(peerID)}`);
             this.updatePeersDiv(mpyc);
         });
-        mpyc.on('peerjs:closed', () => { this.term.error('PeerJS closed.'); });
-        mpyc.on('peerjs:error', (err: Error) => {
+        mpyc.on('transport:closed', () => { this.term.error('PeerJS closed.'); });
+        mpyc.on('transport:error', (err: Error) => {
             this.term.warn(`PeerJS failed: ${err.message}`);
             console.warn(`PeerJS failed: ${err.message}\n${err.stack}`);
 
             if (err.message === "Lost connection to server.") {
                 setTimeout(() => {
-                    this.mpyc.peer.reconnect();
+                    this.mpyc.transport.reconnect();
                 }, 1000);
             };
         });
-        mpyc.on('peerjs:conn:ready', this.onPeerConnectedHook);
-        mpyc.on('peerjs:conn:disconnected', this.onPeerDisconnectedHook);
-        mpyc.on('peerjs:conn:error', this.onPeerConnectionErrorHook);
-        mpyc.on('peerjs:conn:data:user:chat', this.processChatMessage);
-        mpyc.on('worker:error', (err: ErrorEvent) => { this.term.error(err.error); });
-        mpyc.on('worker:message', (e: MessageEvent) => { this.term.writeln(e.data); });
-        mpyc.on('worker:messageerror', (err: MessageEvent) => { this.term.error(err.data); });
-        mpyc.on('worker:run', (mpyc: MPyCManager) => { this.updatePeersDiv(mpyc); });
-        mpyc.on('worker:display', (message: string) => { this.term.display(message); });
-        mpyc.on('worker:display:error', (message: string) => { this.term.displayError(message) });
-        mpyc.on('worker:stats', (stats: string) => {
+        mpyc.on('transport:conn:ready', this.onPeerConnectedHook);
+        mpyc.on('transport:conn:disconnected', this.onPeerDisconnectedHook);
+        mpyc.on('transport:conn:error', this.onPeerConnectionErrorHook);
+        mpyc.on('transport:conn:data:custom', this.processChatMessage);
+        mpyc.on('runtime:error', (err: ErrorEvent) => { this.term.error(err.error); });
+        // mpyc.on('runtime:message', (e: MessageEvent) => { this.term.writeln(e.data); });
+        mpyc.on('runtime:messageerror', (err: MessageEvent) => { this.term.error(err.data); });
+        mpyc.on('runtime:exec:done', () => { this.updatePeersDiv(this.mpyc); });
+        mpyc.on('runtime:exec:init', () => { this.updatePeersDiv(this.mpyc); });
+        mpyc.on('runtime:display', (message: string) => { this.term.display(message); });
+        mpyc.on('runtime:display:error', (message: string) => { this.term.displayError(message) });
+        mpyc.on('runtime:display:stats', (stats: string) => {
             this.term.live(stats)
         });
-        mpyc.on('worker:ready', () => {
-            console.log("PyScript runtime ready.")
 
-            this.term.success(`${format.green("PyScript")} runtime ready.`);
+
+
+        mpyc.on('runtime:ready', () => {
+            console.log(`${mpyc.runtime.type()} runtime ready.`)
+
+            this.term.success(`${format.green(mpyc.runtime.type())} runtime ready.`);
             // setTimeout(this.pingWorker, 3000);
         });
-        mpyc.on('peerjs:conn:data:mpyc:ready', () => { this.updatePeersDiv(mpyc); });
+        // mpyc.on('transport:conn:data:mpyc', () => { this.updatePeersDiv(mpyc); });
     }
 
-    setupButtonEvents(mpyc: MPyCManager, opts: ControllerOptions) {
-        this.resetPeerIDButton.addEventListener('click', () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetPeer(""); });
-        this.stopMPyCButton.addEventListener('click', () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetWorker(); });
+    setupButtonEvents(mpyc: MPCManager, opts: ControllerOptions) {
+        this.resetPeerIDButton.addEventListener('click', () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(); });
+        this.stopMPyCButton.addEventListener('click', () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
         this.runMPyCButton.addEventListener('click', () => { mpyc.runMPC(this.editor.getCode(), false); });
         this.runMPyCAsyncButton.addEventListener('click', () => mpyc.runMPC(this.editor.getCode(), true));
-        this.connectToPeerButton.addEventListener('click', () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.connectToPeer(this.hostPeerIDInput.value) });
+        this.connectToPeerButton.addEventListener('click', () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
         this.sendMessageButton.addEventListener('click', () => { this.sendChatMessage(); });
         this.clearTerminalButton.addEventListener('click', () => { this.term.clear(); });
 
@@ -167,7 +159,7 @@ export class Controller {
         window.editor = this.editor;
         window.term = this.term;
         window.clearTabCount = () => { delete localStorage.tabCount }
-        window.r = () => { this.mpyc.reset("") };
+        window.r = () => { this.mpyc.reset() };
         window.run = async () => this.mpyc.runMPC(this.editor.getCode(), false);
         window.runa = async () => this.mpyc.runMPC(this.editor.getCode(), true);
         // window.ps2 = polyscript;
@@ -188,7 +180,7 @@ export class Controller {
 
 declare global {
     interface Window {
-        mpyc: MPyCManager;
+        mpyc: MPCManager;
         clearTabCount: any;
         r: any;
         app: Controller

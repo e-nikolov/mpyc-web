@@ -1,22 +1,22 @@
 packages = ["emfs:./mpyc_web-0.4.0-py3-none-any.whl"]
 
-[[fetch]]
-from = "./py/mpycweb"
-to_folder = "./mpycweb"
-files = [
-    "__init__.py",
-    "patches.py",
-    "peerjs.py",
-    "transport.py",
-    "worker_init.py",
-    "worker.py",
-    "log_levels.py",
-    "bench.py",
-    "log.py",
-    "stats.py",
-    "bootstrap.py",
-    "benches/__init__.py"
-]
+# [[fetch]]
+# from = "./py/mpycweb"
+# to_folder = "./mpycweb"
+# files = [
+#     "__init__.py",
+#     "patches.py",
+#     "peerjs.py",
+#     "transport.py",
+#     "worker_init.py",
+#     "worker.py",
+#     "log_levels.py",
+#     "bench.py",
+#     "log.py",
+#     "stats.py",
+#     "bootstrap.py",
+#     "benches/__init__.py"
+# ]
 
 [[fetch]]
 from = "./py/"

@@ -2,15 +2,23 @@
 
 import '../scss/style.scss';
 
-import { MPyCManager } from './lib/mpyc';
+import { MPCManager } from './lib/mpyc';
 import * as app from './app';
+import { PyScriptInterpreter } from './lib/runtimes/PyScriptInterpreter';
+import { PeerJSTransport } from './lib/transports/PeerJS';
+import { PyScriptXWorker } from './lib/runtimes/PyScriptXWorker';
 
 
 function main() {
     app.ensureStorageSchema(18);
     let peerID = app.loadPeerID();
 
-    let mpyc = new MPyCManager(peerID, "./py/shim.py", "config.toml", { COLUMNS: "110" });
+    const transportFactory = () => new PeerJSTransport(peerID);
+    const runtimeFactory = () => new PyScriptXWorker("./py/mpycweb/shim/shim.py", "./config.toml", { COLUMNS: "110" });
+    // const runtimeFactory = (mpc: MPCManager) => new PyScriptInterpreter(mpc, "./py/mpycweb/shim/shim.py", "./config.toml", { COLUMNS: "110" });
+
+    // let mpyc = new MPCManager(peerID, { COLUMNS: "110" }, () => { return new PyScriptInterpreter(this) });
+    let mpyc = new MPCManager(transportFactory, runtimeFactory);
 
     new app.Controller(mpyc, {
         terminalSelector: '#terminal',
