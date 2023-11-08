@@ -21,21 +21,21 @@ export function safe(text: string) {
     return DOMPurify.sanitize(text);
 }
 
-export function onPeerConnectedHook(this: Controller, newPeerID: string) {
+export async function onPeerConnectedHook(this: Controller, newPeerID: string) {
     this.term.success(`Connected to: ${format.peerID(newPeerID)}`);
     this.updatePeersDiv(this.mpyc);
 }
-export function onPeerConnectionErrorHook(this: Controller, peerID: string, err: Error, mpyc: MPCManager) {
+export async function onPeerConnectionErrorHook(this: Controller, peerID: string, err: Error, mpyc: MPCManager) {
     this.term.error(`Failed to connect to: ${format.peerID(peerID)}: ${err.message}`);
     this.updatePeersDiv(mpyc);
 }
 
-export function onPeerDisconnectedHook(this: Controller, disconnectedPeerID: string, mpyc: MPCManager) {
+export async function onPeerDisconnectedHook(this: Controller, disconnectedPeerID: string, mpyc: MPCManager) {
     this.term.error(`Disconnected from: ${format.peerID(disconnectedPeerID)}`);
     this.updatePeersDiv(mpyc);
 }
 
-export function updatePeersDiv(this: Controller, mpyc: MPCManager) {
+export async function updatePeersDiv(this: Controller, mpyc: MPCManager) {
     console.log("updating the peers div")
     this.knownPeersEl.innerHTML = "";
     mpyc.transport.getPeers(true).forEach((p, pid) => {
