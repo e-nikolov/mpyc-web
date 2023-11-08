@@ -9,7 +9,7 @@ export function sendChatMessage(this: Controller) {
     this.mpyc.transport.broadcast('chat', message)
 }
 
-export function processChatMessage(this: Controller, peerID: string, data: AnyData) {
+export async function processChatMessage(this: Controller, peerID: string, data: AnyData) {
     if (data.type != 'chat') {
         console.warn("unknown message type", data)
         return;

@@ -1,6 +1,7 @@
 import { Peer, DataConnection, PeerOptions } from "peerjs";
 
 import { EventEmitter } from 'eventemitter3'
+import Emittery from 'emittery'
 import { MPCEvents, PeerJSData, PeerJSTransportData, TransportEvents, Transport, AnyData, PeersData } from '../mpyc/events'
 import { callSoon, callSoon_pool, channelPool, sleep } from '../utils'
 import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
@@ -12,7 +13,8 @@ import { PyScriptInterpreter } from "../runtimes/PyScriptInterpreter";
 type ConnMap = Map<string, DataConnection>;
 
 
-export class PeerJSTransport extends EventEmitter<TransportEvents> implements Transport {
+// export class PeerJSTransport extends EventEmitter<TransportEvents> implements Transport {
+export class PeerJSTransport extends Emittery<TransportEvents> implements Transport {
     peer: Peer;
     conns: ConnMap = new Map<string, DataConnection>();
 
@@ -44,26 +46,26 @@ export class PeerJSTransport extends EventEmitter<TransportEvents> implements Tr
     id = () => this.peer.id;
 
     private addPeerEventHandlers(peer: Peer) {
-        peer.on('open', (peerID) => { this.emit('ready', peerID); });
-        peer.on('error', (err) => { this.emit('error', err); });
-        peer.on('close', () => { this.emit('closed'); });
-        peer.on('connection', (conn: DataConnection) => { this.addConnEventHandlers(conn); });
+        peer.on('open', async (peerID) => { this.emit('ready', peerID); });
+        peer.on('error', async (err) => { this.emit('error', err); });
+        peer.on('close', async () => { this.emit('closed'); });
+        peer.on('connection', async (conn: DataConnection) => { this.addConnEventHandlers(conn); });
     }
 
     private addConnEventHandlers(conn: DataConnection) {
         console.log("new peer connection from", conn.peer)
-        conn.on('open', () => {
+        conn.on('open', async () => {
             this.conns.set(conn.peer, conn);
             this.sendPeers(conn);
             this.emit('conn:ready', conn.peer);
         });
-        conn.on('error', (err: Error) => { this.emit('conn:error', conn.peer, err) });
-        conn.on('close', () => {
+        conn.on('error', async (err: Error) => { this.emit('conn:error', { peerID: conn.peer, err }) });
+        conn.on('close', async () => {
             this.conns.delete(conn.peer);
             this.emit('conn:disconnected', conn.peer);
         });
 
-        conn.on('data', (data: PeerJSTransportData) => {
+        conn.on('data', async (data: PeerJSTransportData) => {
             let { type, payload } = data;
 
             switch (type) {
@@ -71,27 +73,29 @@ export class PeerJSTransport extends EventEmitter<TransportEvents> implements Tr
                     this.processNewPeers(payload);
                     break;
                 default:
-                    this.emit(`conn:data`, conn.peer, data);
+                    this.emit(`conn:data`, { peerID: conn.peer, data });
                     break;
             }
         });
     }
 
-    send(peerID: string, type: string, payload: any) {
+    async send(peerID: string, type: string, payload: any) {
         // console.warn("sending", peerID, typeof peerID)
         // console.warn("sending", peerID, this.conns, this.conns[peerID])
+
         this.conns.get(peerID).send({ type, payload });
+
+
+
     }
 
-    __send(conn: DataConnection, type: string, payload: any) {
-        conn.send({ type, payload });
-    }
+
     destroy() {
         this.peer.destroy();
     }
 
     // TODO formally prove that this always results in a full mesh
-    private processNewPeers = (newPeers: string[]) => {
+    private processNewPeers = async (newPeers: string[]) => {
         newPeers.forEach(peerID => {
 
             if (!this.conns.get(peerID) && peerID != this.peer.id) {
@@ -100,15 +104,14 @@ export class PeerJSTransport extends EventEmitter<TransportEvents> implements Tr
         });
     }
 
-    broadcast(type: string, payload: any) {
+    async broadcast(type: string, payload: any) {
         this.conns.forEach(conn => {
             this.send(conn.peer, `user:${type}`, payload);
         });
     }
 
-    private sendPeers(conn: DataConnection) {
-
-        this.__send(conn, 'peers', this.getPeers())
+    private async sendPeers(conn: DataConnection) {
+        conn.send({ type: 'peers', payload: this.getPeers() })
     }
 
     getPeers(includeSelf = false) {
@@ -121,13 +124,11 @@ export class PeerJSTransport extends EventEmitter<TransportEvents> implements Tr
         return peers.sort();
     }
 
-    connect(peerID: string) {
+    async connect(peerID: string) {
         let conn = this.peer.connect(peerID, {
             reliable: true
         });
 
         this.addConnEventHandlers(conn);
     }
-
-
 }

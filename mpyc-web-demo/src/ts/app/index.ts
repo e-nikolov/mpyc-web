@@ -85,7 +85,7 @@ export class Controller {
         addEventListener("error", (e) => {
             this.term.error(e.error);
         });
-        mpyc.on('transport:ready', (peerID: string) => {
+        mpyc.on('transport:ready', async (peerID: string) => {
             this.myPeerIDEl.value = app.safe(peerID);
             app.setTabState('myPeerID', peerID);
 
@@ -93,8 +93,8 @@ export class Controller {
             this.term.success(`${format.green("PeerJS")} ready with ID: ${format.peerID(peerID)}`);
             this.updatePeersDiv(mpyc);
         });
-        mpyc.on('transport:closed', () => { this.term.error('PeerJS closed.'); });
-        mpyc.on('transport:error', (err: Error) => {
+        mpyc.on('transport:closed', async () => { this.term.error('PeerJS closed.'); });
+        mpyc.on('transport:error', async (err: Error) => {
             this.term.warn(`PeerJS failed: ${err.message}`);
             console.warn(`PeerJS failed: ${err.message}\n${err.stack}`);
 
@@ -108,39 +108,39 @@ export class Controller {
         mpyc.on('transport:conn:disconnected', this.onPeerDisconnectedHook);
         mpyc.on('transport:conn:error', this.onPeerConnectionErrorHook);
         mpyc.on('transport:conn:data:custom', this.processChatMessage);
-        mpyc.on('runtime:error', (err: ErrorEvent) => { this.term.error(err.error); });
-        // mpyc.on('runtime:message', (e: MessageEvent) => { this.term.writeln(e.data); });
-        mpyc.on('runtime:messageerror', (err: MessageEvent) => { this.term.error(err.data); });
-        mpyc.on('runtime:exec:done', () => { this.updatePeersDiv(this.mpyc); });
-        mpyc.on('runtime:exec:init', () => { this.updatePeersDiv(this.mpyc); });
-        mpyc.on('runtime:display', (message: string) => { this.term.display(message); });
-        mpyc.on('runtime:display:error', (message: string) => { this.term.displayError(message) });
-        mpyc.on('runtime:display:stats', (stats: string) => {
+        mpyc.on('runtime:error', async (err: ErrorEvent) => { this.term.error(err.error); });
+        // mpyc.on('runtime:message',async  (e: MessageEvent) => { this.term.writeln(e.data); });
+        mpyc.on('runtime:messageerror', async (err: MessageEvent) => { this.term.error(err.data); });
+        mpyc.on('runtime:exec:done', async () => { this.updatePeersDiv(this.mpyc); });
+        mpyc.on('runtime:exec:init', async () => { this.updatePeersDiv(this.mpyc); });
+        mpyc.on('runtime:display', async (message: string) => { this.term.display(message); });
+        mpyc.on('runtime:display:error', async (message: string) => { this.term.displayError(message) });
+        mpyc.on('runtime:display:stats', async (stats: string) => {
             this.term.live(stats)
         });
 
 
 
-        mpyc.on('runtime:ready', () => {
+        mpyc.on('runtime:ready', async () => {
             console.log(`${mpyc.runtime.type()} runtime ready.`)
 
             this.term.success(`${format.green(mpyc.runtime.type())} runtime ready.`);
             // setTimeout(this.pingWorker, 3000);
         });
-        // mpyc.on('transport:conn:data:mpyc', () => { this.updatePeersDiv(mpyc); });
+        // mpyc.on('transport:conn:data:mpyc', async () => { this.updatePeersDiv(mpyc); });
     }
 
     setupButtonEvents(mpyc: MPCManager, opts: ControllerOptions) {
-        this.resetPeerIDButton.addEventListener('click', () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(); });
-        this.stopMPyCButton.addEventListener('click', () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
-        this.runMPyCButton.addEventListener('click', () => { mpyc.runMPC(this.editor.getCode(), false); });
-        this.runMPyCAsyncButton.addEventListener('click', () => mpyc.runMPC(this.editor.getCode(), true));
-        this.connectToPeerButton.addEventListener('click', () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
-        this.sendMessageButton.addEventListener('click', () => { this.sendChatMessage(); });
-        this.clearTerminalButton.addEventListener('click', () => { this.term.clear(); });
+        this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(); });
+        this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
+        this.runMPyCButton.addEventListener('click', async () => { mpyc.runMPC(this.editor.getCode(), false); });
+        this.runMPyCAsyncButton.addEventListener('click', async () => mpyc.runMPC(this.editor.getCode(), true));
+        this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
+        this.sendMessageButton.addEventListener('click', async () => { this.sendChatMessage(); });
+        this.clearTerminalButton.addEventListener('click', async () => { this.term.clear(); });
 
         // CHAT
-        this.chatInput.addEventListener('keypress', (e: Event) => {
+        this.chatInput.addEventListener('keypress', async (e: Event) => {
             let ev = e as KeyboardEvent;
 
             if (ev.key === 'Enter' && !ev.shiftKey) {
