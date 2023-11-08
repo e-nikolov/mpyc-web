@@ -1,4 +1,6 @@
 import { EventEmitter } from 'eventemitter3'
+import Emittery from 'emittery'
+
 import { MPCEvents, PeerJSData, TransportEvents, Transport, AnyData, PassThroughRuntimeEvents } from './events'
 import { callSoon, callSoon_pool, channelPool, sleep } from '../utils'
 import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
@@ -14,14 +16,14 @@ type options = {
     env?: { [key: string]: string }
 }
 
-
 const wrapEvent = (runtime: MPCRuntimeBase, manager: MPCManager, event: keyof PassThroughRuntimeEvents) => {
-    runtime.on(event, (...args: EventEmitter.EventArgs<PassThroughRuntimeEvents, EventEmitter.EventNames<PassThroughRuntimeEvents>>) => {
-        manager.emit(`runtime:${event}`, ...args);
+    runtime.on(event, (data) => {
+        manager.emit(`runtime:${event}`, data);
     })
 }
 
-export class MPCManager extends EventEmitter<MPCEvents> {
+// export class MPCManager extends EventEmitter<MPCEvents> {
+export class MPCManager extends Emittery<MPCEvents> {
     transport: Transport;
     peerIDToPID: Map<string, number> = new Map<string, number>();
     pidToPeerID: Map<number, string> = new Map<number, string>();
@@ -77,12 +79,12 @@ export class MPCManager extends EventEmitter<MPCEvents> {
         transport.on('error', (err) => { this.emit('transport:error', err); });
         transport.on('conn:ready', (peerID: string) => { this.emit('transport:conn:ready', peerID); });
         transport.on('conn:disconnected', (peerID: string) => { this.emit('transport:conn:disconnected', peerID); });
-        transport.on('conn:error', (peerID: string, err: Error) => { this.emit('transport:conn:error', peerID, err); });
-        transport.on('conn:data', (peerID: string, data: PeerJSData) => {
+        transport.on('conn:error', ({ peerID, err }) => { this.emit('transport:conn:error', { peerID, err }); });
+        transport.on('conn:data', ({ peerID, data }) => {
             switch (data.type) {
                 case 'mpyc:ready': this.processReadyMessage(peerID, data.payload); break;
                 case 'mpyc:runtime': this.processRuntimeMessage(peerID, data.payload); break;
-                default: this.emit(`transport:conn:data:custom`, peerID, data);
+                default: this.emit(`transport:conn:data:custom`, { peerID, data });
             }
         });
     }
@@ -98,7 +100,7 @@ export class MPCManager extends EventEmitter<MPCEvents> {
             this.emit('runtime:ready');
         })
 
-        runtime.on('send', (type: string, pid: number, payload: any) => {
+        runtime.on('send', ({ type, pid, payload }) => {
             this.sendMPCMessage(type, pid, payload)
         })
     }

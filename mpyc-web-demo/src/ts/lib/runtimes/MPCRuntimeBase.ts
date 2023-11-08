@@ -6,6 +6,8 @@ import { callSoon, callSoon_pool, channelPool, sleep } from '../utils'
 import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
 import { PyodideXWorker } from "./PyodideXWorker";
 import { MPCManager } from "../mpyc";
+import Emittery from 'emittery'
+
 type ConnMap = Map<string, DataConnection>;
 
 
@@ -41,7 +43,8 @@ declare global {
     }
 }
 
-export abstract class MPCRuntimeBase extends EventEmitter<RuntimeEvents> {
+// export abstract class MPCRuntimeBase extends EventEmitter<RuntimeEvents> {
+export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
     peersReady: Map<string, boolean> = new Map<string, boolean>();
     workerReady = false;
     running = false;
@@ -89,18 +92,18 @@ export abstract class MPCRuntimeBase extends EventEmitter<RuntimeEvents> {
                 case "proxy:js:mpc:msg:ready":
                     let [pid1, message1] = args
                     // console.log(message1, typeof message1)
-                    // if (message1.getBuffer) {
-                    //     message1 = message1.getBuffer()
-                    // }
-                    this.emit('send', "ready", pid1, message1)
+                    if (message1.getBuffer) {
+                        message1 = message1.getBuffer()
+                    }
+                    this.emit('send', { type: "ready", pid: pid1, payload: message1 })
                     break;
                 case "proxy:js:mpc:msg:runtime":
                     let [pid2, message2] = args
                     // console.log(message2, typeof message1)
-                    // if (message2.getBuffer) {
-                    //     message2 = message2.getBuffer()
-                    // }
-                    this.emit('send', "runtime", pid2, message2)
+                    if (message2.getBuffer) {
+                        message2 = message2.getBuffer()
+                    }
+                    this.emit('send', { type: "runtime", pid: pid2, payload: message2 })
                     break;
                 case "proxy:js:display":
                     let [text] = args

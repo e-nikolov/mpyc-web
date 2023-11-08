@@ -1,26 +1,27 @@
 import { EventEmitter } from 'eventemitter3'
+import Emittery from 'emittery'
 
 export type MPCEvents = {
-    'runtime:error': (err: ErrorEvent) => void
-    'runtime:message': (e: MessageEvent) => void
-    'runtime:messageerror': (err: MessageEvent) => void
-    'runtime:exec:init': () => void;
-    'runtime:exec:done': () => void;
-    'runtime:display': (message: string) => void;
-    'runtime:display:error': (message: string) => void;
-    'runtime:display:stats': (stats: string) => void;
-    'runtime:ready': () => void;
+    'runtime:error': ErrorEvent
+    'runtime:message': MessageEvent
+    'runtime:messageerror': MessageEvent
+    'runtime:exec:init': never
+    'runtime:exec:done': never
+    'runtime:display': string;
+    'runtime:display:error': string;
+    'runtime:display:stats': string;
+    'runtime:ready': never;
 
 
-    'transport:ready': (peer: string) => void;
-    'transport:closed': () => void;
-    'transport:error': (err: Error) => void;
-    'transport:conn:ready': (peer: string) => void;
-    'transport:conn:disconnected': (peer: string) => void
-    'transport:conn:error': (peer: string, err: Error) => void
+    'transport:ready': string;
+    'transport:closed': never
+    'transport:error': Error;
+    'transport:conn:ready': string;
+    'transport:conn:disconnected': string
+    'transport:conn:error': { peerID: string, err: Error }
 
-    'transport:conn:data:mpyc': (peer: string, data: MPyCReadyData | MPyCRuntimeData) => void
-    'transport:conn:data:custom': (peer: string, data: AnyData) => void
+    'transport:conn:data:mpyc': { peerID: string, data: MPyCReadyData | MPyCRuntimeData }
+    'transport:conn:data:custom': { peerID: string, data: AnyData }
 
 };
 
@@ -31,7 +32,7 @@ export interface Conn {
     close(): void;
 }
 
-export interface Transport extends EventEmitter<TransportEvents> {
+export interface Transport extends Emittery<TransportEvents> {
     connect(peerID: string): void
     getPeers(includeSelf?: boolean): string[]
     send(peerID: string, type: string, payload: any): void;
@@ -42,29 +43,29 @@ export interface Transport extends EventEmitter<TransportEvents> {
 }
 
 export class TransportEvents {
-    'ready': (peer: string) => void;
-    'closed': () => void;
-    'error': (err: Error) => void;
-    'conn:ready': (peer: string) => void;
-    'conn:disconnected': (peer: string) => void
-    'conn:error': (peerID: string, err: Error) => void
-    'conn:data': (peerID: string, data: AnyData) => void
+    'ready': string;
+    'closed': never;
+    'error': Error;
+    'conn:ready': string;
+    'conn:disconnected': string
+    'conn:error': { peerID: string, err: Error }
+    'conn:data': { peerID: string, data: AnyData }
 }
 
 export class PassThroughRuntimeEvents {
-    'ready': () => void;
-    'exec:init': () => void;
-    'exec:done': () => void;
-    'error': (err: ErrorEvent) => void
-    'message': (e: MessageEvent) => void
-    'messageerror': (err: MessageEvent) => void
-    'display': (message: string) => void;
-    'display:error': (message: string) => void;
-    'display:stats': (stats: string) => void;
+    'ready': never;
+    'exec:init': never;
+    'exec:done': never;
+    'error': ErrorEvent
+    'message': MessageEvent
+    'messageerror': MessageEvent
+    'display': string;
+    'display:error': string;
+    'display:stats': string;
 }
 
 export type RuntimeEvents = PassThroughRuntimeEvents & {
-    'send': (type: string, pid: number, payload: any) => void;
+    'send': { type: string, pid: number, payload: any };
 }
 
 export type MPyCReadyData = {

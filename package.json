@@ -58,6 +58,7 @@
     "coi-serviceworker": "^0.1.7",
     "coincident": "^0.14.2",
     "dompurify": "^3.0.6",
+    "emittery": "^1.0.1",
     "eventemitter3": "^5.0.1",
     "events": "^3.3.0",
     "fontfaceobserver": "^2.3.0",
