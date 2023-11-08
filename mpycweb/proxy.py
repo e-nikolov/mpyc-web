@@ -2,7 +2,8 @@
 This module provides a client for establishing connections with other peers using the PeerJS protocol.
 """
 
-from asyncio import AbstractEventLoop, Protocol, Transport, get_event_loop
+import asyncio
+
 import logging
 from typing import Any, Callable
 
@@ -14,6 +15,8 @@ from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: di
 from .transport import PeerJSTransport, AbstractClient
 from .lib.stats import stats
 from . import api
+from .run_mpc import run_mpc
+import js
 
 logger = logging.getLogger(__name__)
 
@@ -22,34 +25,44 @@ def noop():
     pass
 
 
-loop = get_event_loop()
+loop = asyncio.get_event_loop()
 
 
 def onmessage(on_ready_message=noop, on_runtime_message=noop):
     def _on_message(event):
+        # js.console.error("onmessage")
+
+        # [message_type, *rest] = event.data.to_py()
         [message_type, *rest] = event.data
 
         match message_type:
-            case "print":
-                [message] = rest
-
-                loop.call_soon(rich.print, rich.text.Text(message))
-            case "ready":
+            case "proxy:py:mpc:ready":
                 [pid, message] = rest
-                loop.call_soon(on_ready_message, pid, message)
-            case "runtime":
+                on_ready_message(pid, message)
+                # loop.call_soon(on_ready_message, pid, message)
+            case "proxy:py:mpc:runtime":
                 [pid, message] = rest
-                loop.call_soon(on_runtime_message, pid, message)
+                on_runtime_message(pid, message)
+                # loop.call_soon(on_runtime_message, pid, message)
+            case "proxy:py:mpc:exec":
+                [opts] = rest
+                asyncio.ensure_future(run_mpc(opts))
+                # loop.call_soon(run_mpc, opts)
+            case "proxy:py:env:update":
+                [env] = rest
+                api.update_env(env.to_py())
+                # api.loop.call_soon(api.update_env, env.to_py())
+            case "proxy:py:ping":
+                api.ping()
+                # api.loop.call_soon(api.ping)
             case _:
                 logger.warning(f"Received unknown message type {message_type}")
 
     return _on_message
 
 
-if api.IN_WORKER:
-    from polyscript import xworker  # pylint: disable=import-error
-
-    xworker.onmessage = onmessage()
+api.chanAsync.onmessage = onmessage()
+# xworker.onmessage = onmessage()
 
 
 class Client(AbstractClient):
@@ -73,18 +86,16 @@ class Client(AbstractClient):
         on_runtime_message(pid, message): Receives a runtime message from a peer.
     """
 
-    def __init__(self, _loop: AbstractEventLoop):
+    def __init__(self, _loop: asyncio.AbstractEventLoop):
         self.loop = _loop
 
         self.transports = {}
-        if api.IN_WORKER:
-            from polyscript import xworker  # pylint: disable=import-error
-
-            xworker.onmessage = onmessage(self.on_ready_message, self.on_runtime_message)
+        api.chanAsync.onmessage = onmessage(self.on_ready_message, self.on_runtime_message)
+        # xworker.onmessage = onmessage(self.on_ready_message, self.on_runtime_message)
 
     async def create_connection(
-        self, protocol_factory: Callable[[], asyncoro.MessageExchanger], loop: AbstractEventLoop, pid: int, listener: bool
-    ) -> tuple[Transport, Protocol]:
+        self, protocol_factory: Callable[[], asyncoro.MessageExchanger], loop: asyncio.AbstractEventLoop, pid: int, listener: bool
+    ) -> tuple[asyncio.Transport, asyncio.Protocol]:
         """
         Creates a new connection with the given protocol factory and event loop.
 
@@ -105,7 +116,7 @@ class Client(AbstractClient):
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     @stats.acc(lambda self, pid, message: stats.sent_to(pid, message))
     def send_ready_message(self, pid: int, message: str):
-        api.send_message("ready", pid, message)
+        api.send_message("proxy:js:mpc:msg:ready", pid, message)
 
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     @stats.acc(lambda self, pid, message: stats.received_from(pid, message))
@@ -133,7 +144,7 @@ class Client(AbstractClient):
         # logger.info("send_runtime_message")
         # logger.info(["runtime", pid, message])
         # logger.info(to_js(["runtime", pid, message]))
-        api.send_message("runtime", pid, message)
+        api.send_message("proxy:js:mpc:msg:runtime", pid, message)
 
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     # @stats.set(lambda self, pid, message: stats.received_from(pid, message))

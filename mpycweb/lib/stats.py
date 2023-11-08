@@ -16,6 +16,7 @@ about the arguments passed to a function.
 
 The `__init__` function at the end of the module initializes a global `stats` object of type `StatsCollector`.
 """
+
 import logging
 
 from typing import TypeVar, Callable, ParamSpec
@@ -24,11 +25,17 @@ import json
 import asyncio
 import gc
 import time
+from datetime import datetime
 import io
+import js
 
 import yaml
+import rich
+from rich.console import Console
 from rich.tree import Tree
 from rich.text import Text
+from rich.panel import Panel
+from rich.align import Align
 
 import mpycweb.lib.log_levels
 
@@ -37,7 +44,6 @@ logger = logging.getLogger(__name__)
 
 K = TypeVar("K")
 V = TypeVar("V")
-
 NestedDict = dict[K, V | "NestedDict[K, V]"]
 
 Numeric = int | float
@@ -113,10 +119,21 @@ R = TypeVar("R")
 
 def print_to_string(*args, **kwargs):
     output = io.StringIO()
-    print(*args, file=output, **kwargs)
+    rich.print(*args, file=output, **kwargs)
     contents = output.getvalue()
     output.close()
     return contents
+
+
+def rich_to_ansi(renderable):
+    """Convert text formatted with rich markup to standard string."""
+    with rich._console.capture() as capture:
+        rich.print(renderable)
+    return capture.get()
+
+
+def time_delta_fmt(time_a, time_b):
+    return datetime.utcfromtimestamp((time_a - time_b).total_seconds()).strftime("%X")
 
 
 class BaseStatsCollector:
@@ -131,6 +148,7 @@ class BaseStatsCollector:
     func: str = "$func"
     stats = DeepCounter[str]({})
     enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
+    start_time = datetime.now()
 
     def dec(
         self, counter_func: Callable[P, NestedDict[str, Numeric]], ff: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
@@ -202,6 +220,7 @@ class BaseStatsCollector:
         """
         self.stats = DeepCounter[str]()
         self.max_tasks = 0
+        self.start_time = datetime.now()
         self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
     def print_stats(self):
@@ -232,16 +251,29 @@ class BaseStatsCollector:
     def gc_stats(self):
         return gc.get_stats()
 
+    def channel_pool_stats(self):
+        return {
+            "size": js.channelPool.size,
+            "available": js.channelPool.available,
+            "borrowed": js.channelPool.borrowed,
+            "pending": js.channelPool.pending,
+        }
+
     def to_tree(self):
-        tree = Tree("Stats", style="gray50")
+        tree = Tree("", style="gray50")
 
         self._to_tree(self.stats, tree.add("mpyc"))
         self._to_tree(self.asyncio_stats(), tree.add("asyncio"))
+        self._to_tree(self.channel_pool_stats(), tree.add("channel_pool"))
         self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
 
         # if logger.isEnabledFor(log_levels.TRACE):
-
-        return print_to_string(tree)
+        # return rich_to_ansi(rich.panel.Panel(Align.center(tree), title="stats", border_style="blue"))
+        return rich_to_ansi(
+            Panel.fit(Align.center(tree), title="stats", subtitle=time_delta_fmt(datetime.now(), self.start_time), border_style="blue")
+        )
+        # return rich_to_ansi('[bold green]My[/][bold red]awesome[/][bold yellow]text[/]')
+        # return print_to_string(tree)
 
     def _to_tree(self, s: dict | list[dict], tree: Tree):
         if isinstance(s, dict):

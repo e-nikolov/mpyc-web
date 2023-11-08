@@ -6,6 +6,8 @@ import asyncio
 
 import rich
 
+from .channels import chanSync
+
 loop = asyncio.get_event_loop()
 
 
@@ -16,7 +18,7 @@ def ping():
     return True
 
 
-def update_environ(env):
+def update_env(env):
     assert isinstance(env, dict)
     if rich._console:  # pylint: disable=protected-access
         environ.update(env)
@@ -27,3 +29,13 @@ def update_environ(env):
             rich._console.width = int(cols)  # pylint: disable=protected-access
         if lines:
             rich._console.height = int(lines)  # pylint: disable=protected-access
+
+
+def load_env():
+    """
+    Loads environment variables from a .env file and updates the current environment.
+
+    Returns:
+        None
+    """
+    os.environ.update(chanSync.getEnv().to_py())

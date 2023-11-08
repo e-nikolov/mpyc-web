@@ -6,12 +6,12 @@ import { keymap } from '@codemirror/view';
 import { copyLineDown, defaultKeymap, deleteLine, moveLineDown, moveLineUp, redo } from '@codemirror/commands';
 import { birdsOfParadise } from 'thememirror';
 import { indentWithTab, } from "@codemirror/commands"
-import { MPyCManager } from '../lib/mpyc';
+import { MPCManager } from '../lib/mpyc';
 import { Controller } from '.';
 import { debounce } from '../lib/utils';
 
 export class Editor extends EditorView {
-    constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPyCManager) {
+    constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPCManager) {
         const languageConf = new Compartment();
         let extensions = [
             indentUnit.of('    '),

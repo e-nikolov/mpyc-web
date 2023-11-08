@@ -27,7 +27,9 @@ async def run_mpc(options):
         None
     """
     logger.debug("starting mpyc execution...")
+    logger.debug(options)
 
+    # m = len(options["parties"])
     m = len(options.parties)
     mpc.options.threshold = (m - 1) // 2
     mpc.options.no_async = m == 1 and options.no_async

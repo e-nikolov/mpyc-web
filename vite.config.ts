@@ -2,10 +2,15 @@ import { defineConfig, PluginOption, loadEnv } from 'vite'
 import git from 'git-rev-sync'
 import topLevelAwait from "vite-plugin-top-level-await";
 import { resolve } from 'path';
+import { run } from 'vite-plugin-run'
+// import 'vite/types/importMeta.d';
+// import PyodidePlugin from "@pyodide/webpack-plugin"
+
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+
 
   return {
     resolve: {
@@ -37,21 +42,33 @@ export default defineConfig(({ command, mode }) => {
     },
     cacheDir: "../.vite",
     plugins: [
+      run([
+        {
+          name: 'python transform',
+          run: ['yarn', 'build:py'],
+          pattern: ['**/*.py'],
+        }
+      ]),
+
       // tsconfigPaths(),
       // externalize({ externals: ["@pyscript/core", "polyscript"] }),
-
+      // new PyodidePlugin(),
       topLevelAwait({
         // The export name of top-level await promise for each chunk module
         promiseExportName: "__tla",
         // The function to generate import names of top-level await promise in each chunk module
         promiseImportName: i => `__tla_${i}`
-      })
+      }),
     ],
     server: {
+      hmr: process.env.NO_HMR ? false : true,
       headers: {
         "Cross-Origin-Embedder-Policy": "require-corp",
         "Cross-Origin-Opener-Policy": "same-origin",
         "Accept-Ranges": "bytes"
+      },
+      watch: {
+
       },
       fs: {
         // allow: [

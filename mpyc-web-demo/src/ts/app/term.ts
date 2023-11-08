@@ -18,8 +18,9 @@ const ERASE_IN_LINE = "\x1b[2K"
 
 import { $, debounce } from '../lib/utils';
 import { format } from './format';
-import { MPyCManager } from '../lib/mpyc';
+import { MPCManager } from '../lib/mpyc';
 import { Controller, safe } from ".";
+import { MPCRuntimeBase } from '../lib/runtimes/MPCRuntimeBase';
 export class Term extends Terminal {
     fitAddon: FitAddon;
     searchAddon: SearchAddon;
@@ -27,13 +28,27 @@ export class Term extends Terminal {
     searchBarAddon: SearchBarAddon;
     webLinksAddon: WebLinksAddon;
     readlineAddon: Readline;
-    mpyc: MPyCManager;
+    mpyc: MPCManager;
 
+    isLivePanelVisible = true
     livePanel: string = "";
+    toggleLivePanel(flag?: boolean) {
+        this.isLivePanelVisible = !this.isLivePanelVisible
+
+        if (flag != undefined) {
+            this.isLivePanelVisible = flag
+        }
+
+        if (!this.isLivePanelVisible) {
+            this.writeln(this._control(this.livePanel))
+        }
+
+        return;
+    }
 
 
 
-    constructor(sel: string, mpyc: MPyCManager) {
+    constructor(sel: string, mpyc: MPCManager) {
         let el = $(sel);
 
         super({
@@ -105,32 +120,42 @@ export class Term extends Terminal {
             // this.loadAddon(ligaturesAddon);
             this.fit();
         });
-        // this.mpyc.worker.sync.readline = (prompt: string): Promise<string> => {
-        //     return new Promise((resolve, reject) => {
-        //         this.readlineAddon.read(prompt).then((input: string) => {
-        //             this.writeln("readline: " + input);
-        //             resolve(input);
-        //         }).catch((e: Error) => {
-        //             reject(e)
-        //         });
-        //     })
-        // }
+
+
+        this.mpyc.runtime.setReadlineFn((prompt: string): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                this.readlineAddon.read(prompt).then((input: string) => {
+                    resolve(input);
+                }).catch((e: Error) => {
+                    reject(e)
+                });
+            })
+        })
 
         this.attachCustomKeyEventHandler((e: KeyboardEvent) => {
             // console.log(e.key)
-            if (e.ctrlKey && e.key == "c") {
-                if (this.hasSelection()) {
-                    navigator.clipboard.writeText(this.getSelection())
-                    this.clearSelection();
+            if (e.type === 'keydown') {
+
+                if (e.ctrlKey && e.key == "c") {
+                    if (this.hasSelection()) {
+                        navigator.clipboard.writeText(this.getSelection())
+                        this.clearSelection();
+                        return false
+                    }
+                }
+                if (e.ctrlKey && e.key == "b") {
+                    this.toggleLivePanel()
+                    e.preventDefault()
+                    return false
+                }
+                if (e.ctrlKey && e.key == "f") {
+                    this.searchBarAddon.show();
+                    e.preventDefault();
                     return false
                 }
             }
-            if (e.ctrlKey && e.key == "f") {
-                this.searchBarAddon.show();
-                e.preventDefault();
-                return false
-            }
-            return true;
+
+            return true
         });
 
         document.addEventListener('keyup', (e: KeyboardEvent) => {
@@ -164,15 +189,19 @@ export class Term extends Terminal {
         this._write_liveln(message)
     }
     _write_liveln(message: string) {
-        this.writeln(this._control(this.livePanel) + message)
-        if (this.livePanel != "") {
-            this.writeln(this.livePanel)
+        if (this.isLivePanelVisible) {
+            this.writeln(this._control(this.livePanel) + message)
+            if (this.livePanel != "") {
+                this.writeln(this.livePanel)
+            }
         }
     }
     _write_live(message: string) {
-        this.write(this._control(this.livePanel) + message)
-        if (this.livePanel != "") {
-            this.writeln(this.livePanel)
+        if (this.isLivePanelVisible) {
+            this.write(this._control(this.livePanel) + message)
+            if (this.livePanel != "") {
+                this.writeln(this.livePanel)
+            }
         }
     }
 
@@ -189,9 +218,12 @@ export class Term extends Terminal {
     }
 
     live(message: string) {
-        message = `${this.time()}\n${format.grey50(message)}`
-        this.writeln(this._control(this.livePanel) + message)
-        this.livePanel = message;
+        if (this.isLivePanelVisible) {
+            // message = `${this.time()}\n${format.grey50(message)}`
+            message = `\n${message}`
+            this.writeln(this._control(this.livePanel) + message)
+            this.livePanel = message;
+        }
     }
 
     success(message: string) {
@@ -230,7 +262,7 @@ export class Term extends Terminal {
 
     updateTermSizeEnv = () => {
         console.log("updating terminal size env: ", this.cols, this.rows);
-        this.mpyc.updateEnv("COLUMNS", this.cols.toString())
-        this.mpyc.updateEnv("LINES", this.rows.toString())
+        this.mpyc.runtime.updateEnv("COLUMNS", this.cols.toString())
+        this.mpyc.runtime.updateEnv("LINES", this.rows.toString())
     }
 }
