@@ -1,12 +1,13 @@
 from mpyc.runtime import mpc
-import demos.secretsanta
+import secretsanta
+import sklearn.datasets
 
 
 async def main():
     """
     Runs the main function of the program, which executes the secretsanta module.
     """
-    await demos.secretsanta.main()
+    await secretsanta.main()
 
 
 mpc.run(main())

@@ -16,6 +16,8 @@ from .transport import PeerJSTransport, AbstractClient
 from .lib.stats import stats
 from . import api
 from .run_mpc import run_mpc
+
+from mpycweb.api.run import run_code
 import js
 
 logger = logging.getLogger(__name__)
@@ -47,6 +49,10 @@ def onmessage(on_ready_message=noop, on_runtime_message=noop):
             case "proxy:py:mpc:exec":
                 [opts] = rest
                 asyncio.ensure_future(run_mpc(opts))
+                # loop.call_soon(run_mpc, opts)
+            case "proxy:py:exec":
+                [code] = rest
+                asyncio.ensure_future(run_code(code))
                 # loop.call_soon(run_mpc, opts)
             case "proxy:py:env:update":
                 [env] = rest

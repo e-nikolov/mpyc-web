@@ -248,6 +248,7 @@ run_js("""
     """)
 
 from polyscript import xworker
+from pyodide.http import open_url
 
 
 def open_fetch(*args, **kwargs):
@@ -266,10 +267,20 @@ def open_fetch(*args, **kwargs):
     """
     try:
         return old_open(*args, **kwargs)
+
     except FileNotFoundError as e:
+        logging.info("fetching %s", e.filename)
         # data = api.fetch(e.filename)
         # data = js.js_fetch(e.filename)
-        data = xworker.sync.fetch(e.filename)
+
+        # FIXME working around a vite bug with gz files being automatically decompressed
+
+        url = e.filename
+        if not url.startswith("http") and url.endswith("gz"):
+            url += "ip"
+
+        data = xworker.sync.fetch(url)
+        # data = open_url(e.filename) # TODO use atomics.wait and notify
         os.makedirs(os.path.dirname(e.filename), exist_ok=True)
         f = old_open(e.filename, "wb+")
         f.write(data.to_py())

@@ -4,6 +4,8 @@ import typing
 import asyncio
 import ast
 import importlib.util
+from mpycweb.lib.exception_handler import exception_handler
+
 
 import pyodide
 import micropip  # pyright: ignore[reportMissingImports] pylint: disable=import-error
@@ -43,5 +45,7 @@ async def run_mpc(options):
 
     # reinitialize the mpyc runtime with the new parties
     mpc.__init__(options.pid, parties, mpc.options)  # pylint: disable=unnecessary-dunder-call
+
+    asyncio.get_event_loop().set_exception_handler(exception_handler)
 
     return await run_code(options.code)

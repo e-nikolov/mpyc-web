@@ -183,14 +183,18 @@ export class Benchmark {
     }
 
     toString() {
-        return `${this.name}\t\t${Math.round(1000 * this.N / (this.duration + 1)).toLocaleString()} ops/sec`
+        return `${this.name}\t\t${(1000 * this.N / (this.duration + 1)).toLocaleString(undefined, { maximumFractionDigits: 2, useGrouping: true })} ops/sec`
     }
 
     toStrings() {
-        return [this.name, `${Math.round(1000 * this.N / (this.duration + 1)).toLocaleString()} ops/sec`]
+        return [this.name, `${toLocaleString(this.N)} / ${toLocaleString(this.duration + 1)} = ${toLocaleString(1000 * this.N / (this.duration + 1))} ops/sec`]
     }
 
     logTable(selector = "#out") {
         tableLogger(selector, ["Name", "Ops/sec"])(...this.toStrings())
     }
+}
+
+function toLocaleString(number: number) {
+    return number.toLocaleString(undefined, { maximumFractionDigits: 2, useGrouping: true })
 }

@@ -5,105 +5,80 @@ in a web environment.
 
 # pylint: disable=wrong-import-position,wrong-import-order
 
-import time
+from pyodide import webloop
+import js
+
+webloop.setTimeout = js.fastSetTimeout
+
 import asyncio
 import logging
 import rich
 import rich.pretty
+import sys
 
 
-noop = lambda *args, **kwargs: None
+from mpycweb.lib.log_levels import *
+from mpycweb.lib.log import *
+from mpycweb.lib import log
 
-# display = noop
-# display_error = noop
+rich._console = log.console  # pylint: disable=protected-access
+import builtins
 
-try:
-    from mpycweb.api import *
+builtins.print = rich.print
 
-    from mpycweb.lib.term_writer import *
+import pprint
 
-    import sys
+pprint.pprint = rich.pretty.pprint
+log.setup()
 
-    # sys.stdout = TermWriter(display)
-    # sys.stderr = TermWriter(display_error)
+from mpycweb import api
 
-    from mpycweb.lib.log import *
+api.load_env()
+lvl = DEBUG
+# sys.argv = ["main.py", "--log-level", f"{logging.getLevelName(lvl)}"]
+set_log_level(lvl)
+logger = logging.getLogger(__name__)
 
-    from mpycweb.lib import log
 
-    rich._console = log.console  # pylint: disable=protected-access
-    import builtins
+import pyodide
 
-    builtins.print = rich.print
 
-    import pprint
+import mpyc
 
-    pprint.pprint = rich.pretty.pprint
-    log.setup()
+logging.debug(
+    f"MPyC version={mpyc.__version__}"
+)  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=no-member,c-extension-no-member
 
-    from mpycweb.lib.log_levels import *
+from .transport import *
+from .patches import *
+from .lib.bench import *
+from .run_mpc import *
 
-    lvl = DEBUG
-    # sys.argv = ["main.py", "--log-level", f"{logging.getLevelName(lvl)}"]
-    api.load_env()
-    set_log_level(lvl)
 
-    logger = log.getLogger(__name__)
+api.onWorkerReady()
 
-    # def exceptHook(*args):
-    #     logging.exception(
-    #         *args,
-    #         exc_info=True,
-    #         stack_info=True,
-    #     )
+asyncio.create_task(api.stats_printer())
 
-    # sys.excepthook = exceptHook
+__all__ = [
+    "log",
+    "stats",
+    "patches",
+    "transport",
+    "run",
+    "run_code",
+    "set_log_level",
+    "print_tree",
+    "bench",
+    "NOTSET",
+    "DEBUG",
+    "INFO",
+    "WARNING",
+    "ERROR",
+    "CRITICAL",
+]
 
-    import pyodide
-
-    logger.debug(f"Python version={sys.version}")
-    logger.debug(f"Pyodide version={pyodide.__version__}")
-
-    import mpyc
-
-    logger.debug(
-        f"MPyC version={mpyc.__version__}"
-    )  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=no-member,c-extension-no-member
-
-    from .transport import *
-
-    from .patches import *
-    from .lib.bench import *
-
-    from .run_mpc import *
-
-    __all__ = [
-        "log",
-        "stats",
-        "patches",
-        "transport",
-        "run",
-        "run_code",
-        "run_file",
-        "set_log_level",
-        "print_tree",
-        "bench",
-        "NOTSET",
-        "DEBUG",
-        "INFO",
-        "WARNING",
-        "ERROR",
-        "CRITICAL",
-        "RUNNING_IN_WORKER",
-    ]
-
-    api.onWorkerReady()
-
-    asyncio.create_task(api.stats_printer())
-
-except Exception as e:
-    logging.error(
-        e,
-        exc_info=True,
-        stack_info=True,
-    )
+js.console.log("python version")
+logger.debug(f"Python version={sys.version}")
+(a, b, c) = sys._emscripten_info.emscripten_version
+logging.debug(f"Emscripten version={a}.{b}.{c}")
+logging.debug(f"Pyodide version={pyodide.__version__}")

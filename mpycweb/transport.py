@@ -149,6 +149,7 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
             case "ready_ack":
                 logging.debug(f"party {self.pid} confirmed ready to start")
                 self._loop.call_soon(self._protocol.connection_made, self)
+
                 self.peer_ready_to_start = True
 
     def is_closing(self):

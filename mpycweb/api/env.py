@@ -9,6 +9,8 @@ import rich
 from .channels import chanSync
 
 loop = asyncio.get_event_loop()
+import js
+import logging
 
 
 def ping():
@@ -24,6 +26,8 @@ def update_env(env):
         environ.update(env)
         cols = os.environ.get("COLUMNS")
         lines = os.environ.get("LINES")
+        js.console.log("environ/COLUMNS", os.environ["COLUMNS"])
+        js.console.log("environ/LINES", os.environ["LINES"])
 
         if cols:
             rich._console.width = int(cols)  # pylint: disable=protected-access
@@ -38,4 +42,5 @@ def load_env():
     Returns:
         None
     """
-    os.environ.update(chanSync.getEnv().to_py())
+    e = chanSync.getEnv()
+    os.environ.update(e.to_py())

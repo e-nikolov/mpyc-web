@@ -18,7 +18,7 @@ authors = ["Berry Schoenmakers <berry@win.tue.nl>"]
 packages = [
     { include = "./mpycweb" },
     { include = "./mpyc", from = "./mpyc" },
-    { include = "./demos/*.py", from = "./mpyc" }
+    { include = "./*.py", from = "./mpyc/demos" }
 ]
 
     [tool.poetry.dependencies]

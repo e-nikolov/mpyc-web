@@ -7,6 +7,7 @@ import * as app from './app';
 import { PyScriptInterpreter } from './lib/runtimes/PyScriptInterpreter';
 import { PeerJSTransport } from './lib/transports/PeerJS';
 import { PyScriptXWorker } from './lib/runtimes/PyScriptXWorker';
+import { PyodideXWorker } from './lib/runtimes/PyodideXWorker';
 
 
 function main() {
@@ -14,7 +15,8 @@ function main() {
     let peerID = app.loadPeerID();
 
     const transportFactory = () => new PeerJSTransport(peerID);
-    const runtimeFactory = () => new PyScriptXWorker("./py/mpycweb/shim/shim.py", "./config.toml", { COLUMNS: "110" });
+    const runtimeFactory = () => new PyScriptXWorker(undefined, "./config.toml");
+    // const runtimeFactory = () => new PyodideXWorker();
     // const runtimeFactory = (mpc: MPCManager) => new PyScriptInterpreter(mpc, "./py/mpycweb/shim/shim.py", "./config.toml", { COLUMNS: "110" });
 
     // let mpyc = new MPCManager(peerID, { COLUMNS: "110" }, () => { return new PyScriptInterpreter(this) });

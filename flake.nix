@@ -11,7 +11,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
-    devenv.url = "github:cachix/devenv";
+    devenv.url = "github:cachix/devenv/python-rewrite";
     nixpkgs-python.url = "github:cachix/nixpkgs-python";
 
     # nixpkgs-python.inputs.nixpkgs.follows = "nixpkgs";
@@ -40,10 +40,10 @@
         pkgs = import nixpkgs {
           inherit system;
 
-          # config = {
+          config = {
           #   allowUnsupportedSystem = true;
-          #   allowUnfree = true;
-          # };
+            allowUnfree = true;
+          };
           overlays = [
             (self: super: {
               mpyc-demo = import ./nix/mpyc-demo.nix super ./.;

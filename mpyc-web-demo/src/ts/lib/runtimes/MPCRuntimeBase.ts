@@ -1,14 +1,9 @@
-import { Peer, DataConnection } from "peerjs";
 
 import { EventEmitter } from 'eventemitter3'
 import { MPCEvents, PeerJSData, PassThroughRuntimeEvents, RuntimeEvents } from '../mpyc/events'
 import { callSoon, callSoon_pool, channelPool, sleep } from '../utils'
-import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
-import { PyodideXWorker } from "./PyodideXWorker";
 import { MPCManager } from "../mpyc";
 import Emittery from 'emittery'
-
-type ConnMap = Map<string, DataConnection>;
 
 
 export type RunMPCOptions = {
@@ -46,9 +41,9 @@ declare global {
 // export abstract class MPCRuntimeBase extends EventEmitter<RuntimeEvents> {
 export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
     peersReady: Map<string, boolean> = new Map<string, boolean>();
-    workerReady = false;
+    workerInitializing = false;
     running = false;
-    env: { [key: string]: string } = {}
+    env = {}
 
     syncProxyPy: any;
     asyncProxyPy: MessagePort;
@@ -67,21 +62,28 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
         this.asyncProxyPy = asyncProxyPy
 
         syncProxyPy.fetch = this.fetch.bind(this)
-        asyncProxyPy.onerror = (err: ErrorEvent) => { console.warn("asyncProxyPy.onerror"); console.warn(err); this.emit('error', err) };
+        asyncProxyPy.onerror = (err: ErrorEvent) => {
+            console.warn("asyncProxyPy.onerror");
+            console.warn(err);
+            // console.warn(typeof err);
+            // console.warn(err.toString());
+            this.emit('error', err)
+        };
         asyncProxyPy.onmessageerror = (err: MessageEvent) => { console.warn("asyncProxyPy.onmessageerror"); console.warn(err); this.emit('messageerror', err) };
 
         asyncProxyPy.onmessage = (e: MessageEvent) => {
-            // console.log("onmessage", e.data)
             let data = e.data as [string, ...any]
             const [type, ...args] = data
-            // console.log(e.data, typeof e.data)
 
             switch (type) {
+                case "proxy:js:init":
+                    this.workerInitializing = true;
+                    this.updateEnv()
+                    break;
                 case "proxy:js:mpc:exec:done":
                     this.emit('exec:done')
                     break;
                 case "proxy:js:runtime:ready":
-                    this.workerReady = true;
                     this.emit('ready')
                     break;
                 case "proxy:js:display:stats":
@@ -120,6 +122,17 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
         this.env = env;
     }
 
+    exec = async (code: string) => {
+        try {
+            console.log("exec")
+            this.asyncProxyPy.postMessage(["proxy:py:exec", code])
+        } catch (err) {
+            console.error(err)
+            this.emit('error', new ErrorEvent('runtime:error', { error: err }))
+        }
+
+        // this.emit('exec:done');
+    }
 
     run_mpc = async (options: RunMPCOptions) => {
         this.emit('exec:init');
@@ -153,10 +166,9 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
             this.emit('error', new ErrorEvent('runtime:error', { error: err }))
         }
     }
-    updateEnv(name: string, value: string) {
-        this.env[name] = value;
-        if (this.workerReady) {
-            console.log("updating env", name, value)
+    updateEnv(env = {}) {
+        this.env = { ...(this.env), ...env };
+        if (this.workerInitializing) {
             this.asyncProxyPy.postMessage(["proxy:py:env:update", this.env]);
         }
     }
@@ -188,7 +200,6 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
         this.emit('display', message);
     }
     displayError = (message: string) => {
-        console.error(message)
         this.emit('display:error', message);
     }
 

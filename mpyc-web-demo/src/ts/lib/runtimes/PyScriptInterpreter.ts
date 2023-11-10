@@ -135,7 +135,6 @@ const dedent = {
 
 declare global {
     interface Window {
-        pyodide: any;
         MPCRuntimeAsyncChannel: MessagePort;
     }
 }
