@@ -1,6 +1,5 @@
 from mpyc.runtime import mpc
 import secretsanta
-import sklearn.datasets
 
 
 async def main():
