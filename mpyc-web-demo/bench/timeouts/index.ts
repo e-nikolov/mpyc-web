@@ -7,68 +7,34 @@ import { callSoon_pool, callSoon_async, sleep_callSoon_setTimeout, sleep_callSoo
 export class TimeoutsBench extends BenchSuite {
     x = 3
 
-
-    async sleep_callSoon_async() {
-        await sleep_callSoon_async(0)
+    async async_nothing() {
     }
 
-    async callSoon_async() {
-        callSoon_async(() => { this.x += 1 }, 0)
+    sync_nothing() {
     }
 
-    async MessageChannel() {
-        new MessageChannel()
+    async add() {
+        1 + 1
     }
 
-    async sleep_setTimeout() {
-        this.x += 1
-        await sleep_callSoon_setTimeout(0)
-    }
-    async nothing() {
-    }
-
-    async globalAdd1() {
-        this.x += 1
-    }
-    async allocate() {
-        let xx = 3
+    async add2(a, b, c) {
+        a = 1
+        b = 2
+        c = a + b
     }
 
-    async allocateAdd() {
-        let xx = 3
-        xx += 1
+
+    add3(a, b, c = 4) {
+        return a + b
     }
 
-    async callSoon_new() {
-        callSoon_new(() => this.x += 1, 0)
-    }
+    loopz() {
 
-    async sleep_callSoon_new() {
-        await sleep_callSoon_new(0)
-    }
-
-    async callSoon_pool() {
-        callSoon_pool(() => this.x += 1, 0)
-    }
-
-    async sleep_callSoon_pool() {
-        await sleep_callSoon_pool(0)
-    }
-
-    async callSoon_singleChan() {
-        callSoon_singleChan(() => this.x += 1, 0)
-    }
-
-    async sleep_callSoon_singleChan() {
-        await sleep_callSoon_singleChan(0)
-    }
-
-    async callSoon_queueMicrotask() {
-        callSoon_queueMicrotask(() => this.x += 1, 0)
-    }
-
-    async sleep_callSoon_queueMicrotask() {
-        await sleep_callSoon_queueMicrotask(0)
+        let x = 1
+        for (let i = 0; i < 1000; i++) {
+            x += i
+        }
+        return x
     }
 }
 
