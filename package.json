@@ -1,6 +1,6 @@
 {
   "name": "mpyc-web",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "type": "module",
   "packageManager": "yarn@3.6.3",
   "scripts": {

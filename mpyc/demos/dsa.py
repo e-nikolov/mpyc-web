@@ -74,9 +74,9 @@ class DSA:
             return False
 
         w = int(invert(s, q))  # s^-1 mod q
-        u_1 = H(M)*w % q
-        u_2 = r*w % q
-        v = self.to_int((g^u_1) @ (y^u_2)) % q
+        u_1 = H(M) * w % q
+        u_2 = r * w % q
+        v = self.to_int((g ^ u_1) @ (y ^ u_2)) % q
         return v == r
 
     def H(self, M):
@@ -85,15 +85,15 @@ class DSA:
         N_sha = ((20, sha1), (28, sha224), (32, sha256), (48, sha384))
         sha = next((sha for _, sha in N_sha if _ >= N), sha512)
 
-        h = int.from_bytes(sha(M).digest()[:N], byteorder='big')
+        h = int.from_bytes(sha(M).digest()[:N], byteorder="big")
         return h
 
     @staticmethod
     def to_int(a):
         """Map group element a to an integer value."""
         if isinstance(a, EllipticCurvePoint):  # cf. ECDSA
-            z = int(a.normalize().x)           # x-coordinate of point a on elliptic curve
-        else:           # cf. DSA
+            z = int(a.normalize().x)  # x-coordinate of point a on elliptic curve
+        else:  # cf. DSA
             z = int(a)  # Schnorr group element a
         return z
 
@@ -131,7 +131,7 @@ class Schnorr:
         H = self.H
         h = self.h
         c, r = S
-        return c == H((g^r) @ (h^-c), M)
+        return c == H((g ^ r) @ (h ^ -c), M)
 
     def H(self, a, M):
         """Hash a and M using a SHA-2 hash function with sufficiently large output length."""
@@ -140,18 +140,18 @@ class Schnorr:
         sha = next((sha for _, sha in N_sha if _ >= N), sha512)
 
         a = self.to_bytes(a)
-        c = int.from_bytes(sha(a + M).digest()[:N], byteorder='big')
+        c = int.from_bytes(sha(a + M).digest()[:N], byteorder="big")
         return c
 
     @staticmethod
     def to_bytes(a):
         """Map group element a to fixed-length byte string."""
         if isinstance(a, EllipticCurvePoint):  # cf. ECDSA
-            z = int(a.normalize().x)           # x-coordinate of point a on elliptic curve
-        else:           # cf. DSA
+            z = int(a.normalize().x)  # x-coordinate of point a on elliptic curve
+        else:  # cf. DSA
             z = int(a)  # Schnorr group element a
         N = (a.field.order.bit_length() + 7) // 8
-        return z.to_bytes(length=N, byteorder='big')
+        return z.to_bytes(length=N, byteorder="big")
 
 
 async def test_sig(sig, group, M):
@@ -163,38 +163,37 @@ async def test_sig(sig, group, M):
 
 
 async def main():
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--group', type=int, metavar='G',
-                        help=('1=EC (default), 2=SG'))
+    parser.add_argument("-g", "--group", type=int, metavar="G", help="1=EC (default), 2=SG")
     parser.set_defaults(group=1)
     args = parser.parse_args()
 
     if args.group == 1:
-        groups = (EllipticCurve('Ed25519'),
-                  EllipticCurve('Ed25519', 'projective'),
-                  EllipticCurve('Ed25519', 'extended'),
-                  EllipticCurve('secp256k1', 'projective'))
+        groups = (
+            EllipticCurve("Ed25519"),
+            EllipticCurve("Ed25519", "projective"),
+            EllipticCurve("Ed25519", "extended"),
+            EllipticCurve("secp256k1", "projective"),
+        )
     else:
-        groups = (SchnorrGroup(p=9739, q=541),
-                  SchnorrGroup(n=160),
-                  SchnorrGroup(l=2048))
+        groups = (SchnorrGroup(p=9739, q=541), SchnorrGroup(n=160), SchnorrGroup(l=2048))
 
-    M = b'hello there?!'
+    M = b"hello there?!"
 
     await mpc.start()
-    print('Sign/verify tests')
-    print('-----------------')
+    print("Sign/verify tests")
+    print("-----------------")
 
     for group in groups:
         print(group.__name__)
         for sig in DSA, Schnorr:
             start = time.process_time()
             await test_sig(sig, group, M)
-            print(f'{time.process_time() - start} seconds for {sig.__name__} signature')
+            print(f"{time.process_time() - start} seconds for {sig.__name__} signature")
             await mpc.barrier()  # synchronize for more accurate timings
 
     await mpc.shutdown()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     mpc.run(main())

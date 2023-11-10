@@ -6,3 +6,14 @@ export function toTitleCase(str: string) {
         }
     );
 }
+
+
+export function stringToByteArray(str: string) {
+    const byteArray = new Uint8Array(str.length);
+
+    for (let i = 0; i < str.length; i++) {
+        byteArray[i] = str.charCodeAt(i);
+    }
+
+    return byteArray;
+}
