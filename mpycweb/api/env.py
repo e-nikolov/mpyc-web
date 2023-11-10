@@ -42,9 +42,5 @@ def load_env():
     Returns:
         None
     """
-    js.console.log("py: requesting env from js")
     e = chanSync.getEnv()
-    js.console.log("py: requesting env from js", e)
-    js.console.log("py: requesting env from js", e.to_py())
-    js.console.log("py: requesting env from js", e.to_py().to_py())
-    os.environ.update(e)
+    os.environ.update(e.to_py())

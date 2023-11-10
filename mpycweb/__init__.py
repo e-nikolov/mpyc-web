@@ -31,8 +31,9 @@ import pprint
 pprint.pprint = rich.pretty.pprint
 log.setup()
 
+from mpycweb import api
 
-# api.load_env()
+api.load_env()
 lvl = DEBUG
 # sys.argv = ["main.py", "--log-level", f"{logging.getLevelName(lvl)}"]
 set_log_level(lvl)
@@ -78,5 +79,6 @@ __all__ = [
 
 js.console.log("python version")
 logger.debug(f"Python version={sys.version}")
-logging.debug(f"Emscripten info={sys._emscripten_info}")
+(a, b, c) = sys._emscripten_info.emscripten_version
+logging.debug(f"Emscripten version={a}.{b}.{c}")
 logging.debug(f"Pyodide version={pyodide.__version__}")
