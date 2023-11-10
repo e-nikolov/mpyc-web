@@ -264,7 +264,7 @@ class BaseStatsCollector:
 
         self._to_tree(self.stats, tree.add("mpyc"))
         self._to_tree(self.asyncio_stats(), tree.add("asyncio"))
-        self._to_tree(self.channel_pool_stats(), tree.add("channel_pool"))
+        # self._to_tree(self.channel_pool_stats(), tree.add("channel_pool"))
         self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
 
         # if logger.isEnabledFor(log_levels.TRACE):

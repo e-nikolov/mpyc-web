@@ -26,4 +26,5 @@ __all__ = [
     "onWorkerReady",
     "chanAsync",
     "chanSync",
+    "stats_printer",
 ]

@@ -4,6 +4,7 @@ This module defines logging functionality for the mpyc-web project.
 It defines a custom logging handler that uses the rich library to format log messages with emojis and colors.
 It also defines a function to set the log level and a custom function to print a directory tree.
 """
+
 import io
 import datetime
 from pathlib import Path
@@ -235,13 +236,13 @@ def print_tree2(path_str=".", prefix="", text=""):
             print_tree2(item, prefix + "│   ", text)
 
 
-def print_tree(directory: str = ".", depth=0):
+def print_tree(directory: str = ".", depth=-1):
     tree = Tree(directory)
-    make_tree(Path(directory), tree, depth=depth)
-    logging.debug(print_to_string(tree))
+    make_tree(directory, tree, depth=depth)
+    print(print_to_string(tree))
 
 
-def make_tree(directory: Path, tree: Tree, depth=-1) -> None:
+def make_tree(directory: str, tree: Tree, depth=-1) -> None:
     """Recursively build a Tree with directory contents."""
 
     if depth == 0:
@@ -254,8 +255,8 @@ def make_tree(directory: Path, tree: Tree, depth=-1) -> None:
     )
     for path in paths:
         # Remove hidden files
-        if path.name.startswith("."):
-            continue
+        # if path.name.startswith("."):
+        #     continue
         try:
             if path.is_dir():
                 style = "dim" if path.name.startswith("__") else ""

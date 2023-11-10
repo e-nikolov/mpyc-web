@@ -3,9 +3,21 @@ import git from 'git-rev-sync'
 import topLevelAwait from "vite-plugin-top-level-await";
 import { resolve } from 'path';
 import { run } from 'vite-plugin-run'
+import fs from 'fs'
 // import 'vite/types/importMeta.d';
 // import PyodidePlugin from "@pyodide/webpack-plugin"
+const hexLoader = {
+  name: 'hex-loader',
+  transform(code, id) {
+    const [path, query] = id.split('?');
+    if (query != 'raw-hex')
+      return null;
 
+    const data = fs.readFileSync(path);
+
+    return data;
+  }
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -49,6 +61,7 @@ export default defineConfig(({ command, mode }) => {
           pattern: ['**/*.py'],
         }
       ]),
+      hexLoader,
 
       // tsconfigPaths(),
       // externalize({ externals: ["@pyscript/core", "polyscript"] }),

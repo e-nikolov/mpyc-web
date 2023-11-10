@@ -5,6 +5,7 @@ import asyncio
 import ast
 import importlib.util
 
+import js
 import pyodide
 import micropip  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 
@@ -89,17 +90,21 @@ async def load_missing_packages(code: str):
     Returns:
         None
     """
-    imports = pyodide.code.find_imports(code)
-    imports = [item for item in imports if importlib.util.find_spec(item) is None]
 
-    if len(imports) > 0:
-        try:
-            logging.info(f"Loading packages: {imports}")
+    try:
+        await js.pyodide.loadPackagesFromImports(
+            code
+            #  {"message_callback": js.wrap.io.stdout, "message_callback_stderr": js.wrap.io.stderr}
+        )
+        imports = pyodide.code.find_imports(code)
+        imports = [item for item in imports if importlib.util.find_spec(item) is None]
+        if len(imports) > 0:
+            # logging.info(f"Loading packages: {imports}")
             await micropip.install(imports, keep_going=True)
-        except Exception as e:
-            logging.error(
-                e,
-                exc_info=True,
-                stack_info=True,
-            )
-            raise e
+    except Exception as e:
+        logging.error(
+            e,
+            exc_info=True,
+            stack_info=True,
+        )
+        raise e

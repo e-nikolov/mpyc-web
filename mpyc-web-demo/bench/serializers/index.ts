@@ -4,8 +4,6 @@ import * as cbor from "cbor-x";
 import * as msgpackr from 'msgpackr';
 
 import { bench, Benchmark, BenchSuite } from "../../src/ts/lib/bench";
-import { callSoon_pool, sleep_setTimeout, sleep_callSoon_pool, sleep_callSoon_new, sleep } from "../../src/ts/lib/utils";
-import { logTable } from "../../src/ts/lib/utils";
 import 'crypto'
 import { randomBytes } from "crypto";
 import { time } from "console";

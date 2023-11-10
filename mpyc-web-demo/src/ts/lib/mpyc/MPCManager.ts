@@ -22,6 +22,7 @@ const wrapEvent = (runtime: MPCRuntimeBase, manager: MPCManager, event: keyof Pa
     })
 }
 
+// Emittery.isDebugEnabled = true;
 // export class MPCManager extends EventEmitter<MPCEvents> {
 export class MPCManager extends Emittery<MPCEvents> {
     transport: Transport;

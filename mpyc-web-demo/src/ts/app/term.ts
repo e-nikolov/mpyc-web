@@ -41,6 +41,7 @@ export class Term extends Terminal {
 
         if (!this.isLivePanelVisible) {
             this.writeln(this._control(this.livePanel))
+            this.livePanel = ""
         }
 
         return;
@@ -143,7 +144,7 @@ export class Term extends Terminal {
                         return false
                     }
                 }
-                if (e.ctrlKey && e.key == "b") {
+                if (e.key == "h") {
                     this.toggleLivePanel()
                     e.preventDefault()
                     return false
@@ -262,7 +263,6 @@ export class Term extends Terminal {
 
     updateTermSizeEnv = () => {
         console.log("updating terminal size env: ", this.cols, this.rows);
-        this.mpyc.runtime.updateEnv("COLUMNS", this.cols.toString())
-        this.mpyc.runtime.updateEnv("LINES", this.rows.toString())
+        this.mpyc.runtime.updateEnv({ COLUMNS: this.cols.toString(), LINES: this.rows.toString() })
     }
 }
