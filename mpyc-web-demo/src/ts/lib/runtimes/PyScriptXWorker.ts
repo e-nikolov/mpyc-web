@@ -83,10 +83,10 @@ export class PyScriptXWorker extends MPCRuntimeBase {
 
                     const oldSetTimeout = self.setTimeout
 
-                    self.setTimeout = (handler: TimerHandler, timeout?: number, ...args: any[]): number => {
-                        console.log("setTimeout")
-                        return oldSetTimeout(handler, timeout, ...args)
-                    }
+                    // self.setTimeout = (handler: TimerHandler, timeout?: number, ...args: any[]): number => {
+                    //     console.log("setTimeout")
+                    //     return oldSetTimeout(handler, timeout, ...args)
+                    // }
 
                     const setTimeoutFromSetImmediate = (setImmediate: (cb: () => void) => void) => (callback: () => never, delay: number) => {
                         if (delay == undefined || isNaN(delay) || delay < 0) {
