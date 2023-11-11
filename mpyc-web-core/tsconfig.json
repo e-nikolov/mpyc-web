@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "paths": {
-      "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.mjs": [
-        "./node_modules/pyodide"
-      ]
-    },
+    // "paths": {
+    //   "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.mjs": [
+    //     "./node_modules/pyodide"
+    //   ]
+    // },
     // "composite": true,
     "allowJs": true,
     "useDefineForClassFields": true,
@@ -12,8 +12,6 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["vite/client", "node"],
-
     "experimentalDecorators": true,
     "checkJs": false,
     "target": "ESNext",
@@ -33,14 +31,7 @@
     "outDir": "./dist"
   },
   "include": [
-    "lib", // and your source files
-    "./lib/**/*.whl" // and your source files
+    "lib" // and your source files
   ],
-  "exclude": [
-    "**/*.test.ts",
-    "node_modules",
-    "test/**",
-    ".history/**",
-    "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.mjs"
-  ]
+  "exclude": ["**/*.test.ts", "node_modules"]
 }

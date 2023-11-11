@@ -1,10 +1,10 @@
 {
   // "extends": "../tsconfig.json",
   "compilerOptions": {
-    // "allowJs": true,
     // "composite": true,
 
-    // "experimentalDecorators": true,
+    "allowJs": true,
+    "experimentalDecorators": true,
     "checkJs": false,
     "target": "ESNext",
     "module": "ESNext",
@@ -12,17 +12,16 @@
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
-    // "allowImportingTsExtensions": true,
-    // "isolatedModules": true,
-    // "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
     "noEmit": true,
-    // "allowSyntheticDefaultImports": true,
+    "allowSyntheticDefaultImports": true,
     /* Linting */
     "strict": false
   },
   "include": [
     "./src/**/*", // and your source files
-    "./src/**/*.whl", // and your source files
     "./bench"
   ],
   "exclude": [

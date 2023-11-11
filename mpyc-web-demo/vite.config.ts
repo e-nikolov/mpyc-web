@@ -77,12 +77,12 @@ export default defineConfig(({ mode }) => {
       // tsconfigPaths(),
       // externalize({ externals: ["@pyscript/core", "polyscript"] }),
       // new PyodidePlugin(),
-      topLevelAwait({
-        // The export name of top-level await promise for each chunk module
-        promiseExportName: "__tla",
-        // The function to generate import names of top-level await promise in each chunk module
-        promiseImportName: i => `__tla_${i}`
-      }),
+      // topLevelAwait({
+      //   // The export name of top-level await promise for each chunk module
+      //   promiseExportName: "__tla",
+      //   // The function to generate import names of top-level await promise in each chunk module
+      //   promiseImportName: i => `__tla_${i}`
+      // }),
     ],
     server: {
       hmr: process.env.NO_HMR ? false : true,

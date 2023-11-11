@@ -2,7 +2,7 @@
   "name": "@mpyc-web/core",
   "version": "0.6.0",
   "type": "module",
-  "packageManager": "yarn@4.0.1",
+  "packageManager": "yarn@3.6.3",
   "scripts": {
     "dev": "APP_DEPLOYMENT=dev vite --debug",
     "build:py": "poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py/ && cp ./dist/*.whl ./dist/py/",
