@@ -61,6 +61,14 @@
 
   # https://devenv.sh/scripts/
   scripts.hello.exec = "echo hello from $GREET";
+  scripts.yi.exec = "yarn; yarn workspace @mpyc-web/core install; yarn workspace @mpyc-web/demo install";
+  scripts.yb.exec = "yarn workspace @mpyc-web/$1 build";
+  scripts.yd.exec = "yarn workspace @mpyc-web/$1 dev";
+  scripts.yw.exec = ''
+    ws=$1
+    shift
+    yarn workspace @mpyc-web/$ws $@
+  '';
   # devenv.debug = true;
   dotenv.enable = true;
   enterShell = ''

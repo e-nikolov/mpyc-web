@@ -1,5 +1,6 @@
-import { Controller, safe } from ".";
-import { AnyData } from "../lib/mpyc/events";
+import { Controller } from './controller';
+import { safe } from '../utils';
+import { AnyData } from "@mpyc-web/core";
 import { format } from "./format";
 
 export function sendChatMessage(this: Controller) {

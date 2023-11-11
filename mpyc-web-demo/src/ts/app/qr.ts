@@ -1,7 +1,6 @@
-import qr from "qrcode";
-import * as ui from ".";
-import { Tooltip } from "bootstrap";
-
+import qr from 'qrcode';
+import { Tooltip } from 'bootstrap';
+import { safe } from '../utils'
 const QR_CANVAS_CLASS = "qr-canvas";
 const QR_URL_SPAN_CLASS = "qr-url-span";
 const QR_CANVAS_SELECTOR = `div.tooltip-inner>canvas.${QR_CANVAS_CLASS}`;
@@ -24,7 +23,7 @@ export function makeQRButton(buttonSelector: string, peerIDGetter: () => string)
         let displayURL = `${baseURL}?peer=<br/>${peerIDGetter()}`;
         qr.toCanvas(document.querySelector<HTMLCanvasElement>(QR_CANVAS_SELECTOR)!, qrURL, { errorCorrectionLevel: "H" })
             .then(_ => {
-                document.querySelector(QR_URL_SPAN_SELECTOR)!.innerHTML = ui.safe(displayURL);
+                document.querySelector(QR_URL_SPAN_SELECTOR)!.innerHTML = safe(displayURL);
             })
             .catch(_ => {
                 //console.error(err)

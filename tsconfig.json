@@ -1,32 +1,37 @@
 {
   "compilerOptions": {
-    // "allowJs": true,
+    // "paths": {
+    //   "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.mjs": [
+    //     "./node_modules/pyodide"
+    //   ]
+    // },
+    // "composite": true,
+    "allowJs": true,
+    "useDefineForClassFields": true,
+    "rootDir": "./lib",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "checkJs": false,
     "target": "ESNext",
     "module": "ESNext",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable",
-      "WebWorker"
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
+    // "moduleResolution": "NodeNext",
+    // "allowImportingTsExtensions": true,
+    // "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "noEmit": true,
     /* Linting */
     "strict": false,
+    "outDir": "./dist"
   },
   "include": [
-    "./mpyc-web-demo/src/**/*", // and your source files
-    "./mpyc-web-demo/src/**/*.whl", // and your source files
-    "mpyc-web-demo/bench"
+    "./" // and your source files
   ],
-  "exclude": [
-    // "./node_modules/**/*",
-  ]
+  "exclude": ["**/*.test.ts", "node_modules"]
 }

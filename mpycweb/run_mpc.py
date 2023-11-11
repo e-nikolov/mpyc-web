@@ -17,8 +17,11 @@ from mpycweb.api.run import run_code
 
 logger = logging.getLogger(__name__)
 
+from mpycweb.lib.log import *
+import js
 
-async def run_mpc(options):
+
+async def run_mpc(options) -> None:
     """
     Runs an mpyc execution with the given options.
 
@@ -46,6 +49,7 @@ async def run_mpc(options):
     # reinitialize the mpyc runtime with the new parties
     mpc.__init__(options.pid, parties, mpc.options)  # pylint: disable=unnecessary-dunder-call
 
-    asyncio.get_event_loop().set_exception_handler(exception_handler)
+    # asyncio.get_event_loop().set_exception_handler(exception_handler)
+    js.runAsync(options.code, {"filename": options.filename})
 
-    return await run_code(options.code)
+    # return await run_code(options.code, options.filename)

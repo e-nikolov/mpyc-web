@@ -3,7 +3,7 @@
 import * as cbor from "cbor-x";
 import * as msgpackr from 'msgpackr';
 
-import { bench, Benchmark, BenchSuite } from "../../src/ts/lib/bench";
+import { bench, Benchmark, BenchSuite } from "../../src/ts/bench";
 import 'crypto'
 import { randomBytes } from "crypto";
 import { time } from "console";
