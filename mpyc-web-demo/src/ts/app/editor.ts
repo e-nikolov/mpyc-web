@@ -6,9 +6,9 @@ import { keymap } from '@codemirror/view';
 import { copyLineDown, defaultKeymap, deleteLine, moveLineDown, moveLineUp, redo } from '@codemirror/commands';
 import { birdsOfParadise } from 'thememirror';
 import { indentWithTab, } from "@codemirror/commands"
-import { MPCManager } from '../lib/mpyc';
-import { Controller } from '.';
-import { debounce } from '../lib/utils';
+import { Controller } from './controller';
+import { MPCManager } from '@mpyc-web/core';
+import { debounce } from '../utils';
 
 export class Editor extends EditorView {
     constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPCManager) {
@@ -26,13 +26,13 @@ export class Editor extends EditorView {
                 keymap.of([
                     {
                         key: 'Ctrl-Enter', run: () => {
-                            mpyc.runMPC(this.getCode(), false)
+                            mpyc.runMPC(this.getCode(), demoSelect.value, false)
                             return true;
                         }, preventDefault: true
                     },
                     {
                         key: 'Shift-Enter', run: () => {
-                            mpyc.runMPC(this.getCode(), true)
+                            mpyc.runMPC(this.getCode(), demoSelect.value, true)
                             return true;
                         }, preventDefault: true
                     },
@@ -41,6 +41,7 @@ export class Editor extends EditorView {
                             localStorage.customCode = this.getCode();
                             if (demoSelect.selectedIndex != 0) {
                                 demoSelect.selectedIndex = 0;
+                                demoSelect.dispatchEvent(new Event('change'));
                             }
                             return true;
                         }, preventDefault: true
@@ -78,7 +79,7 @@ export class Editor extends EditorView {
 
 export function setupDemoSelector(this: Controller) {
     const resizeDemoSelector = () => {
-        if (window.innerWidth < 768) {
+        if (window.innerWidth < 992) {
             this.demoSelect.size = 1;
         } else {
             this.demoSelect.size = window.innerHeight / (4 * 21)
