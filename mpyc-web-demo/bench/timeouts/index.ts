@@ -1,7 +1,7 @@
 'use strict';
 
-import { BenchSuite } from "../../src/ts/lib/bench";
-import { callSoon_pool, callSoon_async, sleep_callSoon_setTimeout, sleep_callSoon_async, sleep_callSoon_pool, sleep_callSoon_new, sleep, callSoon_singleChan, sleep_callSoon_singleChan, callSoon_new, sleep_callSoon_queueMicrotask, callSoon_queueMicrotask } from "../../src/ts/lib/utils";
+import { BenchSuite } from "../../src/ts/bench";
+import { callSoon_pool, callSoon_async, sleep_callSoon_setTimeout, sleep_callSoon_async, sleep_callSoon_pool, sleep_callSoon_new, sleep, callSoon_singleChan, sleep_callSoon_singleChan, callSoon_new, sleep_callSoon_queueMicrotask, callSoon_queueMicrotask } from "../../src/ts/utils";
 
 
 export class TimeoutsBench extends BenchSuite {

@@ -11,16 +11,17 @@ import { WebLinksAddon } from 'xterm-addon-web-links';
 import { Unicode11Addon } from 'xterm-addon-unicode11';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
 import { loadWebFont } from './xterm-webfont'
+import { safe } from '../utils'
 
 const CARRIAGE_RETURN = "\r"
 const CURSOR_UP = "\x1b[1A"
 const ERASE_IN_LINE = "\x1b[2K"
 
-import { $, debounce } from '../lib/utils';
+import { $, debounce } from '../utils';
+
 import { format } from './format';
-import { MPCManager } from '../lib/mpyc';
-import { Controller, safe } from ".";
-import { MPCRuntimeBase } from '../lib/runtimes/MPCRuntimeBase';
+import { MPCManager, MPCRuntimeBase } from '@mpyc-web/core';
+
 export class Term extends Terminal {
     fitAddon: FitAddon;
     searchAddon: SearchAddon;

@@ -16,7 +16,9 @@ version = "0.4.0"
 description = "MPyC for Multiparty Computation in Python"
 authors = ["Berry Schoenmakers <berry@win.tue.nl>"]
 packages = [
-    { include = "./mpycweb" },
+    { include = "./mpycweb", from = "./mpyc-web-py" },
+    { include = "./lib", from = "./mpyc-web-py" },
+    { include = "./startup", from = "./mpyc-web-py" },
     { include = "./mpyc", from = "./mpyc" },
     { include = "./*.py", from = "./mpyc/demos" }
 ]

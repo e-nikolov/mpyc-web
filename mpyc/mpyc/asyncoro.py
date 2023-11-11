@@ -436,6 +436,7 @@ def mpc_coro(func, pc=True):
 
 def exception_handler(loop, context):
     """Handle some MPyC coroutine related exceptions."""
+    print("(mpyc exception handler)", file=sys.stderr)
     if 'handle' in context:
         if 'mpc_coro' in context['message']:
             task = context['handle']._args[0]

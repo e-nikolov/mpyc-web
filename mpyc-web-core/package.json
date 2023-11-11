@@ -1,0 +1,64 @@
+{
+  "name": "@mpyc-web/core",
+  "version": "0.6.0",
+  "type": "module",
+  "packageManager": "yarn@4.0.1",
+  "scripts": {
+    "dev": "APP_DEPLOYMENT=dev vite --debug",
+    "build:py": "poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py/ && cp ./dist/*.whl ./dist/py/",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "static": "python -m http.server -d dist",
+    "gen:dts": "dts-bundle-generator --config ./dts.config.ts",
+    "ghp": "gh-pages -d dist -t true"
+  },
+  "devDependencies": {
+    "@pyodide/webpack-plugin": "^1.2.0",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/gh-pages": "^5.0.0",
+    "@types/git-rev-sync": "^2.0.1",
+    "cross-env": "^7.0.3",
+    "gh-pages": "^6.0.0",
+    "git-rev-sync": "^3.0.2",
+    "pyodide": "^0.24.1",
+    "rollup": "^4.1.5",
+    "rollup-plugin-typescript-paths": "^1.4.0",
+    "sass": "^1.69.5",
+    "tslib": "^2.4.0",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0",
+    "vite-plugin-dts": "^3.6.3",
+    "vite-plugin-externalize-dependencies": "^0.10.0",
+    "vite-plugin-run": "^0.5.1",
+    "vite-plugin-top-level-await": "^1.3.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/mpyc-web-core.mjs",
+      "require": "./dist/mpyc-web-core.umd.cjs"
+    }
+  },
+  "main": "./dist/mpyc-web-core.umd.cjs",
+  "module": "./dist/mpyc-web-core.mjs",
+  "typings": "./dist/mpyc-web-core.d.ts",
+  "files": [
+    "dist",
+    "./**/*.whl",
+    "./**/*.py"
+  ],
+  "dependencies": {
+    "@types/node": "^20.8.9",
+    "cbor-x": "^1.5.4",
+    "coincident": "^0.14.2",
+    "dts-bundle-generator": "^8.1.2",
+    "emittery": "^1.0.1",
+    "eventemitter3": "^5.0.1",
+    "events": "^3.3.0",
+    "generic-pool": "^3.9.0",
+    "msgpackr": "^1.9.9",
+    "node-fetch": "^3.3.2",
+    "peerjs": "^1.5.1",
+    "polyscript": "=0.5.5",
+    "reflect-metadata": "^0.1.13"
+  }
+}

@@ -1,9 +1,7 @@
 import { Controller } from ".";
-import { MPCManager } from '../lib/mpyc';
-import DOMPurify from "dompurify";
-
+import { MPCManager, MPCRuntimeBase } from '@mpyc-web/core';
 import { format } from "./format";
-import { MPCRuntimeBase } from "../lib/runtimes/MPCRuntimeBase";
+import { safe } from '../utils'
 
 export function updateHostPeerIDInput(this: Controller): string {
     const urlParams = new URLSearchParams(window.location.search);
@@ -15,10 +13,6 @@ export function updateHostPeerIDInput(this: Controller): string {
     }
 
     return hostPeerID;
-}
-
-export function safe(text: string) {
-    return DOMPurify.sanitize(text);
 }
 
 export async function onPeerConnectedHook(this: Controller, newPeerID: string) {

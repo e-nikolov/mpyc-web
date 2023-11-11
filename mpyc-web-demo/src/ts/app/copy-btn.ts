@@ -1,5 +1,5 @@
 import { Tooltip } from 'bootstrap';
-import { $ } from '../lib/utils';
+import { $ } from '../utils';
 
 // const <T extends HTMLElement>$ = (css: string, root = document) => root.querySelector<T>(css);
 

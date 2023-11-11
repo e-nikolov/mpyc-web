@@ -2,12 +2,8 @@
 
 import '../scss/style.scss';
 
-import { MPCManager } from './lib/mpyc';
+import { MPCManager, PyScriptMainThreadRuntime, PeerJSTransport, PyScriptWorkerRuntime, PyodideWorkerRuntime } from '@mpyc-web/core';
 import * as app from './app';
-import { PyScriptInterpreter } from './lib/runtimes/PyScriptInterpreter';
-import { PeerJSTransport } from './lib/transports/PeerJS';
-import { PyScriptXWorker } from './lib/runtimes/PyScriptXWorker';
-import { PyodideXWorker } from './lib/runtimes/PyodideXWorker';
 
 
 function main() {
@@ -15,7 +11,7 @@ function main() {
     let peerID = app.loadPeerID();
 
     const transportFactory = () => new PeerJSTransport(peerID);
-    const runtimeFactory = () => new PyScriptXWorker(undefined, "./config.toml");
+    const runtimeFactory = () => new PyScriptWorkerRuntime(undefined, "./config.toml");
     // const runtimeFactory = () => new PyodideXWorker();
     // const runtimeFactory = (mpc: MPCManager) => new PyScriptInterpreter(mpc, "./py/mpycweb/shim/shim.py", "./config.toml", { COLUMNS: "110" });
 
