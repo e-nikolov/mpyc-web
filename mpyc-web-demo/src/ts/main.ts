@@ -5,7 +5,6 @@ import '../scss/style.scss';
 import { MPCManager, PyScriptMainThreadRuntime, PeerJSTransport, PyScriptWorkerRuntime, PyodideWorkerRuntime } from '@mpyc-web/core';
 import * as app from './app';
 
-
 function main() {
     app.ensureStorageSchema(18);
     let peerID = app.loadPeerID();
@@ -42,3 +41,4 @@ function main() {
 }
 
 main()
+

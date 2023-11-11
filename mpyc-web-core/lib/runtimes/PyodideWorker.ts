@@ -125,12 +125,3 @@ self.pyodide.runPython(startup)
 //         canOwn: true,
 //     });
 // };
-
-
-declare global {
-    interface Window {
-        pyodide: PyodideInterface;
-        writeFile: any;
-        onmessage: any;
-    }
-}

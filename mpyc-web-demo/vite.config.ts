@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
     // },
     resolve: {
       alias: {
+        // "@core": "@mpyc-web/core/dev",
         // "@pyscript/core": "https://cdn.jsdelivr.net/npm/@pyscript/core@0.2.8/index.js",
         // '@pyscript/core': './node_modules/@pyscript/core/index.js',
       }

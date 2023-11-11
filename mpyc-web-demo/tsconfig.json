@@ -3,6 +3,7 @@
   "compilerOptions": {
     // "composite": true,
 
+    "paths": {},
     "allowJs": true,
     "experimentalDecorators": true,
     "checkJs": false,

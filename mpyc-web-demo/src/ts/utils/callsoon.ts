@@ -1,6 +1,5 @@
 import pool from 'generic-pool'
 
-
 export const channelPool = pool.createPool(
     {
         create: async () => {

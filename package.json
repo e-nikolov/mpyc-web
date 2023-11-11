@@ -2,7 +2,7 @@
   "name": "mpyc-web-all",
   "version": "0.6.0",
   "type": "module",
-  "packageManager": "yarn@3.6.3",
+  "packageManager": "yarn@4.0.1",
   "workspaces": [
     "mpyc-web-core",
     "mpyc-web-demo",
@@ -21,6 +21,7 @@
     "clean": "rm -rf ./*/dist; rm -rf ./*/node_modules; rm -rf ./*/vite.config.ts.timestamp-*.mjs"
   },
   "devDependencies": {
+    "@types/events": "^3",
     "@types/gh-pages": "^5.0.0",
     "@types/git-rev-sync": "^2.0.1",
     "coi-serviceworker": "^0.1.7",
@@ -36,5 +37,10 @@
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
     "vite-plugin-externalize-dependencies": "^0.10.0"
+  },
+  "dependencies": {
+    "@lezer/common": "^1.1.1",
+    "@lezer/highlight": "^1.1.6",
+    "events": "^3.3.0"
   }
 }

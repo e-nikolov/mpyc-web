@@ -19,7 +19,6 @@ function XXWorker(shimFilePath: string, configFilePath: string, hooks: any) {
 }
 
 
-
 let blobURL = (code: string) => {
     return URL.createObjectURL(
         new Blob([code], {

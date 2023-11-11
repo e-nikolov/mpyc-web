@@ -18,8 +18,6 @@ const getPackageNameCamelCase = () => {
   }
 };
 
-console.log(getPackageNameCamelCase());
-
 const fileName = {
   es: `${getPackageName()}.mjs`,
   umd: `${getPackageName()}.umd.cjs`,

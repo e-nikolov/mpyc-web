@@ -4,9 +4,5 @@
     "**/.pnp.*": true
   },
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
-  },
-  "editor.formatOnSave": true
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }
