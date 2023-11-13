@@ -14,9 +14,9 @@
     "build": "bun workspace @mpyc-web/core build && bun workspace @mpyc-web/demo build",
     "preview": "vite preview",
     "static": "python -m http.server -d dist",
-    "ghp": "bun build && bun gh-pages -d mpyc-web-demo/dist -t true",
-    "gh-pages": "APP_DEPLOYMENT='' bun ghp",
-    "gh-pages-test": "APP_DEPLOYMENT='test' bun ghp --remote test",
+    "ghp": "bunx --bun build && bunx --bun gh-pages -d mpyc-web-demo/dist -t true",
+    "gh-pages-web": "APP_DEPLOYMENT='' bunx --bun ghp",
+    "gh-pages-test": "APP_DEPLOYMENT='test' bunx --bun ghp --remote test",
     "gh-pages-mpyc": "APP_DEPLOYMENT='' bun ghp --remote mpyc",
     "clean": "rm -rf ./*/dist; rm -rf ./*/node_modules; rm -rf ./*/vite.config.ts.timestamp-*.mjs"
   },
