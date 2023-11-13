@@ -223,7 +223,7 @@ class BaseStatsCollector:
         self.stats = DeepCounter[str]()
         self.max_tasks = 0
         self.start_time = datetime.now()
-        self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
+        # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
     def print_stats(self):
         """
@@ -248,6 +248,7 @@ class BaseStatsCollector:
         return {
             "tasks": tasks,
             "max_tasks": self.max_tasks,
+            "setTimeouts": js.counter,
         }
 
     def gc_stats(self):

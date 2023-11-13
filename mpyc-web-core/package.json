@@ -2,7 +2,7 @@
   "name": "@mpyc-web/core",
   "version": "0.6.0",
   "type": "module",
-  "packageManager": "bun@1.0.11",
+  "packageManager": "yarn@4.0.1",
   "scripts": {
     "dev": "APP_DEPLOYMENT=dev vite --debug",
     "build:py": "poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py/ && cp ./dist/*.whl ./dist/py/",
@@ -34,8 +34,8 @@
   },
   "exports": {
     ".": {
-      "\\import": "./dist/mpyc-web-core.mjs",
-      "import": "./lib/main.ts",
+      "import": "./dist/mpyc-web-core.mjs",
+      "\\import": "./lib/main.ts",
       "require": "./dist/mpyc-web-core.umd.cjs"
     },
     "./dev": {
@@ -53,6 +53,7 @@
   "dependencies": {
     "@types/node": "^20.8.9",
     "cbor-x": "^1.5.4",
+    "coincident": "^0.14.4",
     "dts-bundle-generator": "^8.1.2",
     "emittery": "^1.0.1",
     "eventemitter3": "^5.0.1",

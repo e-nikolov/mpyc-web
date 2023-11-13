@@ -166,6 +166,7 @@ def set_log_level(level, verbosity=0):
 
     logging.basicConfig(**opts)
     stats.reset()
+    stats.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
     if level <= TRACE:
         gc.set_debug(gc.DEBUG_LEAK)

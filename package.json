@@ -2,7 +2,6 @@
   "name": "mpyc-web-all",
   "version": "0.6.0",
   "type": "module",
-  "packageManager": "bun@1.0.11",
   "workspaces": [
     "mpyc-web-core",
     "mpyc-web-demo",
@@ -11,12 +10,12 @@
   "scripts": {
     "dev": "concurrently \"cd mpyc-web-demo && bun dev\" \"bun vite --debug\"",
     "build:py": "poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py && cp dist/*.whl ./mpyc-web-demo/dist/py/",
-    "build": "bun workspace @mpyc-web/core build && bun workspace @mpyc-web/demo build",
+    "build": "yarn build:py && yarn workspace @mpyc-web/core build && yarn workspace @mpyc-web/demo build",
     "preview": "vite preview",
     "static": "python -m http.server -d dist",
-    "ghp": "bunx --bun build && bunx --bun gh-pages -d mpyc-web-demo/dist -t true",
-    "gh-pages-web": "APP_DEPLOYMENT='' bunx --bun ghp",
-    "gh-pages-test": "APP_DEPLOYMENT='test' bunx --bun ghp --remote test",
+    "ghp": "yarn build && gh-pages -d mpyc-web-demo/dist -t true",
+    "gh-pages-web": "APP_DEPLOYMENT='' ghp",
+    "gh-pages-test": "APP_DEPLOYMENT='test' yarn ghp --remote test",
     "gh-pages-mpyc": "APP_DEPLOYMENT='' bun ghp --remote mpyc",
     "clean": "rm -rf ./*/dist; rm -rf ./*/node_modules; rm -rf ./*/vite.config.ts.timestamp-*.mjs"
   },
@@ -45,7 +44,9 @@
   "dependencies": {
     "@lezer/common": "^1.1.1",
     "@lezer/highlight": "^1.1.6",
+    "coincident": "^0.14.4",
     "events": "^3.3.0",
     "vite-plugin-run": "^0.5.1"
-  }
+  },
+  "packageManager": "yarn@4.0.1"
 }

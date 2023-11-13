@@ -46,7 +46,7 @@ packages = [
     pyodide-py = "^0.24.1"
     rich = "^13.5.3"
 
-    mpyc = { path = "./mpyc/", develop = true }
+    mpyc = { path = "./mpyc-web-py/mpyc/", develop = true }
     matplotlib = "^3.5.2"
     pandas = "1.5.3"
     scipy = "1.11.2"
