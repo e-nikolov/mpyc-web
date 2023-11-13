@@ -11,7 +11,7 @@ import logging
 from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
 
 
-logging = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class AbstractClient:
@@ -133,21 +133,21 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
         Returns:
             None
         """
-        logging.debug(f"receiving on_ready_message {message}")
+        logger.debug(f"receiving on_ready_message {message}")
         match message:
             case "ready?":
-                logging.debug(f"party {self.pid} asks if we are ready to start")
+                logger.debug(f"party {self.pid} asks if we are ready to start")
                 if self.ready_for_next_run:
                     try:
                         self._protocol.connection_made(self)
                     except Exception as e:
-                        logging.error(e, exc_info=True, stack_info=True)
+                        logger.error(e, exc_info=True, stack_info=True)
                         raise e
                     self.client.send_ready_message(self.pid, "ready_ack")
                     self.ready_for_next_run = False
 
             case "ready_ack":
-                logging.debug(f"party {self.pid} confirmed ready to start")
+                logger.debug(f"party {self.pid} confirmed ready to start")
                 self._loop.call_soon(self._protocol.connection_made, self)
 
                 self.peer_ready_to_start = True
@@ -156,7 +156,7 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
         return self._closing
 
     def close(self):
-        logging.debug("closing connection")
+        logger.debug("closing connection")
         self._closing = True
         self._protocol.connection_lost(None)
 

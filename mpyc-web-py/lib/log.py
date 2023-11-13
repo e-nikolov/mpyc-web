@@ -7,13 +7,16 @@ It also defines a function to set the log level and a custom function to print a
 
 __all__ = [
     "set_log_level",
-    "print_tree",
+    "ls",
     "NOTSET",
     "TRACE",
     "DEBUG",
     "INFO",
     "WARN",
     "ERROR",
+    "fail",
+    "afail",
+    "aexit",
 ]
 
 import io
@@ -22,14 +25,14 @@ from pathlib import Path
 from collections.abc import Iterable
 import sys
 from logging import LogRecord
-import logging
 import asyncio
 import gc
 import os
+import builtins
 
 from rich.console import Console
 from rich.logging import RichHandler
-
+from rich import pretty
 
 from rich.style import Style
 from rich.filesize import decimal
@@ -38,8 +41,30 @@ from rich.text import Text
 from rich.tree import Tree
 
 
-from mpycweb.lib.log_levels import *
-from mpycweb.lib.stats import stats, print_to_string
+def fail(message: str = "test exception"):
+    raise Exception(message)
+
+
+async def _afail(delay=0, message: str = "test async exception"):
+    await asyncio.sleep(delay)
+    raise Exception(message)
+
+
+def afail(delay=0, message: str = "test async exception"):
+    asyncio.ensure_future(_afail(delay, message))
+
+
+async def _aexit(delay=0, num=1):
+    await asyncio.sleep(delay)
+    raise Exception(num)
+
+
+def aexit(delay=0, num=1):
+    asyncio.ensure_future(_aexit(delay, num))
+
+
+from lib.log_levels import *
+from lib.stats import stats, print_to_string
 
 console = Console(
     color_system="truecolor",
@@ -52,11 +77,20 @@ console = Console(
 )
 
 
-def setup():
+def install(level, verbosity=0):
     """
     Sets up the logger class for the application.
     """
+    rich._console = console  # pylint: disable=protected-access
+
+    builtins.print = rich.print
+
+    import pprint
+
+    pprint.pprint = pretty.pprint
+    sys.argv = ["main.py", "--log-level", f"{logging.getLevelName(level)}"]
     logging.setLoggerClass(Logger)
+    set_log_level(level, verbosity=verbosity)
 
 
 def getLogger(name):
@@ -155,12 +189,12 @@ class Handler(RichHandler):
         # if record.msg:
         #     record.msg = Text(record.msg, style=Style(color="red"))
         if record.stack_info:
-            record.stack_info = Text(record.stack_info, "red")
+            record.stack_info = str(Text(record.stack_info, "red"))
         # if record.exc_info:
         #     record.exc_info = Text(record.exc_info, style=Style(color="red"))
 
         if record.exc_text:
-            record.exc_text = Text(record.exc_text, "red")
+            record.exc_text = str(Text(record.exc_text, "red"))
 
         match record.levelname.split("-"):
             case ["CRITICAL", *_]:
@@ -195,9 +229,10 @@ class Handler(RichHandler):
         return (level, message, traceback)
 
     def render(self, *, record, traceback, message_renderable):
-        if traceback:
-            rich.inspect("log handler traceback")
-            rich.inspect(traceback)
+        # if traceback:
+        # rich.inspect("log handler traceback")
+        # rich.inspect(traceback)
+        # rich.inspect(record)
 
         path = Path(record.pathname).name
         (level, message, traceback) = self._get_level_message(record, message_renderable, traceback)
@@ -251,16 +286,16 @@ def print_tree2(path_str=".", prefix="", text=""):
     for item in path.iterdir():
         print(f"{prefix}├── {item.name}\n")
         if item.is_dir():
-            print_tree2(item, prefix + "│   ", text)
+            print_tree2(item.name, prefix + "│   ", text)
 
 
-def print_tree(directory: str = ".", depth=-1):
+def ls(directory: str = ".", depth=-1):
     tree = Tree(directory)
     make_tree(directory, tree, depth=depth)
     print(print_to_string(tree))
 
 
-def make_tree(directory: str, tree: Tree, depth=-1) -> None:
+def make_tree(directory: str | Path, tree: Tree, depth=-1) -> None:
     """Recursively build a Tree with directory contents."""
 
     if depth == 0:

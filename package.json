@@ -2,33 +2,37 @@
   "name": "mpyc-web-all",
   "version": "0.6.0",
   "type": "module",
-  "packageManager": "yarn@4.0.1",
+  "packageManager": "bun@1.0.11",
   "workspaces": [
     "mpyc-web-core",
     "mpyc-web-demo",
     "mpyc-web-peerjs"
   ],
   "scripts": {
-    "dev": "yarn workspace @mpyc-web/demo dev",
+    "dev": "concurrently \"cd mpyc-web-demo && bun dev\" \"bun vite --debug\"",
     "build:py": "poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py && cp dist/*.whl ./mpyc-web-demo/dist/py/",
-    "build": "yarn workspace @mpyc-web/core build && yarn workspace @mpyc-web/demo build",
+    "build": "bun workspace @mpyc-web/core build && bun workspace @mpyc-web/demo build",
     "preview": "vite preview",
     "static": "python -m http.server -d dist",
-    "ghp": "yarn build && yarn gh-pages -d mpyc-web-demo/dist -t true",
-    "gh-pages": "APP_DEPLOYMENT='' yarn ghp",
-    "gh-pages-test": "APP_DEPLOYMENT='test' yarn ghp --remote test",
-    "gh-pages-mpyc": "APP_DEPLOYMENT='' yarn ghp --remote mpyc",
+    "ghp": "bun build && bun gh-pages -d mpyc-web-demo/dist -t true",
+    "gh-pages": "APP_DEPLOYMENT='' bun ghp",
+    "gh-pages-test": "APP_DEPLOYMENT='test' bun ghp --remote test",
+    "gh-pages-mpyc": "APP_DEPLOYMENT='' bun ghp --remote mpyc",
     "clean": "rm -rf ./*/dist; rm -rf ./*/node_modules; rm -rf ./*/vite.config.ts.timestamp-*.mjs"
   },
   "devDependencies": {
+    "@nx/nx-linux-x64-gnu": "^17.1.1",
     "@types/events": "^3",
     "@types/gh-pages": "^5.0.0",
     "@types/git-rev-sync": "^2.0.1",
     "coi-serviceworker": "^0.1.7",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "gh-pages": "^6.0.0",
     "git-rev-sync": "^3.0.2",
+    "lerna": "^7.4.2",
     "node-sass": "^9.0.0",
+    "nx": "^17.1.1",
     "pyodide": "^0.24.1",
     "rollup": "^4.1.5",
     "rollup-plugin-typescript-paths": "^1.4.0",
@@ -41,6 +45,7 @@
   "dependencies": {
     "@lezer/common": "^1.1.1",
     "@lezer/highlight": "^1.1.6",
-    "events": "^3.3.0"
+    "events": "^3.3.0",
+    "vite-plugin-run": "^0.5.1"
   }
 }

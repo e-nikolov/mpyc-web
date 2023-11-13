@@ -88,7 +88,7 @@
         # devShells.default = import ./nix/shell.nix pkgs;
         devShells.default = devenv.lib.mkShell {
           inherit inputs pkgs;
-          modules = [ (import ./devenv.nix) ];
+          modules = [ (import ./nix/devenv.nix) ];
         };
         packages.mpyc-demo = pkgs.mpyc-demo;
 
