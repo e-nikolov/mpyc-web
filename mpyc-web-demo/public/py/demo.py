@@ -1,3 +1,5 @@
+import js
+
 from mpyc.runtime import mpc
 import secretsanta
 

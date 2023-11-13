@@ -13,7 +13,7 @@ import rich
 import rich.text
 from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
 from .transport import PeerJSTransport, AbstractClient
-from .lib.stats import stats
+from lib.stats import stats
 from . import api
 from .run_mpc import run_mpc
 
@@ -23,52 +23,11 @@ import js
 logger = logging.getLogger(__name__)
 
 
-def noop():
+def noop(*args, **kwargs):
     pass
 
 
 loop = asyncio.get_event_loop()
-
-
-def onmessage(on_ready_message=noop, on_runtime_message=noop):
-    def _on_message(event):
-        # js.console.error("onmessage")
-
-        # [message_type, *rest] = event.data.to_py()
-        [message_type, *rest] = event.data
-
-        match message_type:
-            case "proxy:py:mpc:ready":
-                [pid, message] = rest
-                on_ready_message(pid, message)
-                # loop.call_soon(on_ready_message, pid, message)
-            case "proxy:py:mpc:runtime":
-                [pid, message] = rest
-                on_runtime_message(pid, message)
-                # loop.call_soon(on_runtime_message, pid, message)
-            case "proxy:py:mpc:exec":
-                [opts] = rest
-                asyncio.ensure_future(run_mpc(opts))
-                # loop.call_soon(run_mpc, opts)
-            case "proxy:py:exec":
-                [code] = rest
-                asyncio.ensure_future(run_code(code))
-                # loop.call_soon(run_mpc, opts)
-            case "proxy:py:env:update":
-                [env] = rest
-                api.update_env(env.to_py())
-                # api.loop.call_soon(api.update_env, env.to_py())
-            case "proxy:py:ping":
-                api.ping()
-                # api.loop.call_soon(api.ping)
-            case _:
-                logger.warning(f"Received unknown message type {message_type}")
-
-    return _on_message
-
-
-api.chanAsync.onmessage = onmessage()
-# xworker.onmessage = onmessage()
 
 
 class Client(AbstractClient):
@@ -92,11 +51,15 @@ class Client(AbstractClient):
         on_runtime_message(pid, message): Receives a runtime message from a peer.
     """
 
-    def __init__(self, _loop: asyncio.AbstractEventLoop):
+    def __init__(self, async_proxy: api.AsyncRuntimeProxy, _loop: asyncio.AbstractEventLoop):
         self.loop = _loop
 
         self.transports = {}
-        api.chanAsync.onmessage = onmessage(self.on_ready_message, self.on_runtime_message)
+        self.async_proxy = async_proxy
+
+        async_proxy.on_ready_message = self.on_ready_message
+        async_proxy.on_runtime_message = self.on_runtime_message
+        async_proxy.on_run_mpc = run_mpc
         # xworker.onmessage = onmessage(self.on_ready_message, self.on_runtime_message)
 
     async def create_connection(
@@ -122,7 +85,7 @@ class Client(AbstractClient):
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     @stats.acc(lambda self, pid, message: stats.sent_to(pid, message))
     def send_ready_message(self, pid: int, message: str):
-        api.send_message("proxy:js:mpc:msg:ready", pid, message)
+        self.async_proxy.send("proxy:js:mpc:msg:ready", pid, message)
 
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     @stats.acc(lambda self, pid, message: stats.received_from(pid, message))
@@ -150,7 +113,7 @@ class Client(AbstractClient):
         # logger.info("send_runtime_message")
         # logger.info(["runtime", pid, message])
         # logger.info(to_js(["runtime", pid, message]))
-        api.send_message("proxy:js:mpc:msg:runtime", pid, message)
+        self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message)
 
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     # @stats.set(lambda self, pid, message: stats.received_from(pid, message))

@@ -70,11 +70,17 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
             this.emit('error', err)
         };
         asyncProxyPy.onmessageerror = (err: MessageEvent) => { console.warn("asyncProxyPy.onmessageerror"); console.warn(err); this.emit('messageerror', err) };
-
+        console.warn("setting onmessage", asyncProxyPy)
         asyncProxyPy.onmessage = (e: MessageEvent) => {
-            let data = e.data as [string, ...any]
-            const [type, ...args] = data
+            let data = e.data
 
+            if (!Array.isArray(data)) {
+                console.warn("asyncProxyPy.onmessage", data)
+                this.emit("display:error", "invalid message from worker \n" + JSON.stringify(data, null, 2) + "\n")
+                return
+            }
+
+            const [type, ...args] = data;
             switch (type) {
                 case "proxy:js:init":
                     this.workerInitializing = true;
@@ -176,13 +182,26 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
             this.asyncProxyPy.postMessage(["proxy:py:env:update", this.env]);
         }
     }
-
+    fetch2 = async (url: string) => {
+        console.log("fetching", url)
+        let res = await fetch("./" + url);
+        let ab = await res.arrayBuffer();
+        return new Uint8Array(ab);
+    };
     fetch = async (url: string) => {
         // if(!url.startsWith("http")) {
         //     url = "./" + url
         // }
-        console.log("fetching", url)
+        if (url.endsWith(".gz")) {
+            url += "ip"
+        }
+
+        console.log("js/fetch fetching", url)
         let res = await fetch(url);
+        // if (!res.ok) {
+        //     throw new Error("fetch failed: " + res.status + " " + res.statusText)
+        // }
+
         let ab = await res.arrayBuffer();
         return new Uint8Array(ab);
     }
@@ -200,11 +219,19 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
         this._close();
     }
 
-    display = (message: string) => {
+    protected display = (message: string) => {
         this.emit('display', message);
     }
-    displayError = (message: string) => {
+    protected displayError = (message: string) => {
         this.emit('display:error', message);
+    }
+
+    resetStats() {
+        this.asyncProxyPy.postMessage(["proxy:py:stats:reset"])
+    }
+
+    toggleStats() {
+        this.asyncProxyPy.postMessage(["proxy:py:stats:toggle"])
     }
 
 

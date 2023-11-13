@@ -1,30 +1,23 @@
-import logging
-import asyncio
-import pyodide
-
-from .channels import *
-from .env import *
-from .run import *
-from .fetch import *
-from .disp import *
-from .message import *
-
-
 __all__ = [
-    "ping",
-    "update_env",
-    "load_env",
-    "display",
-    "display_error",
-    "fetch",
-    "send_message",
     "loop",
     "RUNNING_IN_WORKER",
     "run_file",
     "run_code_async",
     "run_code",
-    "onWorkerReady",
-    "chanAsync",
-    "chanSync",
+    "async_proxy",
+    "sync_proxy",
     "stats_printer",
+    "async_proxy",
+    "sync_proxy",
+    "AsyncRuntimeProxy",
+    "SyncRuntimeProxy",
 ]
+
+import logging
+import asyncio
+import pyodide
+
+from .proxy import sync_proxy, async_proxy, RUNNING_IN_WORKER, stats_printer, AsyncRuntimeProxy, SyncRuntimeProxy
+
+loop = asyncio.get_event_loop()
+from .run import *

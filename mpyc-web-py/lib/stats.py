@@ -19,6 +19,7 @@ The `__init__` function at the end of the module initializes a global `stats` ob
 
 import logging
 
+
 from typing import TypeVar, Callable, ParamSpec
 from functools import wraps
 import json
@@ -37,7 +38,7 @@ from rich.text import Text
 from rich.panel import Panel
 from rich.align import Align
 
-from mpycweb.lib import log_levels
+from lib import log_levels
 
 # pyright: reportMissingImports=false
 logger = logging.getLogger(__name__)
@@ -261,6 +262,9 @@ class BaseStatsCollector:
         }
 
     def to_tree(self):
+        if not self.enabled:
+            return ""
+
         tree = Tree("", style="gray50")
 
         if self.enabled:

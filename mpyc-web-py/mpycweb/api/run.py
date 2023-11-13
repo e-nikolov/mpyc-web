@@ -7,12 +7,14 @@ import importlib.util
 
 import js
 import pyodide
+from pyodide.ffi import to_js
 import micropip  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 
-from mpyc.runtime import Party, mpc  # pyright: ignore[reportMissingImports] pylint: disable=import-error,disable=no-name-in-module
-from mpycweb.lib.stats import stats
+from lib.stats import stats
 
 logger = logging.getLogger(__name__)
+
+from lib.log import *  ## add imports here to make them available by default to the demos run inside the pyodide runtime
 
 
 async def run_file(file: str):
@@ -31,7 +33,7 @@ async def run_file(file: str):
             code = f.read()
             return await run_code(code)
     except Exception as e:
-        logging.error(
+        logger.error(
             e,
             exc_info=True,
             stack_info=True,
@@ -90,7 +92,7 @@ async def run_code(code: str, filename=None):
     #         all=True,
     #     )
     #     pass
-    #     # logging.error(
+    #     # logger.error(
     #     #     e,
     #     #     exc_info=True,
     #     #     stack_info=True,
@@ -108,19 +110,31 @@ async def load_missing_packages(code: str):
     Returns:
         None
     """
-
     try:
-        await js.pyodide.loadPackagesFromImports(
-            code
-            #  {"message_callback": js.wrap.io.stdout, "message_callback_stderr": js.wrap.io.stderr}
-        )
         imports = pyodide.code.find_imports(code)
         imports = [item for item in imports if importlib.util.find_spec(item) is None]
+        load_matplotlib = "matplotlib" in imports
         if len(imports) > 0:
-            # logging.info(f"Loading packages: {imports}")
+            logger.info(f"Loading packages: {imports}")
+
+            await js.pyodide.loadPackagesFromImports(
+                code,
+                {"message_callback": print, "message_callback_stderr": print},
+            )
+
+            imports = [item for item in imports if importlib.util.find_spec(item) is None]
             await micropip.install(imports, keep_going=True)
+
+            if load_matplotlib:
+                old_level = logging.root.level
+                logging.root.level = logging.INFO
+                try:
+                    import matplotlib
+                finally:
+                    logging.root.level = old_level
+
     except Exception as e:
-        logging.error(
+        logger.error(
             e,
             exc_info=True,
             stack_info=True,

@@ -4,11 +4,51 @@ import '../scss/style.scss';
 
 import { MPCManager, PyScriptMainThreadRuntime, PeerJSTransport, PyScriptWorkerRuntime, PyodideWorkerRuntime } from '@mpyc-web/core';
 import * as app from './app';
+import { XWorker } from 'polyscript/xworker';
+import ZWorker from './worker?worker'
+
+let blobURL = (code: string) => {
+    return URL.createObjectURL(
+        new Blob([code], {
+            type: "text/plain",
+        }),
+    )
+}
+
+// let pc = new RTCPeerConnection()
+// let dc = pc.createDataChannel("test")
+// let ww = new ZWorker()
+
+// ww.postMessage([dc])
+// ww.postMessage([dc], { transfer: [dc] })
+// ww.postMessage([pc])
+
+// let ww = XWorker(blobURL(`
+//          import js
+//          js.console.error("test")
+//     `), { type: "pyodide", config: "./config.toml", async: true })
+
+// ww.onmessage = (e) => {
+//     console.log("onmessage", e)
+//     ww.postMessage("test")
+// }
+
+
 
 function main() {
     app.ensureStorageSchema(18);
     let peerID = app.loadPeerID();
 
+
+
+    // ww.onmessage = (e) => {
+    //     console.log("onmessage", e)
+    //     ww.postMessage("test")
+    //     ww.postMessage("test")
+    //     ww.postMessage("test")
+    //     ww.postMessage("test")
+    // }
+    // console.log(ww)
     const transportFactory = () => new PeerJSTransport(peerID);
     const runtimeFactory = () => new PyScriptWorkerRuntime(undefined, "./config.toml");
     // const runtimeFactory = () => new PyodideXWorker();

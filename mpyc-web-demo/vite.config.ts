@@ -2,7 +2,7 @@ import { defineConfig, PluginOption, loadEnv } from 'vite'
 import git from 'git-rev-sync'
 import topLevelAwait from "vite-plugin-top-level-await";
 import path, { resolve } from 'path';
-// import checker from 'vite-plugin-checker'
+import checker from 'vite-plugin-checker'
 import { run } from 'vite-plugin-run'
 import fs from 'fs'
 // import 'vite/types/importMeta.d';
@@ -57,22 +57,17 @@ export default defineConfig(({ mode }) => {
         // external: ['@pyscript/core'],
         input: {
           main: resolve(__dirname, 'index.html'),
-          // bench_serializers: resolve(__dirname, 'src/bench/serializers/index.html'),
-          // bench_timeouts: resolve(__dirname, 'src/bench/timeouts/index.html'),
-          // bench_all: resolve(__dirname, 'src/bench/all/index.html'),
+          bench_serializers: resolve(__dirname, 'bench/serializers/index.html'),
+          bench_timeouts: resolve(__dirname, 'bench/timeouts/index.html'),
+          bench_all: resolve(__dirname, 'bench/all/index.html'),
         }
       }
     },
     cacheDir: ".vite",
     plugins: [
-      // run([
-      //   {
-      //     name: 'python transform',
-      //     run: ['yarn', 'build:py'],
-      //     pattern: ['../**/*.py'],
-      //   }
-      // ]),
       // checker({ typescript: true }),
+
+
       // hexLoader,
 
       // tsconfigPaths(),
@@ -86,6 +81,7 @@ export default defineConfig(({ mode }) => {
       // }),
     ],
     server: {
+      port: 4001,
       hmr: process.env.NO_HMR ? false : true,
       headers: {
         "Cross-Origin-Embedder-Policy": "require-corp",
@@ -97,8 +93,12 @@ export default defineConfig(({ mode }) => {
       },
       fs: {
         // allow: [
-        //   "mpyc-web/", // and your source files
-        //   "src/", // and your source files
+        //   // "mpyc-web/", // and your source files
+        //   "/**/*.*", // and your source files
+        //   "src", // and your source files
+        //   "./src/**/*.woff2", // and your source files
+        //   "/src/**/*.woff2", // and your source files
+        //   "../mpyc-web-py", // and your source files
         // ],
       }
     }

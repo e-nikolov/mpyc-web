@@ -18,9 +18,10 @@ authors = ["Berry Schoenmakers <berry@win.tue.nl>"]
 packages = [
     { include = "./mpycweb", from = "./mpyc-web-py" },
     { include = "./lib", from = "./mpyc-web-py" },
+    { include = "./bench.py", from = "./mpyc-web-py/lib" },
     { include = "./startup", from = "./mpyc-web-py" },
-    { include = "./mpyc", from = "./mpyc" },
-    { include = "./*.py", from = "./mpyc/demos" }
+    { include = "./mpyc", from = "./mpyc-web-py/mpyc" },
+    { include = "./*.py", from = "./mpyc-web-py/mpyc/demos" }
 ]
 
     [tool.poetry.dependencies]
