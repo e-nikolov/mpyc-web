@@ -85,15 +85,7 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
 
                     const oldSetTimeout = self.setTimeout
 
-                    // self.setTimeout = (handler: TimerHandler, timeout?: number, ...args: any[]): number => {
-                    //     console.log("setTimeout")
-                    //     return oldSetTimeout(handler, timeout, ...args)
-                    // }
-                    const setTimeoutFromSetImmediate = (setImmediate: (cb: () => void) => void) => (callback: () => never, delay: number) => {
-                        if (delay == undefined || isNaN(delay) || delay < 0) {
-                            delay = 0;
-                        }
-
+                    const setTimeoutFromSetImmediate = (setImmediate: (cb: () => void) => void) => (callback: () => never, delay: number = 0) => {
                         if (delay < 1) {
                             return setImmediate(callback)
                         } else {
@@ -101,12 +93,7 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                         }
                     }
 
-                    const setTimeout_async = setTimeoutFromSetImmediate(async (cb: () => void) => {
-                        cb()
-                    })
-                    const setTimeout_queueMicrotask = setTimeoutFromSetImmediate(queueMicrotask)
-
-                    var counter = 0;
+                    self.counter = 0;
                     var queue = {};
 
                     var channel = new MessageChannel();
@@ -120,12 +107,12 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                     };
 
                     const setImmediate = (callback: () => void) => {
-                        queue[++counter] = callback;
-                        channel.port2.postMessage(counter);
+                        queue[++self.counter] = callback;
+                        channel.port2.postMessage(self.counter);
                     }
 
                     self.fastSetTimeout = setTimeoutFromSetImmediate(setImmediate)
-
+                    self.setTimeout = self.fastSetTimeout;
                     // self.runAsync(wrap, startup, { filename: "startup.py" })
                     self.runAsync(`
                         import asyncio
@@ -163,6 +150,8 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
 declare global {
     interface Window {
         runAsync: (code: string, filename: string) => Promise<any>;
+        counter: number;
         fastSetTimeout: (callback: () => never, delay: number) => void;
+        setTimeout: any
     }
 }
