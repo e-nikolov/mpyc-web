@@ -135,4 +135,4 @@ class Client(AbstractClient):
         # logger.info(message.to_memoryview())
         # logger.info(message.to_bytes())
         # logger.info(type(message))
-        self._on_runtime_message(pid, message.to_bytes())
+        self._on_runtime_message(pid, message.to_py())

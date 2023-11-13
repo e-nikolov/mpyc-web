@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => {
     define: {
       "__BUILD_INFO__": { version: env.npm_package_version, dirty: git.isDirty(), deployment: env.APP_DEPLOYMENT, timestamp: Date.now(), time: new Date().toLocaleString("en-IE", { hour12: false }), revision: git.short("../") },
     },
-    // base: "./",
+    base: "./",
     build: {
       outDir: "dist",
       emptyOutDir: true,
@@ -82,7 +82,9 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       port: 4001,
-      hmr: process.env.NO_HMR ? false : true,
+      hmr: process.env.NO_HMR ? false : {
+        overlay: false,
+      },
       headers: {
         "Cross-Origin-Embedder-Policy": "require-corp",
         "Cross-Origin-Opener-Policy": "same-origin",

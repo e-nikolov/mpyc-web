@@ -4,8 +4,6 @@ import '../scss/style.scss';
 
 import { MPCManager, PyScriptMainThreadRuntime, PeerJSTransport, PyScriptWorkerRuntime, PyodideWorkerRuntime } from '@mpyc-web/core';
 import * as app from './app';
-import { XWorker } from 'polyscript/xworker';
-import ZWorker from './worker?worker'
 
 let blobURL = (code: string) => {
     return URL.createObjectURL(
