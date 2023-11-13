@@ -2,7 +2,7 @@
   "name": "@mpyc-web/core",
   "version": "0.6.0",
   "type": "module",
-  "packageManager": "yarn@3.6.3",
+  "packageManager": "bun@1.0.11",
   "scripts": {
     "dev": "APP_DEPLOYMENT=dev vite --debug",
     "build:py": "poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py/ && cp ./dist/*.whl ./dist/py/",
@@ -53,7 +53,6 @@
   "dependencies": {
     "@types/node": "^20.8.9",
     "cbor-x": "^1.5.4",
-    "coincident": "^0.14.2",
     "dts-bundle-generator": "^8.1.2",
     "emittery": "^1.0.1",
     "eventemitter3": "^5.0.1",
@@ -62,7 +61,7 @@
     "msgpackr": "^1.9.9",
     "node-fetch": "^3.3.2",
     "peerjs": "^1.5.1",
-    "polyscript": "=0.5.5",
+    "polyscript": "^0.5.11",
     "reflect-metadata": "^0.1.13"
   }
 }

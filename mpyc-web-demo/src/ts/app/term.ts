@@ -146,7 +146,12 @@ export class Term extends Terminal {
                     }
                 }
                 if (e.key == "h") {
-                    this.toggleLivePanel()
+                    this.mpyc.runtime.toggleStats()
+                    e.preventDefault()
+                    return false
+                }
+                if (e.key == "r") {
+                    this.mpyc.runtime.resetStats()
                     e.preventDefault()
                     return false
                 }

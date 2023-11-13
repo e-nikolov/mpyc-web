@@ -9,8 +9,8 @@
   </script>
   <link rel="icon" href="/favicon.ico" />
   <!-- <script src="/mini-coi.js"></script> -->
-  <script src="/coi-serviceworker.js"></script>
   <script defer type="module" src="/src/ts/main.ts"></script>
+  <script defer src="/coi-serviceworker.js"></script>
 </head>
 
 <body>
@@ -82,7 +82,7 @@
         <div class="mb-3">
           <h5> MPC Demos: </h5>
           <select size=15 id="select-demo" class="form-select" aria-label="Select Demo">
-            <option value="saved.py">Your Code</option>
+            <option value="./py/saved.py">Your Code</option>
             <option selected value="./py/demo.py">Demo</option>
             <option value="./py/demos/secretsanta.py">Secret Santa</option>
             <option value="./py/demos/helloworld.py">Hello World</option>

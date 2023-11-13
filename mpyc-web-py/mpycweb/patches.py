@@ -3,7 +3,6 @@ patches.py
 """
 
 # pylint: disable=import-error
-from io import TextIOWrapper
 import time
 import types
 import datetime
@@ -15,6 +14,7 @@ import builtins
 import js
 
 # pyright: reportMissingImports=false
+from polyscript import xworker
 
 
 from pyodide.code import run_js
@@ -27,10 +27,83 @@ from mpyc.runtime import mpc, Runtime  # pylint: disable=import-error,disable=no
 
 
 from . import proxy
-from .lib.stats import stats
+from lib.stats import stats
 from . import api
 
+loop = asyncio.get_event_loop()
 logger = logging.getLogger(__name__)
+
+# https://github.com/pyodide/pyodide/issues/4006
+# The pyodide Webloop relies onsetTimeout(), which has a minimum delay of 4ms
+# this slows down code that uses await asyncio.sleep(0)
+# This monkey patch replaces setTimeout() with a faster version that uses MessageChannel
+run_js("""
+//import genericPool from 'https://cdn.jsdelivr.net/npm/generic-pool@3.9.0/+esm'
+
+addEventListener("error", (e) => {
+    console.warn(e.error);
+});
+
+const oldSetTimeout = setTimeout;
+
+function fastSetTimeout(callback, delay) {
+    if (delay == undefined || isNaN(delay) || delay < 0) {
+        delay = 0;
+    }
+    if (delay < 1) {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = () => { callback() };
+        channel.port2.postMessage('');
+    } else {
+        oldSetTimeout(callback, delay);
+    }
+}
+
+
+// import pool from 'generic-pool'
+
+// const channelPool = pool.createPool(
+//     {
+//         create: async () => {
+//             return new MessageChannel();
+//         },
+//         destroy: async (channel) => {
+//             channel.port1.close();
+//             channel.port2.close();
+//         }
+//     },
+//     {
+//         max: 100,
+//         min: 30,
+//     }
+// )
+
+// export function callSoon(callback: () => void, delay: number = 0) {
+//     if (delay == undefined || isNaN(delay) || delay < 0) {
+//         delay = 0;
+//     }
+//     if (delay < 1) {
+//         channelPool.acquire().then(channel => {
+//             channel.port1.onmessage = () => { channelPool.release(channel); callback() };
+//             channel.port2.postMessage('');
+//         });
+//     } else {
+//         setTimeout(callback, delay);
+//     }
+// }
+
+        """)
+webloop.setTimeout = js.fastSetTimeout
+
+
+# async def stats_printer():
+#     while True:
+#         xworker.sync.log(f"Python Worker Stats")
+#         xworker.sync.log(f"{stats.stats}")
+#         await asyncio.sleep(5)
+
+
+# asyncio.ensure_future(stats_printer())
 
 
 def run(self, f):
@@ -54,6 +127,9 @@ def run(self, f):
 mpc.run = types.MethodType(run, mpc)
 
 
+pjs = proxy.Client(api.async_proxy, loop)
+
+
 # TODO refactor runtime.start() to work with multiple transports
 # The regular start() starts TCP connections, which don't work in the browser.
 # We monkey patch it to use PeerJS instead.
@@ -64,7 +140,7 @@ async def start(runtime: Runtime) -> None:
     """
     loop = runtime._loop  # pylint: disable=protected-access
 
-    pjs = proxy.Client(loop)
+    pjs = proxy.Client(api.async_proxy, loop)
 
     logger.debug("monkey patched start()")
     logger.info(f"Start MPyC runtime v{runtime.version} with a PeerJS transport")
@@ -199,56 +275,10 @@ async def shutdown(self):
 #         peer.protocol.close_connection()
 #     await self.parties[self.pid].protocol
 
-builtins.input = api.readline
-
 old_open = builtins.open
 
 import rich
 import os
-import js
-
-from pyodide.code import run_js
-
-run_js("""
-       
-    function stringToArrayBuffer(str) {
-        var buf = new ArrayBuffer(str.length);
-        var bufView = new Uint8Array(buf);
-
-        for (var i=0, strLen=str.length; i<strLen; i++) {
-            bufView[i] = str.charCodeAt(i);
-        }
-
-        return buf;
-    }
-    
-    function js_fetch2(url) {
-        url = "/./" + url;
-        
-        console.log("fetching", url)
-        const request = new XMLHttpRequest();
-        request.open("GET", url, false); // `false` makes the request synchronous
-        //request.responseType = "arraybuffer";
-        request.send(null);
-
-        if (request.status === 200) {
-            
-            return stringToArrayBuffer(request.response);
-        }
-        throw new Error("Could not fetch " + url);
-    }
-    
-    async function js_fetch(url) {
-        console.log("fetching", url)
-        let res = await fetch("./" + url);
-        let ab = await res.arrayBuffer();
-        return new Uint8Array(ab);
-    };
-    
-    """)
-
-from polyscript import xworker
-from pyodide.http import open_url
 
 
 def open_fetch(*args, **kwargs):
@@ -267,28 +297,72 @@ def open_fetch(*args, **kwargs):
     """
     try:
         return old_open(*args, **kwargs)
-
     except FileNotFoundError as e:
-        logging.info("fetching %s", e.filename)
-        # data = api.fetch(e.filename)
-        # data = js.js_fetch(e.filename)
-
-        # FIXME working around a vite bug with gz files being automatically decompressed
-
-        url = e.filename
-        if not url.startswith("http") and url.endswith("gz"):
-            url += "ip"
-
-        data = xworker.sync.fetch(url)
-        # data = open_url(e.filename) # TODO use atomics.wait and notify
+        data = xworker.sync.fetch(e.filename).to_py()
         os.makedirs(os.path.dirname(e.filename), exist_ok=True)
-        f = old_open(e.filename, "wb+")
-        f.write(data.to_py())
-        f.close()
+        with old_open(e.filename, "wb+") as f:
+            f.write(data)
 
         return old_open(*args, **kwargs)
 
 
+def try_fetch(path):
+    try:
+        data = xworker.sync.fetch(path).to_py()
+        # exit(0)
+        # data = open_url(e.filename) # TODO use atomics.wait and notify
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with old_open(path, "wb+") as f:
+            f.write(data)
+
+        return
+    except:
+        pass
+
+
+# old_open = builtins.open
+old_open = open
+# old_open = os.open
+old_stat = os.stat
+patched = True
+
+
+# def _open(path, depth=0, **kwargs):
+#     global patched
+#     try:
+#         if depth > 0:
+#             return old_open(path, os.O_CREAT, **kwargs)
+
+#         res = _open(path, depth=depth + 1, **kwargs)
+
+#         if res:
+#             return res
+#     except FileNotFoundError as e:
+#         try_fetch(e.filename)
+#         return _open(path, depth=depth + 1, **kwargs)
+#     finally:
+#         patched = True
+
+
+# def _stat(*args, **kwargs):
+#     global patched
+#     try:
+#         if not patched:
+#             return old_stat(*args, **kwargs)
+
+#         patched = False
+#         res = _stat(*args, **kwargs)
+#         if res:
+#             return res
+#     except FileNotFoundError as e:
+#         try_fetch(e.filename)
+#         return _stat(*args, **kwargs)
+#     finally:
+#         patched = True
+
+
+# builtins.open = _open
+# os.stat = _stat
 builtins.open = open_fetch
 
 mpc.shutdown = types.MethodType(shutdown, mpc)

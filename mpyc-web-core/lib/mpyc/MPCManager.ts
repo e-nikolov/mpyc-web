@@ -3,10 +3,10 @@ import Emittery from 'emittery'
 
 import { MPCEvents, PeerJSData, TransportEvents, Transport, AnyData, PassThroughRuntimeEvents } from './events'
 import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
-import { PyodideWorkerRuntime } from "../runtimes/PyodideWorkerRuntime";
+import { PyodideWorkerRuntime } from "../runtimes/PyodideWorker/PyodideWorkerRuntime";
 import { MPCRuntimeBase, MPCRuntimeManager } from "../runtimes/MPCRuntimeBase";
-import { PyScriptWorkerRuntime } from "../runtimes/PyScriptWorkerRuntime";
-import { PyScriptMainThreadRuntime } from "../runtimes/PyScriptMainThreadRuntime";
+import { PyScriptWorkerRuntime } from "../runtimes/PyScriptWorker/PyScriptWorkerRuntime";
+import { PyScriptMainThreadRuntime } from "../runtimes/PyScriptMainThread/PyScriptMainThreadRuntime";
 
 type options = {
     peerID?: string
@@ -168,7 +168,7 @@ export class MPCManager extends Emittery<MPCEvents> {
         this.runtime.processReadyMessage(pid, message)
     }
 
-    // Called from the PeerJS connection
+    // Called from the PeerJS connection 
     processRuntimeMessage = (peerID: string, message: any) => {
         if (!this.running) {
             console.log("ignoring mpc runtime message because we are not running")

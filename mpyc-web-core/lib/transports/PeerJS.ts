@@ -1,13 +1,7 @@
 import { Peer, DataConnection, PeerOptions } from "peerjs";
 
-import { EventEmitter } from 'eventemitter3'
 import Emittery from 'emittery'
-import { MPCEvents, PeerJSData, PeerJSTransportData, TransportEvents, Transport, AnyData, PeersData } from '../mpyc/events'
-import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
-import { PyodideWorkerRuntime } from "../runtimes/PyodideWorkerRuntime";
-import { MPCRuntimeBase, MPCRuntimeManager } from "../runtimes/MPCRuntimeBase";
-import { PyScriptWorkerRuntime } from "../runtimes/PyScriptWorkerRuntime";
-import { PyScriptMainThreadRuntime } from "../runtimes/PyScriptMainThreadRuntime";
+import { PeerJSTransportData, TransportEvents, Transport } from '../mpyc/events'
 
 type ConnMap = Map<string, DataConnection>;
 
