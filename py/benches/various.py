@@ -81,7 +81,7 @@ async def autorange_async(func: AsyncCallable[[], R]) -> tuple[float, R]:
         for j in 1, 2, 5:
             iterations = i * j
             time_taken, res = await _timeit_async(func, iterations)
-            if time_taken >= 2:
+            if time_taken >= 0.5:
                 return (round(iterations / time_taken, 2), res)
         i *= 10
 
@@ -92,7 +92,7 @@ def autorange_sync(func: Callable[[], R]) -> tuple[float, R]:
         for j in 1, 2, 5:
             iterations = i * j
             time_taken, res = _timeit_sync(func, iterations)
-            if time_taken >= 2:
+            if time_taken >= 0.5:
                 return (round(iterations / time_taken, 2), res)
         i *= 10
 
@@ -261,13 +261,12 @@ def loopz(a: Any, b: Any, c: Any = 4):
 
 
 async def main():
-    sync_nothing()
-
-    await async_nothing()
+    await async_sleep_0()
 
     sync_sleep_0()
 
-    await async_sleep_0()
+    await async_nothing()
+    sync_nothing()
 
     await async_sleep_0001()
     await async_sleep_0002()
