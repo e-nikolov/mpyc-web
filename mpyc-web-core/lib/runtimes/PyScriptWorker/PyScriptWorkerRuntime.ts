@@ -99,10 +99,8 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                     var channel = new MessageChannel();
 
                     channel.port1.onmessage = function (event) {
-                        var id = event.data;
-
-                        var callback = queue[id];
-                        delete queue[id];
+                        var callback = queue[event.data];
+                        delete queue[event.data];
                         callback();
                     };
 
@@ -111,8 +109,8 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                         channel.port2.postMessage(self.counter);
                     }
 
-                    self.fastSetTimeout = setTimeoutFromSetImmediate(setImmediate)
-                    self.setTimeout = self.fastSetTimeout;
+                    // self.fastSetTimeout = setTimeoutFromSetImmediate(setImmediate)
+                    // self.setTimeout = self.fastSetTimeout;
                     // self.runAsync(wrap, startup, { filename: "startup.py" })
                     self.runAsync(`
                         import asyncio
