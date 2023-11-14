@@ -17,7 +17,6 @@ from mpyc.runtime import mpc
 
 
 class SecureFraction:
-
     size = 2  # __lt__() assumes last dimension of size 2
 
     def __init__(self, a):
@@ -37,45 +36,52 @@ def np_pwlst(a, x, n):
     elif n == 2:
         powers = mpc.np_fromlist([a, a * x])
     else:
-        even_powers = np_pwlst(a, x * x, (n+1)//2)
-        if n%2:
+        even_powers = np_pwlst(a, x * x, (n + 1) // 2)
+        if n % 2:
             even_powers, d = even_powers[:-1], even_powers[-1:]
         powers = np.stack((even_powers, x * even_powers))  # add odd powers
-        powers = powers.reshape(n - (n%2), order='F')  # mix even-odd powers
-        if n%2:
+        powers = powers.reshape(n - (n % 2), order="F")  # mix even-odd powers
+        if n % 2:
             powers = np.append(powers, d)
     return powers
 
 
 async def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--dataset', type=int, metavar='I',
-                        help=('dataset 0=uvlp (default), 1=wiki, 2=tb2x2, 3=woody, '
-                              '4=LPExample_R20, 5=sc50b, 6=kb2, 7=LPExample'))
-    parser.add_argument('-l', '--bit-length', type=int, metavar='L',
-                        help='override preset bit length for dataset')
+    parser.add_argument(
+        "-i",
+        "--dataset",
+        type=int,
+        metavar="I",
+        help="dataset 0=uvlp (default), 1=wiki, 2=tb2x2, 3=woody, 4=LPExample_R20, 5=sc50b, 6=kb2, 7=LPExample",
+    )
+    parser.add_argument("-l", "--bit-length", type=int, metavar="L", help="override preset bit length for dataset")
     parser.set_defaults(dataset=0, bit_length=0)
     args = parser.parse_args()
 
-    settings = [('uvlp', 8, 1, 2),
-                ('wiki', 6, 1, 1),
-                ('tb2x2', 6, 1, 2),
-                ('woody', 8, 1, 3),
-                ('LPExample_R20', 70, 1, 9),
-                ('sc50b', 104, 10, 55),
-                ('kb2', 560, 100000, 154),
-                ('LPExample', 110, 1, 175)]
+    settings = [
+        ("uvlp", 8, 1, 2),
+        ("wiki", 6, 1, 1),
+        ("tb2x2", 6, 1, 2),
+        ("woody", 8, 1, 3),
+        ("LPExample_R20", 70, 1, 9),
+        ("sc50b", 104, 10, 55),
+        ("kb2", 560, 100000, 154),
+        ("LPExample", 110, 1, 175),
+    ]
     name, bit_length, scale, n_iter = settings[args.dataset]
     if args.bit_length:
         bit_length = args.bit_length
 
-    T = np.genfromtxt(os.path.join('data', 'lp', name + '.csv'), dtype=float, delimiter=',')
+    fpath = os.path.join("data", "lp", name + ".csv")
+    open(fpath)
+    T = np.genfromtxt(fpath, dtype=float, delimiter=",")
     m, n = T.shape[0] - 1, T.shape[1] - 1
     secint = mpc.SecInt(bit_length, n=m + n)  # force existence of Nth root of unity, N>=m+n
-    print(f'Using secure {bit_length}-bit integers: {secint.__name__}')
-    print(f'dataset: {name} with {m} constraints and {n} variables (scale factor {scale})')
+    print(f"Using secure {bit_length}-bit integers: {secint.__name__}")
+    print(f"dataset: {name} with {m} constraints and {n} variables (scale factor {scale})")
     T[0, -1] = 0.0  # initialize optimal value
-    T = np.vectorize(int, otypes='O')(T * scale)
+    T = np.vectorize(int, otypes="O")(T * scale)
     g = np.gcd.reduce(T[1:], axis=1, keepdims=True)
     T[1:] //= np.maximum(g, 1)  # remove common factors per row (skipping cost row)
     T = secint.array(T)
@@ -93,7 +99,7 @@ async def main():
     await mpc.start()
 
     cobasis = w_powers[:n]
-    basis = w_powers[N - m:N]
+    basis = w_powers[N - m : N]
     previous_pivot = secint(1)
 
     iteration = 0
@@ -110,7 +116,7 @@ async def main():
         # reveal progress a bit
         iteration += 1
         mx, cd, p = await mpc.output([T[0, -1], previous_pivot, pivot])
-        logging.info(f'Iteration {iteration}/{n_iter}: {mx / cd} pivot={p / cd}')
+        logging.info(f"Iteration {iteration}/{n_iter}: {mx / cd} pivot={p / cd}")
 
         # swap basis entries
         delta = basis @ p_row_index - cobasis @ p_col_index
@@ -128,26 +134,24 @@ async def main():
 
     mx = await mpc.output(T[0, -1])
     cd = await mpc.output(previous_pivot)  # common denominator for all entries of T
-    print(f'max = {mx} / {cd} / {scale} = {mx / cd / scale} in {iteration} iterations')
+    print(f"max = {mx} / {cd} / {scale} = {mx / cd / scale} in {iteration} iterations")
 
-    logging.info('Solution x')  # TODO: support np.vander() for finite field Vandermonde arrays
-    if np.lib.NumpyVersion(np.__version__) >= '1.23.0':
+    logging.info("Solution x")  # TODO: support np.vander() for finite field Vandermonde arrays
+    if np.lib.NumpyVersion(np.__version__) >= "1.23.0":
         coefs = w_powers[[[(-j * k) % N for k in range(N)] for j in range(n)]]
     else:
-        coefs = Zp.array([[w_powers[-j*k % N].value for k in range(N)] for j in range(n)])
-    sum_powers = np.sum(np.fromiter((np_pwlst(T[i+1][-1] / N, basis[i], N) for i in range(m)),
-                                    'O', count=m))
+        coefs = Zp.array([[w_powers[-j * k % N].value for k in range(N)] for j in range(n)])
+    sum_powers = np.sum(np.fromiter((np_pwlst(T[i + 1][-1] / N, basis[i], N) for i in range(m)), "O", count=m))
     x = coefs @ sum_powers
     Ax_bounded_by_b = np.all(A @ x <= b * cd)
     x_nonnegative = np.all(x >= 0)
 
-    logging.info('Dual solution y')
-    if np.lib.NumpyVersion(np.__version__) >= '1.23.0':
+    logging.info("Dual solution y")
+    if np.lib.NumpyVersion(np.__version__) >= "1.23.0":
         coefs = w_powers[[[(-i * k) % N for k in range(N)] for i in range(N - m, N)]]
     else:
-        coefs = Zp.array([[w_powers[-i*k % N].value for k in range(N)] for i in range(N - m, N)])
-    sum_powers = np.sum(np.fromiter((np_pwlst(T[0][j] / N, cobasis[j], N) for j in range(n)),
-                                    'O', count=n))
+        coefs = Zp.array([[w_powers[-i * k % N].value for k in range(N)] for i in range(N - m, N)])
+    sum_powers = np.sum(np.fromiter((np_pwlst(T[0][j] / N, cobasis[j], N) for j in range(n)), "O", count=n))
     y = coefs @ sum_powers
     yA_bounded_by_c = np.all(y @ A >= c * cd)
     y_nonnegative = np.all(y >= 0)
@@ -155,12 +159,13 @@ async def main():
     cx_eq_yb = c @ x == y @ b
     check = mpc.all([cx_eq_yb, Ax_bounded_by_b, x_nonnegative, yA_bounded_by_c, y_nonnegative])
     check = bool(await mpc.output(check))
-    print(f'verification c.x == y.b, A.x <= b, x >= 0, y.A >= c, y >= 0: {check}')
+    print(f"verification c.x == y.b, A.x <= b, x >= 0, y.A >= c, y >= 0: {check}")
 
     x = await mpc.output(x)
-    print(f'solution = {[a / cd for a in x]}')
+    print(f"solution = {[a / cd for a in x]}")
 
     await mpc.shutdown()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     mpc.run(main())

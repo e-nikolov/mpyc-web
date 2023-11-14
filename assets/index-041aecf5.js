@@ -1,1 +1,0 @@
-import{B as e}from"./index-8321c0dd.js";import{d as a,e as s,f as n}from"./callsoon-6da41c3b.js";class o extends e{x=3;async MessageChannel(){new MessageChannel}async sleep_setTimeout(){this.x+=1,await a(0)}async sleep_callSoon_pool(){await s(0)}async sleep_callSoon_new(){await n(0)}}async function i(){await o.run2()}export{i as m};

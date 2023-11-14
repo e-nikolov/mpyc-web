@@ -1,1 +1,0 @@
-import"./callsoon-6da41c3b.js";import{m as i}from"./index-355df0b7.js";import"./encode-6b53eb4b.js";import"./index-8321c0dd.js";(async()=>{document.title="MPyC Web - Bench Serializers";await i()})();

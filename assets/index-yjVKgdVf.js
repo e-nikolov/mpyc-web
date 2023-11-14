@@ -1,0 +1,1 @@
+import{B as c}from"./index-IqbplxEJ.js";class e extends c{x=3;async async_nothing(){}sync_nothing(){}async add(){}async add2(a,n,t){}add3(a,n,t=4){return a+n}loopz(){let a=1;for(let n=0;n<1e3;n++)a+=n;return a}}async function i(){await e.run2()}export{i as m};
