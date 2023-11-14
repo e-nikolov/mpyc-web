@@ -5,7 +5,7 @@ This module provides a client for establishing connections with other peers usin
 import asyncio
 
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Awaitable
 
 # pyright: reportMissingImports=false
 from pyodide.ffi import JsProxy, to_js
@@ -52,7 +52,7 @@ class Client(AbstractClient):
     """
 
     def __init__(self, async_proxy: api.AsyncRuntimeProxy, _loop: asyncio.AbstractEventLoop):
-        self.loop = _loop
+        self._loop = _loop
 
         self.transports = {}
         self.async_proxy = async_proxy
@@ -104,6 +104,7 @@ class Client(AbstractClient):
             logger.warning(f"Received ready message from {pid} but no transport exists for that pid yet")
             return
         self.transports[pid].on_ready_message(message)
+        # self._loop.create_task(self.transports[pid].on_ready_message(message))
 
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     # @stats.time()
@@ -114,14 +115,18 @@ class Client(AbstractClient):
         # logger.info(["runtime", pid, message])
         # logger.info(to_js(["runtime", pid, message]))
         self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message)
+        # self._loop.create_task(self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message))
+        # asyncio.ensure_future(self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message))
+        # loop.create_task(self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message))
 
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     # @stats.set(lambda self, pid, message: stats.received_from(pid, message))
     @stats.acc(lambda self, pid, message: stats.received_from(pid, message))
     def _on_runtime_message(self, pid: int, message: bytes):
+        # self._loop.create_task(self.transports[pid].on_runtime_message(message))
         self.transports[pid].on_runtime_message(message)
 
-    def on_runtime_message(self, pid: int, message: JsProxy):
+    def on_runtime_message(self, pid: int, message: JsProxy) -> None:
         """
         Handle a runtime message from a peer.
 
@@ -135,4 +140,6 @@ class Client(AbstractClient):
         # logger.info(message.to_memoryview())
         # logger.info(message.to_bytes())
         # logger.info(type(message))
+        # self._loop.create_task(self._on_runtime_message(pid, message.to_py()))
+        # self._loop.call_soon(self._on_runtime_message, pid, message.to_py())
         self._on_runtime_message(pid, message.to_py())

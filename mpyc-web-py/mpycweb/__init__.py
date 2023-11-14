@@ -61,6 +61,7 @@ from .transport import *
 from .patches import *
 from lib.bench import *
 
+# asyncio.ensure_future(api.async_proxy.notify_runtime_ready())
 api.async_proxy.notify_runtime_ready()
 
 asyncio.create_task(api.stats_printer())

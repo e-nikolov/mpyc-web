@@ -30,6 +30,7 @@ packages = [
     numpy = "^1.25.2"
     gmpy2 = "^2.1.5"
     pyyaml = "^6.0.1"
+    humanize = "^4.8.0"
 
     [tool.poetry.group.dev.dependencies]
     python = "^3.11,<3.13"

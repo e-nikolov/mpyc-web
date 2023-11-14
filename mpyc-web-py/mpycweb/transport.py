@@ -102,6 +102,7 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
     async def _connect_to_peer(self):
         while not self.peer_ready_to_start:
             ## send ready messages to this connection's peer to check if the user has clicked "run mpyc demo"
+            # self._loop.call_soon(self.client.send_ready_message, self.pid, "ready?")
             self.client.send_ready_message(self.pid, "ready?")
             await asyncio.sleep(1)
 
@@ -112,7 +113,8 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
         to be sent out asynchronously.
         """
 
-        self.client.send_runtime_message(self.pid, data)
+        # self._loop.call_soon(self.client.send_runtime_message, self.pid, data)  # TODO buffer?
+        self.client.send_runtime_message(self.pid, data)  # TODO buffer?
 
     def on_runtime_message(self, message: bytes):
         """
@@ -121,6 +123,7 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
         Args:
             message (bytes): The message received from the runtime.
         """
+        # self._loop.call_soon(self._protocol.data_received, message)
         self._protocol.data_received(message)
 
     def on_ready_message(self, message: str):
@@ -138,17 +141,15 @@ class PeerJSTransport(asyncio.Transport):  # pylint: disable=abstract-method
             case "ready?":
                 logger.debug(f"party {self.pid} asks if we are ready to start")
                 if self.ready_for_next_run:
-                    try:
-                        self._protocol.connection_made(self)
-                    except Exception as e:
-                        logger.error(e, exc_info=True, stack_info=True)
-                        raise e
+                    self._protocol.connection_made(self)
+                    # self._loop.call_soon(self.client.send_ready_message, self.pid, "ready_ack")
                     self.client.send_ready_message(self.pid, "ready_ack")
                     self.ready_for_next_run = False
 
             case "ready_ack":
                 logger.debug(f"party {self.pid} confirmed ready to start")
-                self._loop.call_soon(self._protocol.connection_made, self)
+                # self._loop.call_soon(self._protocol.connection_made, self)
+                self._protocol.connection_made(self)
 
                 self.peer_ready_to_start = True
 

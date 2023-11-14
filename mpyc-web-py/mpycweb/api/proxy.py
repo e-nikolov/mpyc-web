@@ -67,12 +67,14 @@ class SyncRuntimeProxy:
 
 import rich
 
+loop = asyncio.get_event_loop()
+
 
 class AsyncRuntimeProxy:
-    postMessage: Callable[[Any], None]
+    postMessage: Callable[[Any], Awaitable[None]]
     on_ready_message: Callable[[int, str], None]
     on_runtime_message: Callable[[int, str], None]
-    on_run_mpc: Callable[[Any], Awaitable[None]]
+    on_run_mpc: Callable[[Any], None]
     chan: Any
 
     def __init__(self, chan: Any):
@@ -80,12 +82,14 @@ class AsyncRuntimeProxy:
         chan.onmessage = self.onmessage
         self.postMessage = chan.postMessage
 
-    def fetch(self, filename: str, opts):
+    async def fetch(self, filename: str, opts):
         return pyfetch(filename, opts)
 
+    # async def send(self, _type: str, pid: int, message: Any):
     def send(self, _type: str, pid: int, message: Any):
         self.postMessage(to_js([_type, pid, message]))
 
+    # async def notify_runtime_ready(self):
     def notify_runtime_ready(self):
         js.console.log("runtime ready")
         self.postMessage(to_js(["proxy:js:runtime:ready"]))
@@ -106,6 +110,7 @@ class AsyncRuntimeProxy:
             case ProxyEventType.MPC_READY:
                 [pid, message] = rest
                 self.on_ready_message(pid, message)
+                # loop.create_task(self.on_ready_message(pid, message))
                 # loop.call_soon(on_ready_message, pid, message)
             case ProxyEventType.STATS_TOGGLE:
                 stats.enabled = not stats.enabled
@@ -114,14 +119,17 @@ class AsyncRuntimeProxy:
             case ProxyEventType.MPC_RUNTIME:
                 [pid, message] = rest
                 self.on_runtime_message(pid, message)
+                # loop.create_task(self.on_runtime_message(pid, message))
                 # loop.call_soon(on_runtime_message, pid, message)
             case ProxyEventType.MPC_EXEC:
                 [opts] = rest
-                asyncio.ensure_future(self.on_run_mpc(opts))
+                self.on_run_mpc(opts)
+                # loop.create_task(self.on_run_mpc(opts))
                 # loop.call_soon(run_mpc, opts)
             case ProxyEventType.EXEC:
                 [code] = rest
-                asyncio.ensure_future(run_code(code))
+                # run_code(code)
+                loop.create_task(run_code(code))
                 # loop.call_soon(run_mpc, opts)
             case ProxyEventType.ENV_UPDATE:
                 [env] = rest
@@ -130,7 +138,7 @@ class AsyncRuntimeProxy:
             case _:
                 logger.warning(f"Received unknown message type {message_type}")
 
-    def display(self, msg):
+    async def display(self, msg):
         """
         Displays a message.
 
@@ -139,7 +147,7 @@ class AsyncRuntimeProxy:
         """
         self.chan.postMessage(to_js(["proxy:js:display", msg]))
 
-    def display_error(self, msg):
+    async def display_error(self, msg):
         """
         Displays a message.
 
