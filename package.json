@@ -8,13 +8,14 @@
     "mpyc-web-peerjs"
   ],
   "scripts": {
-    "dev": "concurrently \"cd mpyc-web-demo && bun dev\" \"bun vite --debug\"",
+    "dev": "concurrently \"yarn workspace @mpyc-web/demo dev\" \"yarn vite --debug\"",
+    "bun:dev": "concurrently \"cd mpyc-web-demo && bun dev\" \"bun vite --debug\"",
     "build:py": "poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py && cp dist/*.whl ./mpyc-web-demo/dist/py/",
     "build": "yarn build:py && yarn workspace @mpyc-web/core build && yarn workspace @mpyc-web/demo build",
     "preview": "vite preview",
     "static": "python -m http.server -d dist",
     "ghp": "yarn build && gh-pages -d mpyc-web-demo/dist -t true",
-    "gh-pages-web": "APP_DEPLOYMENT='' ghp",
+    "gh-pages-web": "APP_DEPLOYMENT='' yarn ghp",
     "gh-pages-test": "APP_DEPLOYMENT='test' yarn ghp --remote test",
     "gh-pages-mpyc": "APP_DEPLOYMENT='' bun ghp --remote mpyc",
     "clean": "rm -rf ./*/dist; rm -rf ./*/node_modules; rm -rf ./*/vite.config.ts.timestamp-*.mjs"

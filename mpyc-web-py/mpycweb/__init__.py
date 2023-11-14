@@ -29,7 +29,6 @@ import asyncio
 from pyodide import webloop
 import js
 
-webloop.setTimeout = js.fastSetTimeout
 
 from . import api
 from lib.exception_handler import exception_handler
@@ -52,6 +51,9 @@ log.install(DEBUG)
 
 logger = logging.getLogger(__name__)
 
+from lib.weblooper import WebLooper
+
+asyncio.set_event_loop(WebLooper())
 
 import mpyc
 
