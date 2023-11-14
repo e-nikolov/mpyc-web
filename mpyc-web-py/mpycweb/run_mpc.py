@@ -21,8 +21,10 @@ from lib.log import *
 import os
 import linecache
 
+loop = asyncio.get_event_loop()
 
-async def run_mpc(options) -> None:
+
+def run_mpc(options) -> None:
     """
     Runs an mpyc execution with the given options.
 
@@ -59,4 +61,4 @@ async def run_mpc(options) -> None:
     mpc.__init__(options.pid, parties, mpc.options)  # pylint: disable=unnecessary-dunder-call
     asyncio.get_event_loop().set_exception_handler(exception_handler)
 
-    return await run_code(options.code, options.filename)
+    loop.create_task(run_code(options.code, options.filename))
