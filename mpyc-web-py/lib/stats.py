@@ -37,6 +37,8 @@ from rich.tree import Tree
 from rich.text import Text
 from rich.panel import Panel
 from rich.align import Align
+from humanize import naturalsize
+import humanize
 
 from lib import log_levels
 
@@ -138,6 +140,14 @@ def time_delta_fmt(time_a, time_b):
     return datetime.utcfromtimestamp((time_a - time_b).total_seconds()).strftime("%X")
 
 
+def format_file_size(size):
+    return naturalsize(size, binary=True)
+
+
+def format_count(count):
+    return humanize.intword(count)
+
+
 class BaseStatsCollector:
     """
     A base class for collecting statistics.
@@ -151,6 +161,10 @@ class BaseStatsCollector:
     stats = DeepCounter[str]({})
     enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
     start_time = datetime.now()
+    formatters: dict[str, Callable[[str], str]] = {
+        "total_bytes_received": format_file_size,
+        "total_bytes_sent": format_file_size,
+    }
 
     def dec(
         self, counter_func: Callable[P, NestedDict[str, Numeric]], ff: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
@@ -286,10 +300,14 @@ class BaseStatsCollector:
                 if isinstance(v, dict | list):
                     self._to_tree(v, tree.add(k))
                 else:
+                    if k in self.formatters:
+                        v = self.formatters[k](v)
+                    else:
+                        v = format_count(v)
                     tree.add(f"{k}: {v}")
         if isinstance(s, list):
             for index, item in enumerate(s):
-                tree.add(f"[{index}]: {json.dumps(item)}")
+                tree.add(f"{json.dumps(item)}")
 
     def to_string(self):
         """

@@ -110,33 +110,24 @@ async def load_missing_packages(code: str):
     Returns:
         None
     """
-    try:
-        imports = pyodide.code.find_imports(code)
-        imports = [item for item in imports if importlib.util.find_spec(item) is None]
-        load_matplotlib = "matplotlib" in imports
-        if len(imports) > 0:
-            logger.info(f"Loading packages: {imports}")
+    imports = pyodide.code.find_imports(code)
+    imports = [item for item in imports if importlib.util.find_spec(item) is None]
+    load_matplotlib = "matplotlib" in imports
+    if len(imports) > 0:
+        logger.info(f"Loading packages: {imports}")
 
-            await js.pyodide.loadPackagesFromImports(
-                code,
-                {"message_callback": print, "message_callback_stderr": print},
-            )
-
-            imports = [item for item in imports if importlib.util.find_spec(item) is None]
-            await micropip.install(imports, keep_going=True)
-
-            if load_matplotlib:
-                old_level = logging.root.level
-                logging.root.level = logging.INFO
-                try:
-                    import matplotlib
-                finally:
-                    logging.root.level = old_level
-
-    except Exception as e:
-        logger.error(
-            e,
-            exc_info=True,
-            stack_info=True,
+        await js.pyodide.loadPackagesFromImports(
+            code,
+            {"message_callback": print, "message_callback_stderr": print},
         )
-        raise e
+
+        imports = [item for item in imports if importlib.util.find_spec(item) is None]
+        await micropip.install(imports, keep_going=True)
+
+        if load_matplotlib:
+            old_level = logging.root.level
+            logging.root.level = logging.INFO
+            try:
+                import matplotlib
+            finally:
+                logging.root.level = old_level
