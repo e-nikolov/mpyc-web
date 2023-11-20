@@ -2,16 +2,16 @@
 import { Terminal } from 'xterm';
 
 import { FitAddon } from 'xterm-addon-fit';
+import { SearchAddon } from 'xterm-addon-search';
+import { WebLinksAddon } from 'xterm-addon-web-links';
 import { WebglAddon } from 'xterm-addon-webgl';
 import { Readline } from 'xterm-readline';
-import { SearchAddon } from 'xterm-addon-search';
 import { SearchBarAddon } from './xterm-addon-search-bar';
-import { WebLinksAddon } from 'xterm-addon-web-links';
 // import { LigaturesAddon } from 'xterm-addon-ligatures';
 import { Unicode11Addon } from 'xterm-addon-unicode11';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
-import { loadWebFont } from './xterm-webfont'
-import { safe } from '../utils'
+import { safe } from '../utils';
+import { loadWebFont } from './xterm-webfont';
 
 const CARRIAGE_RETURN = "\r"
 const CURSOR_UP = "\x1b[1A"
@@ -19,8 +19,8 @@ const ERASE_IN_LINE = "\x1b[2K"
 
 import { $, debounce } from '../utils';
 
+import { MPCManager } from '@mpyc-web/core';
 import { format } from './format';
-import { MPCManager, MPCRuntimeBase } from '@mpyc-web/core';
 
 export class Term extends Terminal {
     fitAddon: FitAddon;
