@@ -1,13 +1,15 @@
+import asyncio
 import collections
 import contextvars
-from typing import Callable, Any, Optional
-from pyodide import webloop
-import js
-
-import asyncio
 import logging
-from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
+from typing import Any, Callable, Optional
+
+import js
+from pyodide import webloop
 from pyodide.code import run_js
+from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
+
+from .stats import stats
 
 run_js("""    
     self.webChannel = new MessageChannel()
@@ -25,6 +27,9 @@ class WebLooper(webloop.WebLoop):
         self._ready = collections.deque()
         self._callbacks = {}
         self.counter = 0
+        self.call_immediate_count = 0
+        self.call_later_count = 0
+        self.call_callback_count = 0
         self.queue = collections.deque()
         # self.call_proxy = create_proxy(self.call_callback)
 
@@ -34,6 +39,7 @@ class WebLooper(webloop.WebLoop):
 
         # chan.port1.onmessage =
 
+    # @stats.acc(lambda self, callb)
     def call_soon(
         self,
         callback: Callable[..., Any],
@@ -100,13 +106,15 @@ class WebLooper(webloop.WebLoop):
             self.queue.appendleft(run_handle)
             # print("posting message", self.queue)
             chan.port2.postMessage("")
+            self.call_later_count += 1
             return h
 
         # self._ready.append(h)
-
+        self.call_immediate_count += 1
         setTimeout(create_once_callable(run_handle), delay * 1000)
         return h
 
+    # @stats.acc(lambda self, *args, **kwargs: {"$func": "calls"})
     def call_callback(self, *args, **kwargs):
         # print("call_callback")
         self.queue.pop()()
