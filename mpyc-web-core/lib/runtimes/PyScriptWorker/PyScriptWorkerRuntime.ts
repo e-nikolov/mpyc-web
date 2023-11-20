@@ -1,17 +1,14 @@
-import PyodideWorker from './PyodideWorker?worker'
 
-import { EventEmitter } from 'eventemitter3'
 // import { PyWorker } from "https://cdn.jsdelivr.net/npm/@pyscript/core";
-import { XWorker, Hook } from "polyscript/xworker";
-import { MPCEvents } from '../../mpyc/events';
+import { Hook, XWorker } from "polyscript/xworker";
 // import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
 // import startup from '../../../../public/py/mpycweb/shim/shim.py?raw'
 // import { XWorker, Hook } from "polyscript";
-import { MPCRuntimeBase, MPCRuntimeManager } from '../MPCRuntimeBase';
+import { MPCRuntimeBase } from '../MPCRuntimeBase';
 
 function XXWorker(startupURL: string, configFilePath: string, hooks: any) {
     let opts: unknown = {
-        async: true, type: "pyodide", config: configFilePath
+        async: true, type: "pyodide", version: "0.24.1", config: configFilePath
     }
 
     console.log("creating a new worker")
@@ -83,31 +80,31 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                         }
                     };
 
-                    const oldSetTimeout = self.setTimeout
+                    // const oldSetTimeout = self.setTimeout
 
-                    const setTimeoutFromSetImmediate = (setImmediate: (cb: () => void) => void) => (callback: () => never, delay: number = 0) => {
-                        if (delay < 1) {
-                            return setImmediate(callback)
-                        } else {
-                            return oldSetTimeout(callback, delay);
-                        }
-                    }
+                    // const setTimeoutFromSetImmediate = (setImmediate: (cb: () => void) => void) => (callback: () => never, delay: number = 0) => {
+                    //     if (delay < 1) {
+                    //         return setImmediate(callback)
+                    //     } else {
+                    //         return oldSetTimeout(callback, delay);
+                    //     }
+                    // }
 
-                    self.counter = 0;
-                    var queue = {};
+                    // self.counter = 0;
+                    // var queue = {};
 
-                    var channel = new MessageChannel();
+                    // var channel = new MessageChannel();
 
-                    channel.port1.onmessage = function (event) {
-                        var callback = queue[event.data];
-                        delete queue[event.data];
-                        callback();
-                    };
+                    // channel.port1.onmessage = function (event) {
+                    //     var callback = queue[event.data];
+                    //     delete queue[event.data];
+                    //     callback();
+                    // };
 
-                    const setImmediate = (callback: () => void) => {
-                        queue[++self.counter] = callback;
-                        channel.port2.postMessage(self.counter);
-                    }
+                    // const setImmediate = (callback: () => void) => {
+                    //     queue[++self.counter] = callback;
+                    //     channel.port2.postMessage(self.counter);
+                    // }
 
                     // self.fastSetTimeout = setTimeoutFromSetImmediate(setImmediate)
                     // self.setTimeout = self.fastSetTimeout;

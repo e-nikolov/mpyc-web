@@ -6,10 +6,14 @@
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
-    # pkgs.mpyc-demo
-    pkgs.pwnat
     pkgs.poetry
     pkgs.python311Packages.pip
+    pkgs.just
+    pkgs.yarn
+    pkgs.bun
+    pkgs.nodePackages_latest.pnpm
+    # pkgs.mpyc-demo
+    pkgs.pwnat
     pkgs.curl
     pkgs.jq
     pkgs.tailscale
@@ -21,14 +25,12 @@
     pkgs.gole
     pkgs.go-stun
     pkgs.pion-stun
-    pkgs.just
-    pkgs.yarn
     # pkgs.bun
-    pkgs.nodePackages_latest.pnpm
     pkgs.nodePackages.lerna
     pkgs.yarn2nix
     pkgs.python311Packages.gmpy2
     pkgs.python311Packages.numpy
+    pkgs.twine
     # pkgs.tailwindcss
 
     (pkgs.terraform.withPlugins (tp: [
@@ -64,7 +66,8 @@
 
   # https://devenv.sh/scripts/
   scripts.hello.exec = "echo hello from $GREET";
-  scripts.yi.exec = "yarn; yarn workspace @mpyc-web/core install; yarn workspace @mpyc-web/demo install";
+  scripts.yi.exec =
+    "yarn; yarn workspace @mpyc-web/core install; yarn workspace @mpyc-web/demo install";
   scripts.yb.exec = "yarn workspace @mpyc-web/$1 build";
   scripts.yd.exec = "yarn workspace @mpyc-web/$1 dev";
   scripts.yw.exec = ''
