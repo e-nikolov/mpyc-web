@@ -1,16 +1,15 @@
+import asyncio
+import logging
 import os
 from enum import StrEnum, auto
-from typing import Awaitable, Callable, Coroutine, Dict, List, Literal, Tuple, Any, TypeVarTuple
-import logging
-import asyncio
+from typing import Any, Awaitable, Callable, Coroutine, Dict, List, Literal, Tuple, TypeVarTuple
 
-import rich
-
-from pyodide.http import pyfetch
-from pyodide.ffi import JsProxy, to_js
 import js  # pyright: ignore[reportMissingImports] pylint: disable=import-error
-
+import rich
 from lib.stats import stats
+from pyodide.ffi import JsProxy, to_js
+from pyodide.http import pyfetch
+
 from .run import run_code
 
 logger = logging.getLogger(__name__)
@@ -73,7 +72,7 @@ loop = asyncio.get_event_loop()
 class AsyncRuntimeProxy:
     postMessage: Callable[[Any], Awaitable[None]]
     on_ready_message: Callable[[int, str], None]
-    on_runtime_message: Callable[[int, str], None]
+    on_runtime_message: Callable[[int, JsProxy], None]
     on_run_mpc: Callable[[Any], None]
     chan: Any
 

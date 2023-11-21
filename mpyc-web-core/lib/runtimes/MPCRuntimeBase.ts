@@ -1,8 +1,7 @@
 
-import { EventEmitter } from 'eventemitter3'
-import { MPCEvents, PeerJSData, PassThroughRuntimeEvents, RuntimeEvents } from '../mpyc/events'
+import Emittery from 'emittery';
 import { MPCManager } from "../mpyc";
-import Emittery from 'emittery'
+import { RuntimeEvents } from '../mpyc/events';
 
 
 export type RunMPCOptions = {
@@ -106,6 +105,7 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
                     this.emit('send', { type: "ready", pid: pid1, payload: message1 })
                     break;
                 case "proxy:js:mpc:msg:runtime":
+                    console.log("js sending runtime message")
                     let [pid2, message2] = args
                     // console.log(message2, typeof message1)
                     if (message2.getBuffer) {

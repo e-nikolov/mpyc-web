@@ -33,18 +33,18 @@ $grid-breakpoints: (
 
 $material-icons-font-size: 16px;
 
+// .w-auto {
+//   width: calc(50% - 5px);
+// }
 body {
   font-family: 'Segoe UI', system-ui;
   margin: 1em;
 }
 
-.container-fluid {
+.main-container {
   height: 95vh;
 }
 
-.h-95 {
-  height: 95%;
-}
 
 .material-icons,
 .material-icons-outlined {
@@ -55,7 +55,28 @@ body {
   font-size: 14px;
   max-height: 150px;
   overflow: auto;
+
+  columns: 2;
+  -webkit-columns: 2;
+  -moz-columns: 2;
 }
+
+// .list-group-item {
+//   margin: 0;
+//   padding: 0;
+// }
+
+// ul {
+//   font-size: 14px;
+//   max-height: 150px;
+//   overflow: auto;
+//   margin: 0;
+//   margin-block: 0;
+//   background-color: $form-control-background;
+//   columns: 2;
+//   -webkit-columns: 2;
+//   -moz-columns: 2;
+// }
 
 .editor,
 .cm-editor,
@@ -64,10 +85,10 @@ body {
   height: 100%;
 }
 
-.peer-ids>.input-group>.input-group-text {
-  flex: 0 0 13%;
-  min-width: 90px;
-}
+// .peer-ids>.input-group>.input-group-text {
+//   flex: 0 0 13%;
+//   min-width: 90px;
+// }
 
 .form-select {
   background-color: $form-control-background;

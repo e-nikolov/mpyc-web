@@ -1,10 +1,7 @@
-import { defineConfig, PluginOption, loadEnv } from 'vite'
-import git from 'git-rev-sync'
-import topLevelAwait from "vite-plugin-top-level-await";
-import path, { resolve } from 'path';
-import checker from 'vite-plugin-checker'
-import { run } from 'vite-plugin-run'
-import fs from 'fs'
+import fs from 'fs';
+import git from 'git-rev-sync';
+import { resolve } from 'path';
+import { defineConfig, loadEnv } from 'vite';
 // import 'vite/types/importMeta.d';
 // import PyodidePlugin from "@pyodide/webpack-plugin"
 const hexLoader = {
@@ -60,6 +57,7 @@ export default defineConfig(({ mode }) => {
           bench_serializers: resolve(__dirname, 'bench/serializers/index.html'),
           bench_timeouts: resolve(__dirname, 'bench/timeouts/index.html'),
           bench_all: resolve(__dirname, 'bench/all/index.html'),
+          bench: resolve(__dirname, 'bench/index.html'),
         }
       }
     },

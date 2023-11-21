@@ -1,13 +1,37 @@
 .split {
     display: flex;
     flex-direction: column;
-    height: 85vh;
-    margin-bottom: 15px;
+    // margin-bottom: 15px;
+}
+
+@media (min-width: 992px) {
+
+    // .wwww-auto {
+    //     width: auto !important;
+    // }
+
+
+    .split {
+        height: 85vh;
+    }
+}
+
+@media (max-width: 991px) {
+
+    .wwww-auto {
+        width: calc(50% - 5px) !important;
+    }
+
+
+    .split {
+        height: calc(85vh - 280px);
+    }
 }
 
 .gutter.gutter-vertical {
     background: url(../images/hsizegrip.png) center center no-repeat $form-control-background;
     cursor: row-resize;
+    border: 1px solid $gray-900;
 }
 
 .split-1 {
