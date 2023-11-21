@@ -2,27 +2,25 @@
 patches.py
 """
 
+import asyncio
+import builtins
+import datetime
+import logging
+
 # pylint: disable=import-error
 import time
 import types
-import datetime
-import logging
 from asyncio import Future
-import asyncio
-import builtins
 
 import js
+from lib.stats import stats
+from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
+from mpyc.runtime import Runtime, mpc  # pylint: disable=import-error,disable=no-name-in-module
 
 # pyright: reportMissingImports=false
 from polyscript import xworker
 
-from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
-from mpyc.runtime import mpc, Runtime  # pylint: disable=import-error,disable=no-name-in-module
-
-
-from . import proxy
-from lib.stats import stats
-from . import api
+from . import api, proxy
 
 loop = asyncio.get_event_loop()
 logger = logging.getLogger(__name__)
@@ -60,6 +58,8 @@ async def start(runtime: Runtime) -> None:
 
     Open connections with other parties, if any.
     """
+    global pjs
+
     loop = runtime._loop  # pylint: disable=protected-access
 
     pjs = proxy.Client(api.async_proxy, loop)
@@ -199,8 +199,9 @@ async def shutdown(self):
 
 old_open = builtins.open
 
-import rich
 import os
+
+import rich
 
 
 def open_fetch(*args, **kwargs):
