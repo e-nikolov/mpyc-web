@@ -1,7 +1,6 @@
 import { Controller } from ".";
-import { MPCManager, MPCRuntimeBase } from '@mpyc-web/core';
+import { safe } from '../utils';
 import { format } from "./format";
-import { safe } from '../utils'
 
 export function updateHostPeerIDInput(this: Controller): string {
     const urlParams = new URLSearchParams(window.location.search);

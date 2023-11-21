@@ -14,22 +14,24 @@
 </head>
 
 <body>
-  <div class="container-fluid">
+  <div class="main-container container-fluid">
     <div class="row">
       <h2 class="d-flex align-items-center justify-content-center">MPyC Web</h2>
+
     </div>
     <div class="row h-95">
       <div class="col-lg-3" style="min-width: 280px;">
-        <!-- My Party ID -->
+        <!-- * My Party ID -->
         <div class="peer-ids">
-          <div class="input-group mb-2">
+
+          <div class="input-group mb-1 d-inline-flex wwww-auto">
             <div class="form-floating">
               <input type="text" class="form-control" onClick="this.select();" readonly id="myPeerID"
                 placeholder="My ID">
               <label for="myPeerID">My ID</label>
             </div>
 
-            <!-- My Party ID - Buttons -->
+            <!-- * My Party ID - Buttons -->
             <button id="show-qr" class="btn btn-primary">
               <!-- <i class="bi bi-qr-code"></i> -->
               <i class="fa fa-qrcode"></i>
@@ -51,17 +53,16 @@
               <!-- <i class="material-icons mi-cached"></i> -->
             </button>
           </div>
-          <!-- Host Party ID -->
-          <div class="input-group mb-3">
+          <!-- * Host Party ID -->
+          <div class="input-group mb-1 d-inline-flex wwww-auto">
             <div class="form-floating">
-              <input id="hostPeerID" type="text" onClick="this.select();" class="form-control w-30"
-                placeholder="Party ID" />
+              <input id="hostPeerID" type="text" onClick="this.select();" class="form-control" placeholder="Party ID" />
               <label for="hostPeerID">
                 Party ID
                 <!-- <strong>Party ID</strong> -->
               </label>
             </div>
-            <!-- Host Party ID - Buttons -->
+            <!-- * Host Party ID - Buttons -->
             <button id="connect" data-bs-toggle="tooltip" data-bs-title="Connect to peer" class="btn btn-primary">
               <!-- <i class="bi bi-link-45deg"></i> -->
               <!-- <i class="fa fa-rss"></i> -->
@@ -78,8 +79,8 @@
             </button>
           </div>
         </div>
-        <!-- Demos -->
-        <div class="mb-3">
+        <!-- * Demos -->
+        <div class="mb-3" id="mpc-demos">
           <h5> MPC Demos: </h5>
           <select size=15 id="select-demo" class="form-select" aria-label="Select Demo">
             <option value="./py/saved.py">Your Code</option>
@@ -112,31 +113,36 @@
             <option value="./py/benches/channels.py">Benchmarks - channels</option>
             <option value="./py/benches/tasks.py">Benchmarks - tasks</option>
             <option value="./py/benches/timeouts.py">Benchmarks - timeouts</option>
+            <option value="./py/benches/runtime.py">Benchmarks - runtime</option>
           </select>
         </div>
 
-        <div class="connected-parties mb-3">
-          <!-- Connected Parties -->
+        <div class="connected-parties mb-1">
+          <!-- * Connected Parties -->
           <h5> Connected Parties: </h5>
-          <ul id="knownPeers" class="list-group" start="6"> </ul>
+          <ol id="knownPeers" class="list-group card-columns" style="columns: 2" start="6">
+          </ol>
         </div>
 
-        <!-- Chat -->
-        <div class="input-group mb-3">
-          <textarea id="chatInput" type="text" class="form-control"
-            placeholder="Send a message to all parties..."></textarea>
-          <button id="sendMessageButton" data-bs-toggle="tooltip" data-bs-title="Send" class="btn btn-primary">
-            <!-- <i class="bi bi-send"></i> -->
-            <!-- <i class="material-icons mi-send"></i> -->
+        <!-- * Chat -->
+        <div id="chatSidebar">
 
-            <span class="material-icons">send</span>
-          </button>
+          <div class="input-group mb-1" id="chatInputGroup">
+            <textarea id="chatInput" type="text" class="form-control"
+              placeholder="Send a message to all parties..."></textarea>
+            <button id="sendMessageButton" data-bs-toggle="tooltip" data-bs-title="Send" class="btn btn-primary">
+              <!-- <i class="bi bi-send"></i> -->
+              <!-- <i class="material-icons mi-send"></i> -->
+
+              <span class="material-icons">send</span>
+            </button>
+          </div>
         </div>
 
       </div>
       <div class="col-md" style="min-width:550px; ">
-        <!-- Terminal - Buttons -->
-        <div class="input-group">
+        <!-- * Editor - Buttons -->
+        <div class="input-group" id="editor-buttons">
           <button id="startButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC" class="btn btn-primary">
             <!-- <i class="bi bi-play-btn-fill"></i> -->
             <i class="fa fa-play"></i>
@@ -159,19 +165,18 @@
         </div>
         <div class="split">
           <div class="split-0">
-            <!-- Editor -->
+            <!-- * Editor -->
             <div id="editor" class="editor"></div>
           </div>
           <div class="split-1">
-            <!-- Terminal -->
+            <!-- * Terminal -->
             <div id="terminal" class="term"></div>
           </div>
         </div>
+        <div id="chatFooter"></div>
       </div>
     </div>
-    <div id="version" style="font-size: 9px;">
-    </div>
-
+    <div id="version" style="font-size: 9px" class="float-sm-start"></div>
     <script type="module">
 
       function makeVersion() {

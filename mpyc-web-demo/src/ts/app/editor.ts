@@ -1,14 +1,13 @@
-import { basicSetup, EditorView } from 'codemirror';
+import { copyLineDown, defaultKeymap, deleteLine, indentWithTab, moveLineDown, moveLineUp, redo } from '@codemirror/commands';
 import { python } from '@codemirror/lang-python';
 import { indentUnit } from '@codemirror/language';
 import { Compartment, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
-import { copyLineDown, defaultKeymap, deleteLine, moveLineDown, moveLineUp, redo } from '@codemirror/commands';
-import { birdsOfParadise } from 'thememirror';
-import { indentWithTab, } from "@codemirror/commands"
-import { Controller } from './controller';
 import { MPCManager } from '@mpyc-web/core';
-import { debounce } from '../utils';
+import { EditorView, basicSetup } from 'codemirror';
+import { birdsOfParadise } from 'thememirror';
+import { $ } from '../utils';
+import { Controller } from './controller';
 
 export class Editor extends EditorView {
     constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPCManager) {
@@ -78,18 +77,27 @@ export class Editor extends EditorView {
 }
 
 export function setupDemoSelector(this: Controller) {
-    const resizeDemoSelector = () => {
-        if (window.innerWidth < 994) {
+    const mql = window.matchMedia("(max-width: 991px)")
+    const resizeDemoSelector = (mqe: MediaQueryListEvent | MediaQueryList) => {
+        if (mqe.matches) {
+            $("#mpc-demos").hidden = true
             this.demoSelect.size = 1;
+            $("#editor-buttons").insertAdjacentElement('beforeend', this.demoSelect)
+            $("#chatFooter").insertAdjacentElement('beforeend', $("#chatInputGroup"))
         } else {
+            $("#mpc-demos").insertAdjacentElement('beforeend', this.demoSelect)
+            $("#mpc-demos").hidden = false
+            $("#chatSidebar").insertAdjacentElement('beforeend', $("#chatInputGroup"))
             this.demoSelect.size = window.innerHeight / (4 * 21)
         }
     }
 
-    resizeDemoSelector();
-    window.addEventListener('resize', debounce(() => {
-        resizeDemoSelector();
-    }, 100))
+    mql.addEventListener('change', resizeDemoSelector)
+    resizeDemoSelector(mql);
+
+    // window.addEventListener('resize', debounce(() => {
+    //     resizeDemoSelector();
+    // }, 100))
 
     this.demoSelect.addEventListener('change', async () => {
         localStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
