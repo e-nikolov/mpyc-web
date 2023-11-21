@@ -75,7 +75,6 @@ export class PeerJSTransport extends Emittery<TransportEvents> implements Transp
     async send(peerID: string, type: string, payload: any) {
         // console.warn("sending", peerID, typeof peerID)
         // console.warn("sending", peerID, this.conns, this.conns[peerID])
-        console.log(this.conns, peerID)
         this.conns.get(peerID).send({ type, payload });
     }
 
