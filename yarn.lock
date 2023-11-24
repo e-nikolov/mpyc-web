@@ -832,6 +832,7 @@ __metadata:
     generic-pool: "npm:^3.9.0"
     gh-pages: "npm:^6.0.0"
     git-rev-sync: "npm:^3.0.2"
+    hotkeys-js: "npm:^3.12.0"
     material-icons: "npm:^1.13.12"
     msgpackr: "npm:^1.9.9"
     node-fetch: "npm:^3.3.2"
@@ -4835,6 +4836,13 @@ __metadata:
   dependencies:
     lru-cache: "npm:^7.5.1"
   checksum: 2e48e3fac799b52d82277ff5693916bfa33441a2c06d1f11f9e82886bd235514783c2bdffb3abde67b7aeb6af457a48df38e6894740c7fc2e1bb78f5bcfac61e
+  languageName: node
+  linkType: hard
+
+"hotkeys-js@npm:^3.12.0":
+  version: 3.12.0
+  resolution: "hotkeys-js@npm:3.12.0"
+  checksum: 8aece582f8108c0207c73fc26b0082f7ad7ef38249793f4e32fe61c0c970579406fc32af2904169545efded39fea27e3dc3470c59e61287b05b00992e03a7712
   languageName: node
   linkType: hard
 

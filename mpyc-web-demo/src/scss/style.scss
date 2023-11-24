@@ -13,7 +13,8 @@ $grid-breakpoints: (
 
 @import '@fontsource/fira-code/latin-400.css';
 
-@import "xterm/css/xterm.css";
+// @import "xterm/css/xterm.css";
+@import "./xterm.scss";
 @import "./theme-superhero-before.scss";
 @import "bootstrap/scss/bootstrap";
 @import "./theme-superhero-after.scss";
@@ -78,12 +79,6 @@ body {
 //   -moz-columns: 2;
 // }
 
-.editor,
-.cm-editor,
-.term,
-.terminal {
-  height: 100%;
-}
 
 // .peer-ids>.input-group>.input-group-text {
 //   flex: 0 0 13%;

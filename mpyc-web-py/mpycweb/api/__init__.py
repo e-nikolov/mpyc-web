@@ -1,3 +1,5 @@
+X = 3
+
 __all__ = [
     "loop",
     "RUNNING_IN_WORKER",
@@ -7,17 +9,18 @@ __all__ = [
     "async_proxy",
     "sync_proxy",
     "stats_printer",
-    "async_proxy",
-    "sync_proxy",
     "AsyncRuntimeProxy",
     "SyncRuntimeProxy",
 ]
 
-import logging
 import asyncio
+import logging
+
 import pyodide
 
-from .proxy import sync_proxy, async_proxy, RUNNING_IN_WORKER, stats_printer, AsyncRuntimeProxy, SyncRuntimeProxy
+from .proxy import RUNNING_IN_WORKER, AsyncRuntimeProxy, SyncRuntimeProxy, async_proxy, stats_printer, sync_proxy
+
+zasync_proxy = async_proxy
 
 loop = asyncio.get_event_loop()
 from .run import *
