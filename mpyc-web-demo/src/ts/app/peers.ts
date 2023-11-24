@@ -19,6 +19,9 @@ export async function onPeerConnectedHook(this: Controller, newPeerID: string) {
     this.updatePeersDiv();
 }
 export async function onPeerConnectionErrorHook(this: Controller, peerID: string, err: Error) {
+    console.warn(peerID)
+    console.warn(err)
+    console.warn(typeof err)
     this.term.error(`Failed to connect to: ${format.peerID(peerID)}: ${err.message}`);
     this.updatePeersDiv();
 }

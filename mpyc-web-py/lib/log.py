@@ -19,24 +19,23 @@ __all__ = [
     "aexit",
 ]
 
-import io
-import datetime
-from pathlib import Path
-from collections.abc import Iterable
-import sys
-from logging import LogRecord
 import asyncio
-import gc
-import os
 import builtins
+import datetime
+import gc
+import io
+import os
+import sys
+from collections.abc import Iterable
+from logging import LogRecord
+from pathlib import Path
 
-from rich.console import Console
-from rich.logging import RichHandler
 from rich import pretty
-
-from rich.style import Style
+from rich.console import Console
 from rich.filesize import decimal
+from rich.logging import RichHandler
 from rich.markup import escape
+from rich.style import Style
 from rich.text import Text
 from rich.tree import Tree
 
@@ -64,7 +63,7 @@ def aexit(delay=0, num=1):
 
 
 from lib.log_levels import *
-from lib.stats import stats, print_to_string
+from lib.stats import print_to_string, stats
 
 console = Console(
     color_system="truecolor",
@@ -166,7 +165,8 @@ def set_log_level(level, verbosity=0):
 
     logging.basicConfig(**opts)
     stats.reset()
-    stats.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
+    # stats.enabled = logging.root.getEffectiveLevel() <= TRACE
+    stats.enabled = logging.root.getEffectiveLevel() <= DEBUG
 
     if level <= TRACE:
         gc.set_debug(gc.DEBUG_LEAK)

@@ -34,8 +34,8 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/mpyc-web-core.mjs",
-      "\\import": "./lib/main.ts",
+      "\\import": "./dist/mpyc-web-core.mjs",
+      "import": "./lib/main.ts",
       "require": "./dist/mpyc-web-core.umd.cjs"
     },
     "./dev": {

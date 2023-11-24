@@ -81,8 +81,8 @@ class AsyncRuntimeProxy:
         chan.onmessage = self.onmessage
         self.postMessage = chan.postMessage
 
-    async def fetch(self, filename: str, opts):
-        return pyfetch(filename, opts)
+    async def fetch(self, filename: str, **opts):
+        return pyfetch(filename, **opts)
 
     # async def send(self, _type: str, pid: int, message: Any):
     def send(self, _type: str, pid: int, message: Any):
@@ -117,7 +117,7 @@ class AsyncRuntimeProxy:
                 stats.reset()
             case ProxyEventType.MPC_RUNTIME:
                 [pid, message] = rest
-                self.on_runtime_message(pid, message)
+                self.on_runtime_message(pid, message.to_py())
                 # loop.create_task(self.on_runtime_message(pid, message))
                 # loop.call_soon(on_runtime_message, pid, message)
             case ProxyEventType.MPC_EXEC:
@@ -174,7 +174,7 @@ else:
 async def stats_printer():
     while True:
         async_proxy.postMessage(to_js(["proxy:js:display:stats", str(stats.to_tree())]))
-        await asyncio.sleep(1)
+        await asyncio.sleep(5)
 
 
 def on_update_env(env):
@@ -183,8 +183,8 @@ def on_update_env(env):
         os.environ.update(env)
         cols = os.environ.get("COLUMNS")
         lines = os.environ.get("LINES")
-        js.console.log("environ/COLUMNS", os.environ["COLUMNS"])
-        js.console.log("environ/LINES", os.environ["LINES"])
+        # js.console.log("environ/COLUMNS", os.environ["COLUMNS"])
+        # js.console.log("environ/LINES", os.environ["LINES"])
 
         if cols:
             rich._console.width = int(cols)  # pylint: disable=protected-access
