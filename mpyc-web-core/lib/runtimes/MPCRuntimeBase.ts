@@ -164,12 +164,17 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
 
     processRuntimeMessage(pid: number, message: any): void {
         try {
-            let transfer = message
+            let transfer = undefined
             if (message && message instanceof Uint8Array) {
-                transfer = message.buffer
+                transfer = [message.buffer]
             }
             // await this.asyncProxyPy.postMessage(["proxy:py:mpc:runtime", pid, message])
-            this.asyncProxyPy.postMessage(["proxy:py:mpc:runtime", pid, message], [transfer])
+            if (transfer) {
+                this.asyncProxyPy.postMessage(["proxy:py:mpc:runtime", pid, message], transfer)
+                return
+            }
+            this.asyncProxyPy.postMessage(["proxy:py:mpc:runtime", pid, message])
+
         } catch (err) {
             console.warn("runtime:error")
             console.warn("runtime:error", err)

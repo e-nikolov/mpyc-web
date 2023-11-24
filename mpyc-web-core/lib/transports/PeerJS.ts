@@ -19,14 +19,33 @@ export class PeerJSTransport extends Emittery<TransportEvents> implements Transp
             secure: true,
             host: "mpyc-demo--headscale-ams3-c99f82e5.demo.mpyc.tech",
             port: 443,
+            config: {
+                iceServers: [
+                    { urls: "stun:stun.l.google.com:19302" },
+                    {
+                        urls: [
+                            "turn:eu-0.turn.peerjs.com:3478",
+                            // "turn:us-0.turn.peerjs.com:3478",
+                        ],
+                        username: "peerjs",
+                        credential: "peerjsp",
+                    },
+                ],
+                sdpSemantics: "unified-plan",
+            }
 
             // pingInterval: 2345,
         };
 
-        if (peerID) {
-            this.peer = new Peer(peerID, opts);
-        } else {
-            this.peer = new Peer(opts);
+        try {
+
+            if (peerID) {
+                this.peer = new Peer(peerID, opts);
+            } else {
+                this.peer = new Peer(opts);
+            }
+        } catch (err) {
+            console.warn(err)
         }
         this.addPeerEventHandlers(this.peer)
 
@@ -46,7 +65,7 @@ export class PeerJSTransport extends Emittery<TransportEvents> implements Transp
     }
 
     private addConnEventHandlers(conn: DataConnection) {
-        console.log("new peer connection from", conn.peer)
+        console.log(`transport:conn ${conn.peer} is trying to connect`)
         conn.on('open', async () => {
             this.conns.set(conn.peer, conn);
             this.sendPeers(conn);

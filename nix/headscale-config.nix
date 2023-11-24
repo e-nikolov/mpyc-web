@@ -6,7 +6,7 @@ pkgs: {
   virtualisation.oci-containers.containers = {
     peerjs-server = {
       image = "peerjs/peerjs-server";
-      cmd = [ "--alive_timeout" "90000" "--proxied" ];
+      cmd = [ "--alive_timeout" "120000" "--proxied" ];
       ports = [ "9000:9000" ];
       # ... other Docker options like environment variables, etc.
     };

@@ -2,12 +2,12 @@ import * as app from '.';
 
 import { format } from "./format";
 
-import { ControllerOptions } from './elements';
-import { MPCManager, MPCRuntimeBase } from '@mpyc-web/core';
-import { Tooltip } from 'bootstrap';
 import { EditorView } from '@codemirror/view';
+import { AnyData, MPCManager } from '@mpyc-web/core';
+import { Tooltip } from 'bootstrap';
+import { ControllerOptions } from './elements';
 
-import { safe, $, $$, withTimeout, toTitleCase } from '../utils';
+import { $, $$, safe } from '../utils';
 
 // import * as polyscript from "polyscript";
 import { makeSplitJS } from './split';
@@ -84,7 +84,7 @@ export class Controller {
 
             console.log('Peer ID: ' + peerID);
             this.term.success(`${format.green("PeerJS")} ready with ID: ${format.peerID(peerID)}`);
-            this.updatePeersDiv(mpyc);
+            this.updatePeersDiv();
         });
         mpyc.on('transport:closed', async () => { this.term.error('PeerJS closed.'); });
         mpyc.on('transport:error', async (err: Error) => {
@@ -104,8 +104,8 @@ export class Controller {
         mpyc.on('runtime:error', async (err: ErrorEvent) => { this.term.error(err.error); });
         // mpyc.on('runtime:message',async  (e: MessageEvent) => { this.term.writeln(e.data); });
         mpyc.on('runtime:messageerror', async (err: MessageEvent) => { this.term.error(err.data); });
-        mpyc.on('runtime:exec:done', async () => { this.updatePeersDiv(this.mpyc); });
-        mpyc.on('runtime:exec:init', async () => { this.updatePeersDiv(this.mpyc); });
+        mpyc.on('runtime:exec:done', async () => { this.updatePeersDiv(); });
+        mpyc.on('runtime:exec:init', async () => { this.updatePeersDiv(); });
         mpyc.on('runtime:display', async (message: string) => { this.term.display(message); });
         mpyc.on('runtime:display:error', async (message: string) => { this.term.displayError(message) });
         mpyc.on('runtime:display:stats', async (stats: string) => {
@@ -159,14 +159,107 @@ export class Controller {
         window.app = this;
     }
 
-    public setupDemoSelector = app.setupDemoSelector.bind(this);
-    public onPeerConnectedHook = app.onPeerConnectedHook.bind(this);
-    public onPeerDisconnectedHook = app.onPeerDisconnectedHook.bind(this);
-    public onPeerConnectionErrorHook = app.onPeerConnectionErrorHook.bind(this);
-    public processChatMessage = app.processChatMessage.bind(this);
-    public updatePeersDiv = app.updatePeersDiv.bind(this);
-    public updateHostPeerIDInput = app.updateHostPeerIDInput.bind(this);
-    public sendChatMessage = app.sendChatMessage.bind(this);
+    // public setupDemoSelector = app.setupDemoSelector.bind(this);
+    // public onPeerConnectedHook = app.onPeerConnectedHook.bind(this);
+    // public onPeerDisconnectedHook = app.onPeerDisconnectedHook.bind(this);
+    // public onPeerConnectionErrorHook = app.onPeerConnectionErrorHook.bind(this);
+    // public processChatMessage = app.processChatMessage.bind(this);
+    // public updatePeersDiv = app.updatePeersDiv.bind(this);
+    // public updateHostPeerIDInput = app.updateHostPeerIDInput.bind(this);
+    // public sendChatMessage = app.sendChatMessage.bind(this);
+    onPeerConnectedHook = async (newPeerID: string) => {
+        this.term.success(`Connected to: ${format.peerID(newPeerID)}`);
+        this.updatePeersDiv();
+    }
+
+    async updatePeersDiv() {
+        console.log("updating the peers div")
+        this.knownPeersEl.innerHTML = "";
+        this.mpyc.transport.getPeers(true).forEach((p, pid) => {
+            let icon = `
+        <span class="position-relative end-0">
+            <i class='bi ${this.mpyc.peersReady.get(p) ? 'bi-play-fill' : 'bi-pause-fill'}'></i>
+        </span>`
+            this.knownPeersEl.innerHTML += `
+        <li class="list-group-item ${p == this.mpyc.transport.id() ? '' : 'list-group-item-light'}"> 
+            <span class="" style="user-select:none">${pid}: </span>
+            <span class="d-inline-block text-truncate" style="vertical-align:top;max-width:80%;">${safe(p)}</span> 
+            ${icon}
+        </li>`;
+        });
+    }
+
+    onPeerDisconnectedHook = async (disconnectedPeerID: string) => {
+        this.term.error(`Disconnected from: ${format.peerID(disconnectedPeerID)}`);
+        this.updatePeersDiv();
+    }
+
+    onPeerConnectionErrorHook = async ({ peerID, err }: { err: Error, peerID: string }) => {
+        this.term.error(`Failed to connect to: ${format.peerID(peerID)}: ${err.message}`);
+        this.updatePeersDiv();
+    }
+
+    setupDemoSelector() {
+        const mql = window.matchMedia("(max-width: 991px)")
+        const resizeDemoSelector = (mqe: MediaQueryListEvent | MediaQueryList) => {
+            if (mqe.matches) {
+                $("#mpc-demos").hidden = true
+                this.demoSelect.size = 1;
+                $("#editor-buttons").insertAdjacentElement('beforeend', this.demoSelect)
+                $("#chatFooter").insertAdjacentElement('beforeend', $("#chatInputGroup"))
+            } else {
+                $("#mpc-demos").insertAdjacentElement('beforeend', this.demoSelect)
+                $("#mpc-demos").hidden = false
+                $("#chatSidebar").insertAdjacentElement('beforeend', $("#chatInputGroup"))
+                this.demoSelect.size = window.innerHeight / (4 * 21)
+            }
+        }
+
+        mql.addEventListener('change', resizeDemoSelector)
+        resizeDemoSelector(mql);
+
+        // window.addEventListener('resize', debounce(() => {
+        //     resizeDemoSelector();
+        // }, 100))
+
+        this.demoSelect.addEventListener('change', async () => {
+            localStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
+            sessionStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
+            let demoCode = await app.fetchSelectedDemo(this.demoSelect);
+            this.editor.updateCode(demoCode);
+        });
+
+        this.demoSelect.selectedIndex = parseInt(sessionStorage.demoSelectorSelectedIndex || localStorage.demoSelectorSelectedIndex || 1);
+        this.demoSelect.dispatchEvent(new Event('change'));
+    }
+
+    updateHostPeerIDInput(): string {
+        const urlParams = new URLSearchParams(window.location.search);
+        const peer = urlParams.get('peer');
+        var hostPeerID = peer || localStorage.hostPeerID;
+        if (hostPeerID) {
+            this.hostPeerIDInput.value = hostPeerID;
+            localStorage.hostPeerID = hostPeerID;
+        }
+
+        return hostPeerID;
+    }
+    sendChatMessage() {
+        let message = this.chatInput.value;
+        this.chatInput.value = "";
+        this.term.chatMe(message)
+        this.mpyc.transport.broadcast('chat', message)
+    }
+
+    processChatMessage = async ({ peerID, data }: { peerID: string, data: AnyData }) => {
+        if (data.type != 'user:chat') {
+            console.warn("unknown message type", data)
+            return;
+        }
+
+        this.term.chat(peerID, data.payload);
+    }
+
 }
 
 

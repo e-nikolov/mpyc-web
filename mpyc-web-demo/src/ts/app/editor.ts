@@ -101,11 +101,12 @@ export function setupDemoSelector(this: Controller) {
 
     this.demoSelect.addEventListener('change', async () => {
         localStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
+        sessionStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
         let demoCode = await fetchSelectedDemo(this.demoSelect);
         this.editor.updateCode(demoCode);
     });
 
-    this.demoSelect.selectedIndex = parseInt(localStorage.demoSelectorSelectedIndex || 1);
+    this.demoSelect.selectedIndex = parseInt(sessionStorage.demoSelectorSelectedIndex || localStorage.demoSelectorSelectedIndex || 1);
     this.demoSelect.dispatchEvent(new Event('change'));
 }
 

@@ -3,22 +3,22 @@ This module provides a client for establishing connections with other peers usin
 """
 
 import asyncio
-
 import logging
-from typing import Any, Callable, Awaitable
+from typing import Any, Awaitable, Callable
+
+import js
+import rich
+import rich.text
+from lib.stats import stats
+from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
+from mpycweb.api.run import run_code
 
 # pyright: reportMissingImports=false
 from pyodide.ffi import JsProxy, to_js
-import rich
-import rich.text
-from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
-from .transport import PeerJSTransport, AbstractClient
-from lib.stats import stats
+
 from . import api
 from .run_mpc import run_mpc
-
-from mpycweb.api.run import run_code
-import js
+from .transport import AbstractClient, PeerJSTransport
 
 logger = logging.getLogger(__name__)
 
@@ -142,4 +142,4 @@ class Client(AbstractClient):
         # logger.info(type(message))
         # self._loop.create_task(self._on_runtime_message(pid, message.to_py()))
         # self._loop.call_soon(self._on_runtime_message, pid, message.to_py())
-        self._on_runtime_message(pid, message.to_py())
+        self._on_runtime_message(pid, message)

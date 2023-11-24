@@ -1,5 +1,6 @@
 
 import { Terminal } from 'xterm';
+// import { AttributeData } from 'xterm/src/common/buffer/AttributeData';
 
 import { FitAddon } from 'xterm-addon-fit';
 import { SearchAddon } from 'xterm-addon-search';
@@ -13,6 +14,7 @@ import { Unicode11Addon } from 'xterm-addon-unicode11';
 import { safe } from '../utils';
 import { loadWebFont } from './xterm-webfont';
 
+// import { ScrollSource } from 'xterm';
 const CARRIAGE_RETURN = "\r"
 const CURSOR_UP = "\x1b[1A"
 const ERASE_IN_LINE = "\x1b[2K"
@@ -22,6 +24,7 @@ import { $, debounce } from '../utils';
 import { MPCManager } from '@mpyc-web/core';
 import { format } from './format';
 
+// export const DEFAULT_ATTR_DATA = Object.freeze(new AttributeData());
 export class Term extends Terminal {
     fitAddon: FitAddon;
     searchAddon: SearchAddon;
@@ -33,34 +36,104 @@ export class Term extends Terminal {
 
     isLivePanelVisible = true
     livePanel: string = "";
-    toggleLivePanel(flag?: boolean) {
-        this.isLivePanelVisible = !this.isLivePanelVisible
+    livePanelLines = 0;
+    currentLivePanelMessage = ''; // Stores the current live panel message
 
-        if (flag != undefined) {
-            this.isLivePanelVisible = flag
+    calculateWrappedLines(message) {
+        const lines = message.split('\n');
+        let wrappedLines = 0;
+        for (const line of lines) {
+            const lineLength = line.length;
+            wrappedLines += Math.ceil(lineLength / this.cols) || 1;
         }
-
-        if (!this.isLivePanelVisible) {
-            this.writeln(this._control(this.livePanel))
-            this.livePanel = ""
-        }
-
-        return;
+        return wrappedLines;
     }
 
+    updateLivePanel(message) {
+        const numLines = this.calculateWrappedLines(message);
+
+        // Save the cursor position and attributes
+        this.write('\x1B7');
+
+        // Clear the current live panel
+        this.write(`\x1B[${this.rows - this.livePanelLines + 1};1H`);
+        for (let i = 0; i < this.livePanelLines; i++) {
+            this.write('\x1B[2K');
+            if (i < this.livePanelLines - 1) {
+                this.write('\x1B[1B\x1B[1G');
+            }
+        }
+
+        // Update the number of lines for the new live panel
+        this.livePanelLines = numLines;
+        this.currentLivePanelMessage = message;
+
+        // Write the new live panel
+        this.write(`\x1B[${this.rows - numLines + 1};1H`);
+        this.write(message);
+
+        // Restore the cursor position and attributes
+        this.write('\x1B8');
+    }
+
+    writeAboveLivePanel(message) {
+        // Store the current live panel message temporarily
+        const tempLivePanelMessage = this.currentLivePanelMessage;
+
+        // Clear the live panel without updating currentLivePanelMessage
+        this.clearLivePanel();
+
+        // Save the cursor position and attributes
+        this.write('\x1B7');
+
+        // Calculate the lines required for the new message
+        const messageLines = this.calculateWrappedLines(message);
+
+        // Move to the start position for the new message
+        this.write(`\x1B[${this.rows - this.livePanelLines - messageLines + 1};1H`);
+
+        // Write the new message above the live panel
+        this.write(message);
+
+        // Restore the cursor position and attributes
+        this.write('\x1B8');
+
+        // Redraw the live panel with the original message
+        this.updateLivePanel(tempLivePanelMessage);
+    }
+
+    clearLivePanel() {
+        // Clear the current live panel without updating currentLivePanelMessage
+        this.write(`\x1B[${this.rows - this.livePanelLines + 1};1H`);
+        for (let i = 0; i < this.livePanelLines; i++) {
+            this.write('\x1B[2K');
+            if (i < this.livePanelLines - 1) {
+                this.write('\x1B[1B\x1B[1G');
+            }
+        }
+        // Reset the number of live panel lines
+        this.livePanelLines = 0;
+    }
 
 
     constructor(sel: string, mpyc: MPCManager) {
         let el = $(sel);
-
         super({
-            screenReaderMode: true,
-            cols: 80,
+            screenReaderMode: false,
+            cols: 120,
             // scrollOnUserInput: false,
-            // rows: 15,
+            rows: 200,
             allowProposedApi: true,
-            // windowsMode: false,
-            // scrollback: 0,
+            windowsMode: true,
+            windowsPty: {
+                backend: 'winpty',
+                // backend: 'conpty',
+            },
+
+            windowOptions: {
+
+            },
+            scrollback: 1000,
             cursorBlink: false,
             convertEol: true,
             // fontFamily: "Fira Code, Hack",
@@ -96,7 +169,7 @@ export class Term extends Terminal {
         this.mpyc = mpyc;
 
         this.onResize((_) => {
-            this.updateTermSizeEnv();
+            // this.updateTermSizeEnv();
         });
         this.fitAddon = new FitAddon();
         this.searchAddon = new SearchAddon();
@@ -125,14 +198,17 @@ export class Term extends Terminal {
 
 
         this.mpyc.runtime.setReadlineFn((prompt: string): Promise<string> => {
-            return new Promise((resolve, reject) => {
-                this.readlineAddon.read(prompt).then((input: string) => {
-                    resolve(input);
-                }).catch((e: Error) => {
-                    reject(e)
-                });
-            })
+            return this.readlineAddon.read(prompt)
         })
+        // this.mpyc.runtime.setReadlineFn((prompt: string): Promise<string> => {
+        //     return new Promise((resolve, reject) => {
+        //         this.readlineAddon.read(prompt).then((input: string) => {
+        //             resolve(input);
+        //         }).catch((e: Error) => {
+        //             reject(e)
+        //         });
+        //     })
+        // })
 
         this.attachCustomKeyEventHandler((e: KeyboardEvent) => {
             // console.log(e.key)
@@ -194,6 +270,7 @@ export class Term extends Terminal {
         message = `${this.time()}  ${icon}  ${message}`
 
         this._write_liveln(message)
+        // this.writeAboveLivePanel(message)
     }
     _write_liveln(message: string) {
         if (this.isLivePanelVisible) {
@@ -205,6 +282,8 @@ export class Term extends Terminal {
     }
     _write_live(message: string) {
         if (this.isLivePanelVisible) {
+            // this.writeAboveLivePanel(message)
+
             this.write(this._control(this.livePanel) + message)
             if (this.livePanel != "") {
                 this.writeln(this.livePanel)
@@ -215,20 +294,69 @@ export class Term extends Terminal {
     _height(message: string) {
         return message.split(/\r\n|\r|\n/).length
     }
+    // clr(lines: number) {
+    //     // this._core.buffer.lines.set(0, this._core.buffer.lines.get(this._core.buffer.ybase + this._core.buffer.y));
+    //     this._core.buffer.resize(this.cols, this.rows - lines)
+    //     // this._core.buffer.fillViewportRows()
 
-    _control(message: string) {
+    //     this.refresh(0, this.rows - lines - 1);
+    //     // const l = this._core.buffer.lines.length - lines
+    //     // // this._core.buffer.lines = this._core.buffer.lines.slice(0, l);
+    //     // // for (let i = l; i < this.rows; i++) {
+    //     // //     this._core.buffer.lines
+    //     // // }
+    //     // this._core.buffer.lines.length = l;
+    //     // this._core.buffer.ydisp = 0;
+    //     // this._core.buffer.ybase = 0;
+    //     // this._core.buffer.y = 0;
+    //     // for (let i = 1; i < this.rows; i++) {
+    //     //     // this._core.buffer.lines.push(this._core.buffer.getBlankLine(DEFAULT_ATTR_DATA));
+    //     // }
+    //     // this._core._onScroll.fire({ position: this._core.buffer.ydisp });
+    //     // this._core.viewport?.reset();
+    //     // this.refresh(0, this.rows - 1);
+
+    // }
+    // clr2(lines: number) {
+    //     // this._core.buffer.lines.set(0, this._core.buffer.lines.get(this._core.buffer.ybase + this._core.buffer.y));
+
+    //     const l = this._core.buffer.lines.length - lines
+    //     // this._core.buffer.lines = this._core.buffer.lines.slice(0, l);
+    //     // for (let i = l; i < this.rows; i++) {
+    //     //     this._core.buffer.lines
+    //     // }
+    //     this._core.buffer.lines.length = l;
+    //     this._core.buffer.ydisp = 0;
+    //     this._core.buffer.ybase = 0;
+    //     this._core.buffer.y = 0;
+    //     for (let i = 1; i < this.rows; i++) {
+    //         // this._core.buffer.lines.push(this._core.buffer.getBlankLine(DEFAULT_ATTR_DATA));
+    //     }
+    //     this._core._onScroll.fire({ position: this._core.buffer.ydisp });
+    //     this._core.viewport?.reset();
+    //     this.refresh(0, this.rows - 1);
+
+    // }
+    _control(message: string = this.livePanel) {
         if (message == "") {
             return ""
         }
+        const ctrlMessage = `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
 
-        return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
+        console.log(this._height(message))
+        return ctrlMessage
     }
 
     live(message: string) {
         if (this.isLivePanelVisible) {
-            // message = `${this.time()}\n${format.grey50(message)}`
+            // // message = `${this.time()}\n${format.grey50(message)}`
+            // this.updateLivePanel(message);
             message = `\n${message}`
+            // this.clear()
+
             this.writeln(this._control(this.livePanel) + message)
+            // this.selectLines(0, this.rows);
+            // this.clear();
             this.livePanel = message;
         }
     }
@@ -263,7 +391,24 @@ export class Term extends Terminal {
 
     fit = () => {
         console.log("fitting terminal");
-        this.fitAddon.fit();
+        const d = this.fitAddon.proposeDimensions()
+
+        if (!d) {
+            return
+        }
+
+        let cols = this.cols;
+        let rows = this.rows;
+
+        if (d.rows > this.rows) {
+            rows = d.rows;
+        }
+
+        // this.resize(cols, rows)
+
+
+
+        // this.fitAddon.fit();
         this.updateTermSizeEnv();
     }
 

@@ -1,4 +1,4 @@
-pkgs:
+{ pkgs, config }:
 let
   user = "pi";
   password = "...";
@@ -6,16 +6,23 @@ let
   SSIDpassword = "...";
   interface = "wlan0";
   hostname = "rpi1";
-in
-{
-  imports = [ "${pkgs.path}/nixos/modules/installer/sd-card/sd-image-armv7l-multiplatform-installer.nix" ];
-  boot.kernelPackages = pkgs.lib.mkForce config.boot.zfs.package.latestCompatibleLinuxPackages;
-
+in {
+  imports = [
+    "${pkgs.path}/nixos/modules/installer/sd-card/sd-image-armv7l-multiplatform-installer.nix"
+    ./hardware-configuration.nix
+  ];
   nixpkgs.system = "armv7l-linux";
-  nix.settings.substituters = pkgs.lib.mkForce [ "https://cache.armv7l.xyz" ];
-  nix.settings.trusted-public-keys = [ "cache.armv7l.xyz-1:kBY/eGnBAYiqYfg0fy0inWhshUo+pGFM3Pj7kIkmlBk=" ];
+  boot.kernelPackages =
+    pkgs.lib.mkForce config.boot.zfs.package.latestCompatibleLinuxPackages;
 
-  swapDevices = [{ device = "/swapfile"; size = 2048; }];
+  nix.settings.substituters = pkgs.lib.mkForce [ "https://cache.armv7l.xyz" ];
+  nix.settings.trusted-public-keys =
+    [ "cache.armv7l.xyz-1:kBY/eGnBAYiqYfg0fy0inWhshUo+pGFM3Pj7kIkmlBk=" ];
+
+  swapDevices = [{
+    device = "/swapfile";
+    size = 2048;
+  }];
 
   networking = {
     hostName = hostname;
@@ -26,10 +33,7 @@ in
     };
   };
 
-  environment.systemPackages = with pkgs; [
-    vim
-    git
-  ];
+  environment.systemPackages = with pkgs; [ vim git ];
   # virtualisation.docker.enable = true;
   # services.tailscale.enable = true;
 
@@ -43,11 +47,6 @@ in
       extraGroups = [ "wheel" "docker" ];
     };
   };
-
-  imports =
-    [
-      ./hardware-configuration.nix
-    ];
 
   boot.loader.grub.enable = false;
   boot.loader.generic-extlinux-compatible.enable = true;
