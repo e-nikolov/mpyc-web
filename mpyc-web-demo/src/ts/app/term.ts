@@ -119,16 +119,17 @@ export class Term extends Terminal {
     constructor(sel: string, mpyc: MPCManager) {
         let el = $(sel);
         super({
-            screenReaderMode: false,
-            cols: 120,
+            screenReaderMode: true,
+            cols: 80,
             // scrollOnUserInput: false,
-            rows: 200,
+            // rows: 6,
             allowProposedApi: true,
-            windowsMode: true,
-            windowsPty: {
-                backend: 'winpty',
-                // backend: 'conpty',
-            },
+            // windowsMode: true, // breaks the split panel
+            drawBoldTextInBrightColors: true,
+            // windowsPty: {
+            //     // backend: 'winpty',
+            //     backend: 'conpty',
+            // },
 
             windowOptions: {
 
@@ -142,6 +143,7 @@ export class Term extends Terminal {
             fontWeight: 400,
             allowTransparency: true,
             disableStdin: false,
+            altClickMovesCursor: true,
             // macOptionClickForcesSelection: false,
             theme: {
                 "black": "#000000",
@@ -169,7 +171,7 @@ export class Term extends Terminal {
         this.mpyc = mpyc;
 
         this.onResize((_) => {
-            // this.updateTermSizeEnv();
+            this.updateTermSizeEnv();
         });
         this.fitAddon = new FitAddon();
         this.searchAddon = new SearchAddon();
@@ -248,7 +250,7 @@ export class Term extends Terminal {
         });
 
         let ro = new ResizeObserver(debounce(() => { this.fit(); }, 50));
-        ro.observe(document.querySelector(".split-1")!)
+        ro.observe(document.querySelector(".split-panel-terminal")!)
     }
 
 
@@ -389,28 +391,68 @@ export class Term extends Terminal {
         this._write_live(message);
     }
 
-    fit = () => {
+    forceRefresh() {
+        (this as any)._core.viewport?._innerRefresh();
+    }
+
+    forceRedraw() {
+        this.clearTextureAtlas();
+    }
+    public fit(): void {
+        this.__fit();
+    }
+
+    public __fit(): void {
         console.log("fitting terminal");
-        const d = this.fitAddon.proposeDimensions()
-
-        if (!d) {
-            return
+        const dims = this.fitAddon.proposeDimensions();
+        if (!dims || !this || isNaN(dims.cols) || isNaN(dims.rows)) {
+            console.log("no dims, returning")
+            return;
         }
 
-        let cols = this.cols;
-        let rows = this.rows;
+        dims.rows = Math.max(dims.rows, 15);
+        // dims.rows = Math.max(dims.rows, this.rows);
+        dims.cols = Math.max(dims.cols, this.cols);
 
-        if (d.rows > this.rows) {
-            rows = d.rows;
+        if (dims.cols == this.cols && dims.rows == this.rows) {
+            console.log("unchanged, returning")
+            return;
         }
 
-        // this.resize(cols, rows)
+        const core = (this as any)._core;
 
-
-
-        // this.fitAddon.fit();
+        console.log("resizing terminal to ", dims.cols, dims.rows);
+        core._renderService.clear();
+        this.resize(dims.cols, dims.rows);
+        this.refresh(0, this.rows - 1)
         this.updateTermSizeEnv();
     }
+
+    // _fit = () => {
+    //     console.log("fitting terminal");
+    //     const d = this.fitAddon.proposeDimensions()
+
+    //     if (!d) {
+    //         return
+    //     }
+
+    //     d.rows = Math.max(d.rows, 15);
+    //     d.cols = Math.max(d.cols, this.cols);
+
+    //     if (d.cols == this.cols && d.rows == this.rows) {
+    //         return;
+    //     }
+
+    //     console.log("resizing terminal to ", d.cols, d.rows);
+    //     (this as any)._core._renderService.clear()
+    //     this.resize(d.cols, d.rows)
+    //     this.refresh(0, this.rows - 1)
+
+
+
+    //     // this.fitAddon.fit();
+    //     // this.updateTermSizeEnv();
+    // }
 
     updateTermSizeEnv = () => {
         console.log("updating terminal size env: ", this.cols, this.rows);
