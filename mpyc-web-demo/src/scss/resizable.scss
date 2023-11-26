@@ -28,19 +28,6 @@
     }
 }
 
-.gutter.gutter-vertical {
-    background: url(../images/hsizegrip.png) center center no-repeat $form-control-background;
-    cursor: row-resize;
-    border: 1px solid $gray-900;
-}
-
-.split-1 {
-    overflow: scroll !important;
-    // z-index: 100;
-    // overflow-y: hidden;
-    // z-index: 205 !important;
-}
-
 .editor,
 .cm-editor {
     width: 100%;
@@ -48,72 +35,244 @@
     // z-index: 1 !important;
 }
 
-.term,
-.xterm-helpers,
-.terminal {
-    // top: 15px !important;
-    // left: 15px !important;
-    // right: 15px !important;
-    // bottom: 15px !important;
-    // height: auto !important;
-    width: 1080px !important;
-    // overflow-x: auto !important;
-    overflow: visible !important;
-    // overflow-y: auto !important;
-    // z-index: 1 !important;
+.gutter.gutter-vertical {
+    background: url(../images/hsizegrip.png) center center no-repeat $form-control-background;
+    cursor: row-resize;
+    border: 1px solid $gray-900;
 }
+
+.split-panel-terminal {
+    // overflow: scroll !important;
+    overflow: hidden !important;
+    // overflow-y: hidden;
+    // z-index: 205 !important;
+}
+
+.terminal {
+    height: 100% !important;
+    width: 100% !important;
+}
+
+.terminal-wrapper {
+    height: 100% !important;
+    width: 100% !important;
+}
+
 
 .xterm-screen {
     // height: max-content !important;
-    width: 1080px !important;
-    overflow: visible !important;
-    // z-index: 2 !important;
-}
-
-.xterm-viewport {
-    // z-index: 1 !important;
-    // top: 15px !important;
-    // left: 15px !important;
-    // right: 15px !important;
-    // bottom: 15px !important;
-    width: 1085px !important;
-    // height: 2000px !important;
-    // overflow-x: auto !important;
-    // overflow-y: hidden;
-    overflow: visible !important;
+    // z-index: 2000 !important;
+    width: 100% !important; // 15px is scrollbar width
+    height: 100% !important; // 15px is scrollbar width
+    // height: calc(100% - 15px) !important; // 15px is scrollbar width
+    // height: calc(100% - 10px) !important;
+    // overflow: auto !important;
+    overflow: hidden !important;
+    overflow-x: scroll !important;
+    // overflow-y: visible !important;
+    // overflow-y: scroll !important;
 }
 
 .xterm {
-    height: 2000px !important;
-}
-
-.xterm-viewport {
-    // z-index: 1 !important;
-    // overflow-y: auto !important;
-    overflow: visible !important;
-    height: auto !important;
-    background-color: aquamarine;
+    /* All terminals have at least 10px left/right edge padding and 2 padding on the bottom (so underscores on last line are visible */
+    // padding: 0 10px 2px;
+    padding-right: 15px;
 }
 
 
-.xterm-scroll-area {
-    // z-index: 1 !important;
-    // overflow-y: auto !important;
-    overflow: visible !important;
-    height: 2000px !important;
-    background-color: aquamarine;
-}
+// .terminal-wrapper {
+//     width: 100% !important;
+//     height: 100% !important;
+//     overflow: hidden !important;
+//     // overflow: scroll !important;
+// }
 
-.xterm .xterm-screen canvas {
-    // z-index: -1000 !important;
-    // top: 15px !important;
-    // left: 15px !important;
-    // right: 15px !important;
-    // bottom: 15px !important;
-    // height: 2000px !important;
-    overflow: visible !important;
-}
+// .xterm {
+//     height: 95% !important;
+//     width: 95% !important;
+//     overflow: hidden !important;
+//     // overflow: scroll !important;
+// }
 
-.xterm-rows>div {
-    margin-top: 0 !important;
-}
+// .xterm-viewport {
+//     z-index: 1005555 !important;
+//     // top: 15px !important;
+//     // left: 15px !important;
+//     // right: 15px !important;
+//     // bottom: 15px !important;
+//     width: 5% !important;
+//     height: 95% !important;
+//     // height: 2000px !important;
+//     // overflow-x: auto !important;
+//     // overflow-y: hidden;
+//     overflow: scroll !important;
+//     // overflow: hidden !important;
+//     // overflow: auto !important;
+// }
+
+
+// .xterm-screen canvas:nth-child(3) {
+//     // z-index: 1000 !important;
+//     // background-color: aquamarine !important;
+//     // top: 15px !important;
+//     // left: 15px !important;
+//     // right: 15px !important;
+//     // bottom: 15px !important;
+//     // height: 2000px !important;
+//     // width: calc(100% - 20px) !important;
+//     // height: 100% !important;
+//     overflow: scroll !important;
+// }
+
+//  // // // // //
+//  // // // // //
+//  // // // // //
+//  // // // // //
+//  // // // // //
+//  // // // // //
+//  // // // // //
+//  // // // // //
+
+
+// .xterm-helpers {
+//     // top: 15px !important;
+//     // left: 15px !important;
+//     // right: 15px !important;
+//     // bottom: 15px !important;
+//     // height: auto !important;
+//     // width: 1080px !important;
+//     width: 100% !important;
+//     height: 100% !important;
+//     // overflow-x: auto !important;
+//     overflow: hidden !important;
+//     // overflow-y: auto !important;
+//     // z-index: 1 !important;
+// }
+
+
+// .xterm-viewport {
+//     // z-index: 1 !important;
+//     // overflow-y: auto !important;
+//     overflow: visible !important;
+//     height: auto !important;
+//     background-color: aquamarine;
+// }
+
+
+// .xterm-scroll-area {
+//     // z-index: 1 !important;
+//     // overflow-y: auto !important;
+//     overflow: scroll !important;
+//     // height: 2000px !important;
+//     height: 100% !important;
+//     width: 100% !important;
+//     background-color: aquamarine;
+// }
+
+
+// .xterm-rows>div {
+//     margin-top: 0 !important;
+// // }
+// xterm-js>div {
+//     border: 1px solid #ccc;
+// }
+
+// xterm-js>div,
+// xterm-js>div>.terminal.xterm {
+//     width: 100%;
+//     height: 100%;
+//     box-sizing: border-box;
+//     overflow: hidden;
+// }
+
+// xterm-js .xterm .xterm-viewport {
+//     width: 100% !important;
+//     height: 100% !important;
+// }
+
+// xterm-js * {
+//     scrollbar-color:
+//         var(--scrollbar-foreground, #ccc) var(--scrollbar-background, transparent);
+// }
+
+// xterm-js *::-webkit-scrollbar {
+//     width: 14px;
+//     height: 14px;
+// }
+
+// xterm-js *::-webkit-scrollbar-thumb {
+//     background: var(--scrollbar-foreground, #ccc);
+// }
+
+// xterm-js *::-webkit-scrollbar-track {
+//     background: var(--scrollbar-backgroundm, transparent);
+// }
+
+
+
+
+//* VS Code
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+// /* Override monaco's styles for terminal editors */
+// .xterm textarea:focus {
+//     opacity: 0 !important;
+//     outline: 0 !important;
+// }
+
+// .xterm .xterm-helper-textarea:focus {
+//     /* Override the general vscode style applies `opacity:1!important` to textareas */
+//     opacity: 0 !important;
+// }
+
+// .terminal-tab::before {
+//     font-family: 'codicon' !important;
+//     font-size: 16px !important;
+// }
+
+// .terminal-tab:not(.terminal-uri-icon)::before {
+//     background-image: none !important;
+// }
+
+// .pane-body.integrated-terminal {
+//     display: block;
+//     height: 100%;
+//     box-sizing: border-box;
+// }
+
+// .xterm-viewport {
+//     box-sizing: border-box;
+// }
+
+// .xterm-viewport {
+//     /* Override xterm.js' width as we want to size the viewport to fill the panel so the scrollbar is on the right edge */
+//     width: auto !important;
+// }
+
+// .split-panel-terminal {
+//     font-variant-ligatures: none;
+// }
+
+// .split-panel-terminal {
+//     box-sizing: border-box;
+//     overflow: hidden;
+// }
+
+// .xterm {
+//     user-select: none;
+//     -webkit-user-select: none;
+// }
+
+// // .xterm .xterm-helpers {
+// //     position: absolute;
+// //     top: 0;
+// // }
+
+// .terminal-overflow-guard {
+//     overflow: hidden;
+//     position: relative;
+//     height: 100%;
+// }

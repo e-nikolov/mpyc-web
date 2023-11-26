@@ -2,7 +2,7 @@
 
 import '../scss/style.scss';
 
-import { MPCManager, PyScriptMainThreadRuntime, PeerJSTransport, PyScriptWorkerRuntime, PyodideWorkerRuntime } from '@mpyc-web/core';
+import { MPCManager, PeerJSTransport, PyScriptWorkerRuntime } from '@mpyc-web/core';
 import * as app from './app';
 
 let blobURL = (code: string) => {
@@ -73,7 +73,7 @@ function main() {
         clearTerminalButtonSelector: 'button#clearTerminal',
         showQRCodeButtonSelector: '#show-qr',
         scanQRInputSelector: '#scan-qr',
-        splitPanelSelectors: ['.split-0', '.split-1'],
+        splitPanelSelectors: ['.split-panel-editor', '.split-panel-terminal'],
         versionSelector: "#version",
     });
 }

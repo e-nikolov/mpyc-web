@@ -2,7 +2,8 @@ import asyncio
 import logging
 import os
 from enum import StrEnum, auto
-from typing import Any, Awaitable, Callable, Coroutine, Dict, List, Literal, Tuple, TypeVarTuple
+from typing import (Any, Awaitable, Callable, Coroutine, Dict, List, Literal,
+                    Tuple, TypeVarTuple)
 
 import js  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 import rich
@@ -161,7 +162,8 @@ sync_proxy = None
 
 
 if RUNNING_IN_WORKER:
-    from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+    from polyscript import \
+        xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 
     async_proxy = AsyncRuntimeProxy(xworker)
     sync_proxy = SyncRuntimeProxy(xworker.sync)
@@ -174,7 +176,7 @@ else:
 async def stats_printer():
     while True:
         async_proxy.postMessage(to_js(["proxy:js:display:stats", str(stats.to_tree())]))
-        await asyncio.sleep(5)
+        await asyncio.sleep(2)
 
 
 def on_update_env(env):
