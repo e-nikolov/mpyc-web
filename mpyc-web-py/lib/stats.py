@@ -285,7 +285,7 @@ class BaseStatsCollector:
             # self._to_tree(self.channel_pool_stats(), tree.add("channel_pool"))
             self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
 
-        return rich_to_ansi(Panel(tree, title="stats", subtitle=time_delta_fmt(datetime.now(), self.start_time), border_style="blue"))
+        return rich_to_ansi(Panel.fit(tree, title="stats", subtitle=time_delta_fmt(datetime.now(), self.start_time), border_style="blue"))
         # return rich_to_ansi('[bold green]My[/][bold red]awesome[/][bold yellow]text[/]')
         # return print_to_string(tree)
 
