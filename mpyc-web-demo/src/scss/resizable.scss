@@ -63,11 +63,13 @@
     // height: max-content !important;
     // z-index: 2000 !important;
     width: 100% !important; // 15px is scrollbar width
+    height: 100% !important; // 15px is scrollbar width
     // height: calc(100% - 15px) !important; // 15px is scrollbar width
-    height: 100% !important;
+    // height: calc(100% - 10px) !important;
     // overflow: auto !important;
     overflow: hidden !important;
     overflow-x: scroll !important;
+    // overflow-y: visible !important;
     // overflow-y: scroll !important;
 }
 
