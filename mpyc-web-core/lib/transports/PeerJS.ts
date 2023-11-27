@@ -11,7 +11,7 @@ export class PeerJSTransport extends Emittery<TransportEvents> implements Transp
     peer: Peer;
     conns: ConnMap = new Map<string, DataConnection>();
 
-    constructor(peerID: string | null) {
+    constructor(peerID?: string) {
         super()
         let opts: PeerOptions = {
             // debug: 3,

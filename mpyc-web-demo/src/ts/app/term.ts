@@ -345,7 +345,7 @@ export class Term extends Terminal {
         }
         const ctrlMessage = `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
 
-        console.log(this._height(message))
+        // console.log(this._height(message))
         return ctrlMessage
     }
 
@@ -406,7 +406,7 @@ export class Term extends Terminal {
         console.log("fitting terminal");
         const dims = this.fitAddon.proposeDimensions();
         if (!dims || !this || isNaN(dims.cols) || isNaN(dims.rows)) {
-            console.log("no dims, returning")
+            // console.log("no dims, returning")
             return;
         }
 
@@ -415,7 +415,7 @@ export class Term extends Terminal {
         dims.cols = Math.max(dims.cols, this.cols);
 
         if (dims.cols == this.cols && dims.rows == this.rows) {
-            console.log("unchanged, returning")
+            // console.log("unchanged, returning")
             return;
         }
 

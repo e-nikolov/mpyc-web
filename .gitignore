@@ -508,3 +508,4 @@ dist-ssr
 *.sln
 *.sw?
 vite.config.js.timestamp-*.mjs
+vite.config.ts.timestamp-*.mjs
