@@ -8,13 +8,8 @@ console.log("PyodideWorker.ts")
 
 
 
-import startup from './startup.py?raw'
-import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
-import coincident from 'coincident/window'
+import startup from './startup.py?raw';
 
-import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.mjs";
-import { PyodideInterface } from 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
-import { stringToByteArray } from '../../utils';
 // import { loadPyodide } from 'pyodide'
 
 const { parse, stringify } = JSON;
@@ -58,7 +53,20 @@ const getPolyscriptJSModule = (interpreter: any) => {
 const toJsOptions = { dict_converter: Object.fromEntries };
 
 async function loadPyodideAndPackages() {
-
+    // // Don't bother yet with this line, suppose our API is built in such a way:
+    // const { id, python, ...context } = event.data;
+    // // // The worker copies the context in its own "memory" (an object mapping name to values)
+    // for (const key of Object.keys(context)) {
+    //     self[key] = context[key];
+    // }
+    // // // Now is the easy part, the one that is similar to working in the main thread:
+    // try {
+    //     await self.pyodide.loadPackagesFromImports(python);
+    //     let results = await self.pyodide.runPythonAsync(python);
+    //     self.postMessage({ results, id });
+    // } catch (error) {
+    //     self.postMessage({ error: error.message, id });
+    // }
 }
 console.error("loading pyodide")
 
@@ -70,20 +78,6 @@ self.onmessage = async (event) => {
     console.log("event")
     console.error(event)
 
-    // // Don't bother yet with this line, suppose our API is built in such a way:
-    // const { id, python, ...context } = event.data;
-    // // The worker copies the context in its own "memory" (an object mapping name to values)
-    // for (const key of Object.keys(context)) {
-    //     self[key] = context[key];
-    // }
-    // // Now is the easy part, the one that is similar to working in the main thread:
-    // try {
-    //     await self.pyodide.loadPackagesFromImports(python);
-    //     let results = await self.pyodide.runPythonAsync(python);
-    //     self.postMessage({ results, id });
-    // } catch (error) {
-    //     self.postMessage({ error: error.message, id });
-    // }
 };
 
 // self.pyodide = await loadPyodide({
@@ -113,7 +107,7 @@ self.onmessage = async (event) => {
 
 
 
-self.pyodide.registerJsModule('polyscript', getPolyscriptJSModule(self.pyodide));
+// self.pyodide.registerJsModule('polyscript', getPolyscriptJSModule(self.pyodide));
 
 self.pyodide.runPython(startup)
 

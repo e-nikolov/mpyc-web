@@ -19,4 +19,5 @@ export interface ControllerOptions {
     showQRCodeButtonSelector: string,
     scanQRInputSelector: string,
     versionSelector: string,
+    toggleStatsSelector: string,
 }

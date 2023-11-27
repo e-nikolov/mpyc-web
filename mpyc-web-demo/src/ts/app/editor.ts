@@ -6,7 +6,7 @@ import { keymap } from '@codemirror/view';
 import { MPCManager } from '@mpyc-web/core';
 import { EditorView, basicSetup } from 'codemirror';
 import { birdsOfParadise } from 'thememirror';
-import { $ } from '../utils';
+import { $, debounce } from '../utils';
 import { Controller } from './controller';
 
 export class Editor extends EditorView {
@@ -78,7 +78,7 @@ export class Editor extends EditorView {
 
 export function setupDemoSelector(this: Controller) {
     const mql = window.matchMedia("(max-width: 991px)")
-    const resizeDemoSelector = (mqe: MediaQueryListEvent | MediaQueryList) => {
+    const resizeDemoSelector = debounce((mqe: MediaQueryListEvent | MediaQueryList) => {
         if (mqe.matches) {
             $("#mpc-demos").hidden = true
             this.demoSelect.size = 1;
@@ -90,7 +90,7 @@ export function setupDemoSelector(this: Controller) {
             $("#chatSidebar").insertAdjacentElement('beforeend', $("#chatInputGroup"))
             this.demoSelect.size = window.innerHeight / (4 * 21)
         }
-    }
+    })
 
     mql.addEventListener('change', resizeDemoSelector)
     resizeDemoSelector(mql);

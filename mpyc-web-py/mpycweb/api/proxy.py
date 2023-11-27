@@ -2,8 +2,7 @@ import asyncio
 import logging
 import os
 from enum import StrEnum, auto
-from typing import (Any, Awaitable, Callable, Coroutine, Dict, List, Literal,
-                    Tuple, TypeVarTuple)
+from typing import Any, Awaitable, Callable, Coroutine, Dict, List, Literal, Tuple, TypeVarTuple
 
 import js  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 import rich
@@ -32,6 +31,8 @@ class ProxyEventType(StrEnum):
     ENV_UPDATE = "proxy:py:env:update"
     STATS_RESET = "proxy:py:stats:reset"
     STATS_TOGGLE = "proxy:py:stats:toggle"
+    STATS_SHOW = "proxy:py:stats:show"
+    STATS_HIDE = "proxy:py:stats:hide"
 
 
 class ProxyEvent:
@@ -114,6 +115,10 @@ class AsyncRuntimeProxy:
                 # loop.call_soon(on_ready_message, pid, message)
             case ProxyEventType.STATS_TOGGLE:
                 stats.enabled = not stats.enabled
+            case ProxyEventType.STATS_SHOW:
+                stats.enabled = True
+            case ProxyEventType.STATS_HIDE:
+                stats.enabled = False
             case ProxyEventType.STATS_RESET:
                 stats.reset()
             case ProxyEventType.MPC_RUNTIME:
@@ -162,8 +167,7 @@ sync_proxy = None
 
 
 if RUNNING_IN_WORKER:
-    from polyscript import \
-        xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+    from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
 
     async_proxy = AsyncRuntimeProxy(xworker)
     sync_proxy = SyncRuntimeProxy(xworker.sync)

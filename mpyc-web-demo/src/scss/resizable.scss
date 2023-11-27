@@ -1,32 +1,27 @@
 .split {
     display: flex;
     flex-direction: column;
-    // margin-bottom: 15px;
 }
 
 @media (min-width: 992px) {
-
-    // .wwww-auto {
-    //     width: auto !important;
-    // }
-
-
     .split {
         height: 85vh;
     }
 }
 
 @media (max-width: 991px) {
-
-    .wwww-auto {
-        width: calc(50% - 5px) !important;
-    }
-
-
     .split {
         height: calc(85vh - 280px);
     }
 }
+
+@media (max-height: 500px) {
+    .split {
+        height: 120vh;
+    }
+}
+
+@media(orientation: landscape) {}
 
 .editor,
 .cm-editor {
@@ -56,6 +51,15 @@
 .terminal-wrapper {
     height: 100% !important;
     width: 100% !important;
+}
+
+#terminal>textarea,
+.xterm-screen>textarea,
+.xterm>textarea,
+#terminal>div>div.xterm-screen>div.xterm-helpers>textarea {
+    display: none !important;
+    visibility: hidden !important;
+    z-index: -1000 !important;
 }
 
 

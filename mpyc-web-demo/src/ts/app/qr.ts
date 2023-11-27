@@ -1,6 +1,6 @@
-import qr from 'qrcode';
 import { Tooltip } from 'bootstrap';
-import { safe } from '../utils'
+import qr from 'qrcode';
+import { safe } from '../utils';
 const QR_CANVAS_CLASS = "qr-canvas";
 const QR_URL_SPAN_CLASS = "qr-url-span";
 const QR_CANVAS_SELECTOR = `div.tooltip-inner>canvas.${QR_CANVAS_CLASS}`;
