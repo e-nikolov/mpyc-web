@@ -7,7 +7,7 @@ import { AnyData, MPCManager, PeerJSTransport } from '@mpyc-web/core';
 import { Tooltip } from 'bootstrap';
 import { ControllerOptions } from './elements';
 
-import { $, $$, safe } from '../utils';
+import { $, $$, debounce, getStorage, safe, setStorage } from '../utils';
 
 // import * as polyscript from "polyscript";
 import { makeSplitJS } from './split';
@@ -32,6 +32,7 @@ export class Controller {
     showQRCodeButton: HTMLButtonElement;
     scanQRInput: HTMLInputElement;
     versionDiv: HTMLDivElement;
+    toggleStatsEl: HTMLInputElement;
 
     constructor(mpyc: MPCManager, opts: ControllerOptions) {
         this.mpyc = mpyc;
@@ -50,6 +51,7 @@ export class Controller {
         this.clearTerminalButton = $<HTMLButtonElement>(opts.clearTerminalButtonSelector);
         this.showQRCodeButton = $<HTMLButtonElement>(opts.showQRCodeButtonSelector);
         this.scanQRInput = $<HTMLInputElement>(opts.scanQRInputSelector);
+        this.toggleStatsEl = $<HTMLInputElement>(opts.toggleStatsSelector);
         this.versionDiv = $<HTMLDivElement>(opts.versionSelector);
 
         this.term = new app.Term(opts.terminalSelector, mpyc);
@@ -63,12 +65,22 @@ export class Controller {
         this.term.info(`Initializing ${format.green(mpyc.runtime.type())} runtime...`);
 
         this.updateHostPeerIDInput();
+        this.hostPeerIDInput.addEventListener('input', debounce(() => {
+            if (URL.canParse(this.hostPeerIDInput.value)) {
+                const peerURL = new URL(this.hostPeerIDInput.value);
+                let peerID = peerURL.searchParams.get('peer')
+
+                if (peerID) {
+                    this.hostPeerIDInput.value = peerID;
+                }
+            }
+        }));
 
         this.setupMPyCEvents(mpyc);
         this.setupButtonEvents(mpyc, opts);
         this.setupDemoSelector();
 
-        $$('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el));
+        $$('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el, { trigger: 'hover' }));
         makeSplitJS(opts.splitPanelSelectors)
 
         this.setupGlobals();
@@ -112,8 +124,6 @@ export class Controller {
             this.term.live(stats)
         });
 
-
-
         mpyc.on('runtime:ready', async () => {
             console.log(`${mpyc.runtime.type()} runtime ready.`)
 
@@ -131,6 +141,20 @@ export class Controller {
         this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
         this.sendMessageButton.addEventListener('click', async () => { this.sendChatMessage(); });
         this.clearTerminalButton.addEventListener('click', async () => { this.term.clear(); });
+
+        this.toggleStatsEl.addEventListener('click', async () => {
+            if (this.toggleStatsEl.checked) {
+                setStorage('showStats', 'true')
+                this.mpyc.runtime.showStats();
+            } else {
+                setStorage('showStats', 'false')
+                this.mpyc.runtime.hideStats();
+            }
+        });
+
+        const showStats = getStorage('showStats');
+        this.toggleStatsEl.checked = showStats === 'true';
+        this.toggleStatsEl.dispatchEvent(new Event('click'));
 
         // CHAT
         this.chatInput.addEventListener('keypress', async (e: Event) => {

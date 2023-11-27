@@ -15,7 +15,9 @@ export class CopyButton {
         this.contentEl = document.querySelector<HTMLInputElement>(contentSelector)!;
         this.buttonEl = document.querySelector<HTMLButtonElement>(buttonSelector)!;
         this.buttonEl.addEventListener("click", () => {
-            navigator.clipboard.writeText(this.contentEl.value).then(() => {
+            let peerURL = new URL("./", window.location.href);
+            peerURL.searchParams.set("peer", this.contentEl.value);
+            navigator.clipboard.writeText(peerURL.toString()).then(() => {
                 Tooltip.getInstance(this.buttonSelector)!.setContent({ '.tooltip-inner': "Copied!" })
                 $(`${this.buttonSelector}.btn-primary`).style.display = "none";
                 $(`${this.buttonSelector}.btn-success`).style.display = "";

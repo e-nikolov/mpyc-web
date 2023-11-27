@@ -166,7 +166,7 @@ def set_log_level(level, verbosity=0):
     logging.basicConfig(**opts)
     stats.reset()
     # stats.enabled = logging.root.getEffectiveLevel() <= TRACE
-    stats.enabled = logging.root.getEffectiveLevel() <= DEBUG
+    # stats.enabled = logging.root.getEffectiveLevel() <= DEBUG
 
     if level <= TRACE:
         gc.set_debug(gc.DEBUG_LEAK)
@@ -216,7 +216,7 @@ class Handler(RichHandler):
             case ["INFO", *_]:
                 # level = Text(" ℹ".ljust(3))
                 message.style = Style(color="bright_green")
-                level = Text(" 🛈".ljust(3), "bright_green")
+                level = Text(" ⓘ".ljust(3), "bright_green")
             case ["DEBUG", *_]:
                 # level = Text("🐞 🪲 ⬤ ℹ️ ⚙️ 🔧 🛠 ⚒ 🛠️ ".ljust(3))
                 level = Text(" ⚒".ljust(3), "grey50")

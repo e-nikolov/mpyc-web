@@ -1,12 +1,7 @@
-import { EventEmitter } from 'eventemitter3'
-import Emittery from 'emittery'
+import Emittery from 'emittery';
 
-import { MPCEvents, PeerJSData, TransportEvents, Transport, AnyData, PassThroughRuntimeEvents } from './events'
-import mpycweb from './mpyc_web-0.4.0-py3-none-any.whl?raw'
-import { PyodideWorkerRuntime } from "../runtimes/PyodideWorker/PyodideWorkerRuntime";
-import { MPCRuntimeBase, MPCRuntimeManager } from "../runtimes/MPCRuntimeBase";
-import { PyScriptWorkerRuntime } from "../runtimes/PyScriptWorker/PyScriptWorkerRuntime";
-import { PyScriptMainThreadRuntime } from "../runtimes/PyScriptMainThread/PyScriptMainThreadRuntime";
+import { MPCRuntimeBase } from "../runtimes/MPCRuntimeBase";
+import { MPCEvents, PassThroughRuntimeEvents, Transport } from './events';
 
 type options = {
     peerID?: string

@@ -239,6 +239,14 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
         this.asyncProxyPy.postMessage(["proxy:py:stats:toggle"])
     }
 
+    showStats() {
+        this.asyncProxyPy.postMessage(["proxy:py:stats:show"])
+    }
+
+    hideStats() {
+        this.asyncProxyPy.postMessage(["proxy:py:stats:hide"])
+    }
+
 
     onerror = (err: ErrorEvent) => { console.warn("MPCRuntime.onerror"); console.warn(err.error); this.emit('error', err) };
     onmessageerror = (err: MessageEvent) => { console.warn("MPCRuntime.onmessageerror"); console.warn(err); this.emit('messageerror', err) };

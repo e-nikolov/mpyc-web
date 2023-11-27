@@ -24,27 +24,24 @@ __all__ = [
 ]
 
 import asyncio
-
-
-from pyodide import webloop
-import js
-
-
-from . import api
-from lib.exception_handler import exception_handler
-
-
-import asyncio
 import logging
-import rich
-import rich.pretty
 import sys
 
+import js
 import pyodide
+import rich
+import rich.pretty
+from lib.exception_handler import exception_handler
+from lib.stats import stats
+from pyodide import webloop
 
-from lib.log_levels import *
-from lib.log import *
+from . import api
+
+stats.enabled = False
+
 from lib import log
+from lib.log import *
+from lib.log_levels import *
 
 api.sync_proxy.load_env()
 log.install(DEBUG)
@@ -59,9 +56,10 @@ import mpyc
 
 logger.debug(f"MPyC version={mpyc.__version__}")  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=no-member,c-extension-no-member
 
-from .transport import *
-from .patches import *
 from lib.bench import *
+
+from .patches import *
+from .transport import *
 
 # asyncio.ensure_future(api.async_proxy.notify_runtime_ready())
 api.async_proxy.notify_runtime_ready()

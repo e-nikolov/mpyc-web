@@ -124,25 +124,28 @@ export class Term extends Terminal {
             // scrollOnUserInput: false,
             // rows: 6,
             allowProposedApi: true,
+            customGlyphs: true,
             // windowsMode: true, // breaks the split panel
             drawBoldTextInBrightColors: true,
             // windowsPty: {
             //     // backend: 'winpty',
             //     backend: 'conpty',
             // },
-
+            rightClickSelectsWord: true,
+            // customGlyphs: true,
             windowOptions: {
 
             },
-            scrollback: 1000,
+            // scrollback: 1000,
             cursorBlink: false,
             convertEol: true,
             // fontFamily: "Fira Code, Hack",
-            fontFamily: "Fira Code",
+            // fontFamily: "Fira Code",
+            fontFamily: "JetBrains Mono",
             fontSize: 16,
             fontWeight: 400,
             allowTransparency: true,
-            disableStdin: false,
+            disableStdin: true,
             altClickMovesCursor: true,
             // macOptionClickForcesSelection: false,
             theme: {
@@ -249,7 +252,7 @@ export class Term extends Terminal {
             }
         });
 
-        let ro = new ResizeObserver(debounce(() => { this.fit(); }, 50));
+        let ro = new ResizeObserver(() => { this.fit() });
         ro.observe(document.querySelector(".split-panel-terminal")!)
     }
 
@@ -265,7 +268,8 @@ export class Term extends Terminal {
 
 
     info(message: string) {
-        this._log(format.greenBright(message), format.greenBright("🛈"));
+        this._log(format.greenBright(message), format.greenBright("ⓘ"));
+        // this._log(format.greenBright(message), format.greenBright("ⓘ  🅘  🛈  Ⓘ"));
     }
 
     _log(message: string, icon: string = " ") {
@@ -398,11 +402,8 @@ export class Term extends Terminal {
     forceRedraw() {
         this.clearTextureAtlas();
     }
-    public fit(): void {
-        this.__fit();
-    }
 
-    public __fit(): void {
+    public __fit = () => {
         console.log("fitting terminal");
         const dims = this.fitAddon.proposeDimensions();
         if (!dims || !this || isNaN(dims.cols) || isNaN(dims.rows)) {
@@ -427,6 +428,8 @@ export class Term extends Terminal {
         this.refresh(0, this.rows - 1)
         this.updateTermSizeEnv();
     }
+
+    public fit = debounce(this.__fit)
 
     // _fit = () => {
     //     console.log("fitting terminal");
@@ -454,8 +457,8 @@ export class Term extends Terminal {
     //     // this.updateTermSizeEnv();
     // }
 
-    updateTermSizeEnv = () => {
+    updateTermSizeEnv = debounce(() => {
         console.log("updating terminal size env: ", this.cols, this.rows);
         this.mpyc.runtime.updateEnv({ COLUMNS: this.cols.toString(), LINES: this.rows.toString() })
-    }
+    })
 }
