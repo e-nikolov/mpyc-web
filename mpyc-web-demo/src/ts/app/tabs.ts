@@ -44,7 +44,7 @@ export function loadPeerID(): string {
 
     // Duplicated Tabs will have the same tabID and peerID as their parent Tab; we must force reset those values
     if (!sessionStorage.tabID || isTabDuplicate || getTabState("lock", sessionStorage.tabID) != "") {
-        sessionStorage.tabID = selectTabID(tabCount);
+        sessionStorage.tabID = selectTabID();
         sessionStorage.myPeerID = getTabState("myPeerID");
     }
 
@@ -54,13 +54,12 @@ export function loadPeerID(): string {
     return sessionStorage.myPeerID;
 }
 
-function selectTabID(tabCount: number) {
-    for (let i = 1; i <= tabCount; i++) {
+function selectTabID() {
+    for (let i = 1; i <= 1000; i++) {
         if (getTabState("lock", i) == "") {
             return i;
         }
     }
-    return tabCount;
 }
 
 export function getTabState(key: string, tabID = sessionStorage.tabID) {

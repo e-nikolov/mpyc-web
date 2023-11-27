@@ -33,7 +33,6 @@ let emptyBlob = URL.createObjectURL(
     }),
 )
 
-console.log(emptyBlob)
 export class PyScriptWorkerRuntime extends MPCRuntimeBase {
     _close(): void {
         this.worker.terminate()
@@ -127,7 +126,7 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
             console.error("worker.onerror")
             console.error(e)
         }
-        console.log(worker)
+        // console.log(worker)
 
         super(worker.sync, worker, env)
         // worker.postMessage(["proxy:py:exec", startup])
