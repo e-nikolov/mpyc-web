@@ -12,6 +12,7 @@ $grid-breakpoints: (
 
 
 @import '@fontsource/fira-code/latin-400.css';
+@import '@fontsource/jetbrains-mono';
 
 // @import "xterm/css/xterm.css";
 @import "./xterm.scss";
@@ -23,7 +24,6 @@ $grid-breakpoints: (
 // @import 'material-icons/iconfont/round.css';
 // @import 'material-icons/iconfont/material-icons.css';
 // @import 'material-icons/css/material-icons.css';
-
 @import 'material-icons/iconfont/filled.css';
 @import "@fortawesome/fontawesome-free/css/fontawesome.css";
 @import "@fortawesome/fontawesome-free/css/regular.css";
@@ -32,7 +32,6 @@ $grid-breakpoints: (
 // @import "@fortawesome/fontawesome-free/css/all.css";
 @import "./resizable.scss";
 
-$material-icons-font-size: 16px;
 
 // .w-auto {
 //   width: calc(50% - 5px);
@@ -40,6 +39,8 @@ $material-icons-font-size: 16px;
 body {
   font-family: 'Segoe UI', system-ui;
   margin: 1em;
+  // font-family: 'JetBrains Mono', system-ui;
+
 }
 
 .main-container {

@@ -58,6 +58,11 @@
     width: 100% !important;
 }
 
+#terminal>div>div.xterm-screen>div.xterm-helpers>textarea {
+    display: none !important;
+    visibility: hidden !important;
+}
+
 
 .xterm-screen {
     // height: max-content !important;

@@ -124,25 +124,28 @@ export class Term extends Terminal {
             // scrollOnUserInput: false,
             // rows: 6,
             allowProposedApi: true,
+            customGlyphs: true,
             // windowsMode: true, // breaks the split panel
             drawBoldTextInBrightColors: true,
             // windowsPty: {
             //     // backend: 'winpty',
             //     backend: 'conpty',
             // },
-
+            rightClickSelectsWord: true,
+            // customGlyphs: true,
             windowOptions: {
 
             },
-            scrollback: 1000,
+            // scrollback: 1000,
             cursorBlink: false,
             convertEol: true,
             // fontFamily: "Fira Code, Hack",
-            fontFamily: "Fira Code",
+            // fontFamily: "Fira Code",
+            fontFamily: "JetBrains Mono",
             fontSize: 16,
             fontWeight: 400,
             allowTransparency: true,
-            disableStdin: false,
+            disableStdin: true,
             altClickMovesCursor: true,
             // macOptionClickForcesSelection: false,
             theme: {
@@ -265,7 +268,8 @@ export class Term extends Terminal {
 
 
     info(message: string) {
-        this._log(format.greenBright(message), format.greenBright("🛈"));
+        this._log(format.greenBright(message), format.greenBright("ⓘ"));
+        // this._log(format.greenBright(message), format.greenBright("ⓘ  🅘  🛈  Ⓘ"));
     }
 
     _log(message: string, icon: string = " ") {

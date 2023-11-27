@@ -216,7 +216,7 @@ class Handler(RichHandler):
             case ["INFO", *_]:
                 # level = Text(" ℹ".ljust(3))
                 message.style = Style(color="bright_green")
-                level = Text(" 🛈".ljust(3), "bright_green")
+                level = Text(" ⓘ".ljust(3), "bright_green")
             case ["DEBUG", *_]:
                 # level = Text("🐞 🪲 ⬤ ℹ️ ⚙️ 🔧 🛠 ⚒ 🛠️ ".ljust(3))
                 level = Text(" ⚒".ljust(3), "grey50")
