@@ -3,7 +3,7 @@ import * as app from '.';
 import { format } from "./format";
 
 import { EditorView } from '@codemirror/view';
-import { AnyData, MPCManager } from '@mpyc-web/core';
+import { AnyData, MPCManager, PeerJSTransport } from '@mpyc-web/core';
 import { Tooltip } from 'bootstrap';
 import { ControllerOptions } from './elements';
 
@@ -124,7 +124,7 @@ export class Controller {
     }
 
     setupButtonEvents(mpyc: MPCManager, opts: ControllerOptions) {
-        this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(); });
+        this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
         this.runMPyCButton.addEventListener('click', async () => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, false); });
         this.runMPyCAsyncButton.addEventListener('click', async () => mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, true));

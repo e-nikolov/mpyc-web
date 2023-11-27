@@ -69,7 +69,7 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
             this.emit('error', err)
         };
         asyncProxyPy.onmessageerror = (err: MessageEvent) => { console.warn("asyncProxyPy.onmessageerror"); console.warn(err); this.emit('messageerror', err) };
-        console.warn("setting onmessage", asyncProxyPy)
+        // console.warn("setting onmessage", asyncProxyPy)
         asyncProxyPy.onmessage = (e: MessageEvent) => {
             let data = e.data
 

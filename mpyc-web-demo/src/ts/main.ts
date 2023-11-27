@@ -37,6 +37,7 @@ function main() {
     app.ensureStorageSchema(18);
     let peerID = app.loadPeerID();
 
+    document.title += ` - (${sessionStorage.tabID})`
 
 
     // ww.onmessage = (e) => {
@@ -47,7 +48,15 @@ function main() {
     //     ww.postMessage("test")
     // }
     // console.log(ww)
-    const transportFactory = () => new PeerJSTransport(peerID);
+    const transportFactory = () => {
+        try {
+            return new PeerJSTransport(peerID);
+        } catch (err) {
+            console.warn(err)
+            return new PeerJSTransport();
+        }
+    }
+
     const runtimeFactory = () => new PyScriptWorkerRuntime(undefined, "./config.toml");
     // const runtimeFactory = () => new PyodideXWorker();
     // const runtimeFactory = (mpc: MPCManager) => new PyScriptInterpreter(mpc, "./py/mpycweb/shim/shim.py", "./config.toml", { COLUMNS: "110" });

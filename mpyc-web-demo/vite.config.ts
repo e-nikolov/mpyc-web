@@ -79,7 +79,12 @@ export default defineConfig(({ mode }) => {
       // }),
     ],
     server: {
+      host: "0.0.0.0",
       port: 4001,
+      https: !process.env.VITE_HTTPS ? false : {
+        key: process.env.VITE_HTTPS_KEY,
+        cert: process.env.VITE_HTTPS_CERT,
+      },
       hmr: process.env.NO_HMR ? false : {
         overlay: false,
       },
