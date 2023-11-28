@@ -156,7 +156,7 @@ class BaseStatsCollector:
 
     func: str = "$func"
     stats = DeepCounter[str]({})
-    enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
+    enabled = False
     start_time = datetime.now()
     formatters: dict[str, Callable[[str], str]] = {
         "total_bytes_received": format_file_size,

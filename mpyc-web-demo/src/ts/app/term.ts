@@ -252,7 +252,7 @@ export class Term extends Terminal {
             }
         });
 
-        let ro = new ResizeObserver(debounce(() => { this.fit(); }, 50));
+        let ro = new ResizeObserver(() => { this.fit() });
         ro.observe(document.querySelector(".split-panel-terminal")!)
     }
 
@@ -402,11 +402,8 @@ export class Term extends Terminal {
     forceRedraw() {
         this.clearTextureAtlas();
     }
-    public fit(): void {
-        this.__fit();
-    }
 
-    public __fit(): void {
+    public __fit = () => {
         console.log("fitting terminal");
         const dims = this.fitAddon.proposeDimensions();
         if (!dims || !this || isNaN(dims.cols) || isNaN(dims.rows)) {
@@ -431,6 +428,8 @@ export class Term extends Terminal {
         this.refresh(0, this.rows - 1)
         this.updateTermSizeEnv();
     }
+
+    public fit = debounce(this.__fit)
 
     // _fit = () => {
     //     console.log("fitting terminal");
@@ -458,8 +457,8 @@ export class Term extends Terminal {
     //     // this.updateTermSizeEnv();
     // }
 
-    updateTermSizeEnv = () => {
+    updateTermSizeEnv = debounce(() => {
         console.log("updating terminal size env: ", this.cols, this.rows);
         this.mpyc.runtime.updateEnv({ COLUMNS: this.cols.toString(), LINES: this.rows.toString() })
-    }
+    })
 }

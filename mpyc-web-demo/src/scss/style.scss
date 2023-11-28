@@ -14,10 +14,11 @@ $grid-breakpoints: (
 @import '@fontsource/fira-code/latin-400.css';
 @import '@fontsource/jetbrains-mono';
 
-// @import "xterm/css/xterm.css";
-@import "./xterm.scss";
+@import "xterm/css/xterm.css";
 @import "./theme-superhero-before.scss";
 @import "bootstrap/scss/bootstrap";
+$form-control-background: $gray-800;
+// @import "./xterm.scss";
 @import "./theme-superhero-after.scss";
 // @import "bootstrap-icons/font/bootstrap-icons.css";
 // @import 'material-icons/iconfont/filled.css';
@@ -25,6 +26,7 @@ $grid-breakpoints: (
 // @import 'material-icons/iconfont/material-icons.css';
 // @import 'material-icons/css/material-icons.css';
 @import 'material-icons/iconfont/filled.css';
+@import 'material-symbols/outlined.css';
 @import "@fortawesome/fontawesome-free/css/fontawesome.css";
 @import "@fortawesome/fontawesome-free/css/regular.css";
 @import "@fortawesome/fontawesome-free/css/solid.css";
@@ -39,13 +41,19 @@ $grid-breakpoints: (
 body {
   font-family: 'Segoe UI', system-ui;
   margin: 1em;
+
+  font-weight: normal;
+  font-style: normal;
   // font-family: 'JetBrains Mono', system-ui;
 
 }
 
-.main-container {
-  height: 95vh;
+@media (orientation: portrait) {
+  .main-container {
+    height: 95vh;
+  }
 }
+
 
 
 .material-icons,

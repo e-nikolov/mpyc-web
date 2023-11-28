@@ -58,7 +58,7 @@ function main() {
     }
 
     const runtimeFactory = () => new PyScriptWorkerRuntime(undefined, "./config.toml");
-    // const runtimeFactory = () => new PyodideXWorker();
+    // const runtimeFactory = () => new PyodideWorkerRuntime();
     // const runtimeFactory = (mpc: MPCManager) => new PyScriptInterpreter(mpc, "./py/mpycweb/shim/shim.py", "./config.toml", { COLUMNS: "110" });
 
     // let mpyc = new MPCManager(peerID, { COLUMNS: "110" }, () => { return new PyScriptInterpreter(this) });
@@ -83,6 +83,7 @@ function main() {
         showQRCodeButtonSelector: '#show-qr',
         scanQRInputSelector: '#scan-qr',
         splitPanelSelectors: ['.split-panel-editor', '.split-panel-terminal'],
+        toggleStatsSelector: "#toggleStatsEl",
         versionSelector: "#version",
     });
 }
