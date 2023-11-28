@@ -66,13 +66,14 @@ export class Controller {
 
         this.updateHostPeerIDInput();
         this.hostPeerIDInput.addEventListener('input', debounce(() => {
-            if (URL.canParse(this.hostPeerIDInput.value)) {
+            try {
                 const peerURL = new URL(this.hostPeerIDInput.value);
                 let peerID = peerURL.searchParams.get('peer')
 
                 if (peerID) {
                     this.hostPeerIDInput.value = peerID;
                 }
+            } catch (e) {
             }
         }));
 
