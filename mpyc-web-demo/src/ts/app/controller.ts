@@ -76,11 +76,12 @@ export class Controller {
             }
         }));
 
+        $$('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el, { trigger: 'hover' }));
+
         this.setupMPyCEvents(mpyc);
         this.setupButtonEvents(mpyc, opts);
         this.setupDemoSelector();
 
-        $$('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el, { trigger: 'hover' }));
         makeSplitJS(opts.splitPanelSelectors)
 
         this.setupGlobals();
@@ -144,10 +145,14 @@ export class Controller {
 
         this.toggleStatsEl.addEventListener('click', async () => {
             if (this.toggleStatsEl.checked) {
-                setStorage('showStats', 'true')
+                setStorage('showStats', 'true');
+
+                Tooltip.getInstance("#toggleStatsLabel")!.setContent({ '.tooltip-inner': "Disable runtime stats" })
                 this.mpyc.runtime.showStats();
             } else {
                 setStorage('showStats', 'false')
+                Tooltip.getInstance("#toggleStatsLabel")!.setContent({ '.tooltip-inner': "Enable runtime stats" })
+
                 this.mpyc.runtime.hideStats();
             }
         });
@@ -224,12 +229,12 @@ export class Controller {
     }
 
     setupDemoSelector() {
-        const mql = window.matchMedia("(max-width: 991px)")
+        const mql = window.matchMedia("(max-width: 1199px)")
         const resizeDemoSelector = (mqe: MediaQueryListEvent | MediaQueryList) => {
             if (mqe.matches) {
                 $("#mpc-demos").hidden = true
                 this.demoSelect.size = 1;
-                $("#editor-buttons").insertAdjacentElement('beforeend', this.demoSelect)
+                $("#demoSelectorLocation2").insertAdjacentElement('beforeend', this.demoSelect)
                 $("#chatFooter").insertAdjacentElement('beforeend', $("#chatInputGroup"))
             } else {
                 $("#mpc-demos").insertAdjacentElement('beforeend', this.demoSelect)

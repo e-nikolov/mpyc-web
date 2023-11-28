@@ -23,18 +23,31 @@ $form-control-background: $gray-800;
 @import 'material-symbols/sharp.css';
 @import "./resizable.scss";
 
-
 // .w-auto {
 //   width: calc(50% - 5px);
 // }
 body {
   font-family: 'Segoe UI', system-ui;
-  margin: 1em;
 
   font-weight: normal;
   font-style: normal;
-  // font-family: 'JetBrains Mono', system-ui;
 
+  /* Support for all WebKit browsers. */
+  // -webkit-font-smoothing: antialiased;
+  // /* Support for Safari and Chrome. */
+  // text-rendering: optimizeLegibility;
+
+  // /* Support for Firefox. */
+  // -moz-osx-font-smoothing: grayscale;
+
+  // /* Support for IE. */
+  // font-feature-settings: 'liga';
+  // // font-family: 'JetBrains Mono', system-ui;
+
+}
+
+#select-demo {
+  width: 100% !important;
 }
 
 @media (orientation: portrait) {
@@ -48,8 +61,40 @@ body {
 .material-symbols-sharp,
 .material-symbols-rounded,
 .material-symbols-outlined {
+  // font-weight: normal;
+  // font-style: normal;
+  font-size: 24px;
+  /* Preferred icon size */
+  // display: inline-block;
+  // line-height: 1;
+  // text-transform: none;
+  // letter-spacing: normal;
+  // word-wrap: normal;
+  // white-space: nowrap;
+  // direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  // -webkit-font-smoothing: antialiased;
+  // /* Support for Safari and Chrome. */
+  // text-rendering: optimizeLegibility;
+
+  // /* Support for Firefox. */
+  // -moz-osx-font-smoothing: grayscale;
+
+  // /* Support for IE. */
+  // font-feature-settings: 'liga';
+  // vertical-align: middle !important;
   vertical-align: -6px;
   font-size: 1.5em !important;
+  max-width: 20px !important;
+  // align-content: center !important;
+  // justify-self: start !important;
+  // // border: 0.05em solid black !important;
+}
+
+.btn-primary {
+  // border: 0.05em solid red !important;
+  // justify-content: center !important;
 }
 
 .material-symbols-filled {
@@ -94,9 +139,25 @@ body {
   color: $form-control-color;
 }
 
+.btn {
+  padding: 0.3em 0.7em 0.3em 0.5em;
+}
+
+.btn-outline-primary {
+  background-color: #c06412;
+  --bs-btn-bg: #be5915;
+  --bs-btn-active-bg: #71350c;
+  --bs-btn-color: white;
+  color: white;
+}
+
+.btn-outline-primary:hover {
+  background-color: #71350c;
+}
+
 .form-floating>label {
-  font-size: 18px !important;
-  font-weight: 800 !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
 }
 
 .form-floating>.form-control:not(:placeholder-shown):focus~label::after {
