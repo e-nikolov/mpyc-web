@@ -1,6 +1,6 @@
 {
   "name": "mpyc-web-all",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "workspaces": [
     "mpyc-web-core",
