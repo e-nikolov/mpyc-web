@@ -1,6 +1,6 @@
 $tooltip-max-height: 300px;
 $tooltip-max-width: 300px;
-$material-icons-font-size: 16px;
+$material-symbols-font-size: 16px;
 $grid-breakpoints: (
   xs: 0,
   sm: 300px,
@@ -10,8 +10,6 @@ $grid-breakpoints: (
   xxl: 1400px
 );
 
-
-@import '@fontsource/fira-code/latin-400.css';
 @import '@fontsource/jetbrains-mono';
 
 @import "xterm/css/xterm.css";
@@ -20,18 +18,9 @@ $grid-breakpoints: (
 $form-control-background: $gray-800;
 // @import "./xterm.scss";
 @import "./theme-superhero-after.scss";
-// @import "bootstrap-icons/font/bootstrap-icons.css";
-// @import 'material-icons/iconfont/filled.css';
-// @import 'material-icons/iconfont/round.css';
-// @import 'material-icons/iconfont/material-icons.css';
-// @import 'material-icons/css/material-icons.css';
-@import 'material-icons/iconfont/filled.css';
-@import 'material-symbols/outlined.css';
-@import "@fortawesome/fontawesome-free/css/fontawesome.css";
-@import "@fortawesome/fontawesome-free/css/regular.css";
-@import "@fortawesome/fontawesome-free/css/solid.css";
-
-// @import "@fortawesome/fontawesome-free/css/all.css";
+@import '@material-symbols/font-400/outlined.css';
+@import 'material-symbols/rounded.css';
+@import 'material-symbols/sharp.css';
 @import "./resizable.scss";
 
 
@@ -54,11 +43,17 @@ body {
   }
 }
 
-
-
-.material-icons,
-.material-icons-outlined {
+.material-symbols,
+.material-symbols-filled,
+.material-symbols-sharp,
+.material-symbols-rounded,
+.material-symbols-outlined {
   vertical-align: -6px;
+  font-size: 1.5em !important;
+}
+
+.material-symbols-filled {
+  font-variation-settings: 'FILL' 1;
 }
 
 #knownPeers {
