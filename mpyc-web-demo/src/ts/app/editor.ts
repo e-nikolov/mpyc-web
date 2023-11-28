@@ -77,7 +77,7 @@ export class Editor extends EditorView {
 }
 
 export function setupDemoSelector(this: Controller) {
-    const mql = window.matchMedia("(max-width: 991px)")
+    const mql = window.matchMedia("(max-width: 1199px)")
     const resizeDemoSelector = debounce((mqe: MediaQueryListEvent | MediaQueryList) => {
         if (mqe.matches) {
             $("#mpc-demos").hidden = true

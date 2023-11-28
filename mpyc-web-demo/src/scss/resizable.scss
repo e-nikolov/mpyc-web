@@ -3,13 +3,13 @@
     flex-direction: column;
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1200px) {
     .split {
         height: 85vh;
     }
 }
 
-@media (max-width: 991px) {
+@media (max-width: 1199px) {
     .split {
         height: calc(85vh - 280px);
     }
