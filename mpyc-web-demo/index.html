@@ -37,24 +37,19 @@
 
               <!-- * My Party ID - Buttons -->
               <button id="show-qr" class="btn btn-primary">
-                <!-- <i class="bi bi-qr-code"></i> -->
-                <i class="fa fa-qrcode"></i>
+                <span class="material-symbols-rounded">qr_code</span>
               </button>
-              <button id="copyPeerID" data-bs-toggle="tooltip" style="width: 40px;" data-bs-title="Copy to clipboard"
+              <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copy to clipboard"
                 class="btn btn-primary">
-                <!-- <i class="bi bi-clipboard"></i> -->
-                <i class="fa-regular fa-clipboard"></i>
+                <span class="material-symbols-rounded">content_paste</span>
               </button>
               <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copied!" class="btn btn-success"
                 style="display: none;">
-                <!-- <i class="bi bi-check2"></i> -->
-                <i class="fa fa-check"></i>
+
+                <span class="material-symbols-rounded">inventory</span>
               </button>
               <button id="resetPeerID" data-bs-toggle="tooltip" data-bs-title="Reset peer ID" class="btn btn-primary">
-                <!-- <i class="bi bi-arrow-repeat"></i> -->
-                <!-- <i class="fa fa-repeat"></i> -->
-                <i class="fa fa-rotate"></i>
-                <!-- <i class="material-icons mi-cached"></i> -->
+                <span class="material-symbols-rounded">refresh</span>
               </button>
             </div>
             <!-- * Host Party ID -->
@@ -72,18 +67,7 @@
               </div>
               <!-- * Host Party ID - Buttons -->
               <button id="connect" data-bs-toggle="tooltip" data-bs-title="Connect to peer" class="btn btn-primary">
-                <!-- <i class="bi bi-link-45deg"></i> -->
-                <!-- <i class="fa fa-rss"></i> -->
-                <!-- <i class="fa fa-tower-cell"></i> -->
-                <!-- <i class="fa fa-tower-broadcast"></i> -->
-                <!-- <i class="material-icons">sensors</i> -->
-                <span class="material-icons">link</span>
-                <!-- <i class="material-icons mi-link"></i> -->
-                <!-- <i class="material-icons mi-cached"></i> -->
-                <!-- <i class="fa fa-globe"></i> -->
-                <!-- <i class="fa fa-wifi"></i> -->
-                <!-- <i class="fa fa-circle-nodes"></i> -->
-                <!-- <i class="fa fa-link"></i> -->
+                <span class="material-symbols-rounded">person_add</span>
               </button>
               <!-- </div> -->
               <!-- </div> -->
@@ -144,10 +128,7 @@
               <textarea id="chatInput" type="text" class="form-control"
                 placeholder="Send a message to all parties..."></textarea>
               <button id="sendMessageButton" data-bs-toggle="tooltip" data-bs-title="Send" class="btn btn-primary">
-                <!-- <i class="bi bi-send"></i> -->
-                <!-- <i class="material-icons mi-send"></i> -->
-
-                <span class="material-icons">send</span>
+                <span class="material-symbols-rounded material-symbols-filled">send</span>
               </button>
             </div>
           </div>
@@ -155,30 +136,26 @@
         </div>
         <div class="col-lg-9">
           <!-- * Editor - Buttons -->
-          <div class="input-group" id="editor-buttons">
+          <div class="btn-group" role="group" id="editor-buttons">
             <button id="startButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC" class="btn btn-primary">
-              <!-- <i class="bi bi-play-btn-fill"></i> -->
-              <i class="fa fa-play"></i>
+
+              <span class="material-symbols-rounded material-symbols-filled">play_arrow</span>
             </button>
             <button id="startAsyncButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC Async"
               class="btn btn-primary">
-              <!-- <i class="bi bi-play"></i> -->
-              <i class="fa fa-circle-play"></i>
-              <!-- <i class="material-icons-outlined mi-play-arrow"></i> -->
+              <span class="material-symbols-rounded material-symbols-filled">play_circle</span>
             </button>
             <button id="stopButton" data-bs-toggle="tooltip" data-bs-title="Restart" class="btn btn-primary">
-              <!-- <i class="bi bi-arrow-repeat"></i> -->
-              <i class="fa fa-rotate"></i>
-              <!-- <i class="material-icons mi-cached"></i> -->
+              <span class="material-symbols-rounded">refresh</span>
             </button>
             <button id="clearTerminal" data-bs-toggle="tooltip" data-bs-title="Clear terminal" class="btn btn-primary">
-              <!-- <i class="bi bi-trash"></i> -->
-              <i class="fa-regular fa-trash-can"></i>
-              <!-- <i class="material-icons mi-cleaning-services"></i> -->
+              <span class="material-symbols-rounded">cleaning_services</span>
+              <!-- <span class="material-symbols-rounded">mop</span> -->
             </button>
-            <input type="checkbox" class="btn-check" id="toggleStatsEl">
-            <label data-bs-toggle="tooltip" data-bs-title="Toggle Stats" class="btn btn-primary" for="toggleStatsEl">
-              <span class="material-symbols-outlined">monitoring</span>
+            <input type="checkbox" class="btn-check" id="toggleStatsEl" autocomplete="off">
+            <label data-bs-toggle="tooltip" data-bs-title="Toggle Runtime Stats" class="btn btn-outline-primary"
+              for="toggleStatsEl">
+              <span class="material-symbols-rounded material-symbols-filled">monitoring</span>
             </label>
           </div>
           <div class="split">
