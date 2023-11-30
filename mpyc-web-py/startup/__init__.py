@@ -4,21 +4,21 @@
 
 # pyright: reportMissingImports=false
 
-import js
 import logging
+
+import js
 
 logger = logging.getLogger(__name__)
 
 
-from lib.exception_handler import exception_handler
 import asyncio
 
-
-asyncio.get_event_loop().set_exception_handler(exception_handler)
-
+from lib.exception_handler import exception_handler
 from rich.traceback import install
 
 install(show_locals=True)
+
+asyncio.get_event_loop().set_exception_handler(exception_handler)
 
 # asyncio.get_event_loop().set_exception_handler(exception_handler)
 

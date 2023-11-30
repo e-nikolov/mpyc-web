@@ -31,20 +31,26 @@ import js
 import pyodide
 import rich
 import rich.pretty
+from lib import log
 from lib.exception_handler import exception_handler
+from lib.log import *
+from lib.log_levels import *
+
+log.install(DEBUG)
+asyncio.get_event_loop().set_exception_handler(exception_handler)
+
 from lib.stats import stats
+
+log.stats = stats
+
+
 from pyodide import webloop
 
 from . import api
 
 stats.enabled = False
 
-from lib import log
-from lib.log import *
-from lib.log_levels import *
-
 api.sync_proxy.load_env()
-log.install(DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +68,7 @@ from .patches import *
 from .transport import *
 
 # asyncio.ensure_future(api.async_proxy.notify_runtime_ready())
+
 
 asyncio.create_task(api.stats_printer())
 

@@ -63,7 +63,8 @@ def aexit(delay=0, num=1):
 
 
 from lib.log_levels import *
-from lib.stats import print_to_string, stats
+
+stats = None
 
 console = Console(
     color_system="truecolor",
@@ -164,7 +165,9 @@ def set_log_level(level, verbosity=0):
     }
 
     logging.basicConfig(**opts)
-    stats.reset()
+    if stats is not None:
+        stats.reset()
+
     # stats.enabled = logging.root.getEffectiveLevel() <= TRACE
     # stats.enabled = logging.root.getEffectiveLevel() <= DEBUG
 
@@ -240,8 +243,17 @@ class Handler(RichHandler):
         time_format = None if self.formatter is None else self.formatter.datefmt
         log_time = datetime.datetime.fromtimestamp(record.created)
         path = f"{path}:{record.lineno}"
-        if record.funcName not in ["<module>", "<lambda>"]:
+        if record.funcName not in ["<module>", "<lambda>"] and len(record.funcName) < 7:
             path = f"{path}:{record.funcName}"
+
+        if traceback:
+            log_time = None
+            path = None
+            link_path = None
+        else:
+            # log_time =
+            link_path = f"{record.pathname}#{record.lineno}" if self.enable_link_path else None
+
         log_renderable = self._log_render(
             self.console,
             [message] if not traceback else [traceback],
@@ -249,7 +261,7 @@ class Handler(RichHandler):
             time_format=time_format,
             level=level,
             path=path,
-            link_path=f"{record.pathname}#{record.lineno}" if self.enable_link_path else None,
+            link_path=link_path,
         )
         return log_renderable
 
