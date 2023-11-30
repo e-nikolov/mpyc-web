@@ -154,7 +154,7 @@ def format_count(count, unit=""):
 
 
 def format_asyncio_stats(stats):
-    return f'{format_count(stats["tasks"], unit="")} / {format_count(stats["max_tasks"], unit="")} Tasks'
+    return f'{format_count(stats["tasks"], unit="")} / {format_count(stats["max_tasks"], unit="")} tasks'
 
 
 def format_data(data):
