@@ -11,7 +11,7 @@
 
 @media (max-width: 1199px) {
     .split {
-        height: calc(85vh - 280px);
+        height: calc(85vh - 230px);
     }
 }
 
@@ -82,6 +82,9 @@
     padding-right: 15px;
 }
 
+textarea.form-control {
+    height: 40px !important;
+}
 
 // .terminal-wrapper {
 //     width: 100% !important;

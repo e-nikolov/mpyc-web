@@ -116,9 +116,11 @@
             </select>
           </div>
 
-          <div class="connected-parties mb-1">
+          <div class="connected-parties mt-1 mb-1">
             <!-- * Connected Parties -->
-            <h5> Connected Parties: </h5>
+            <div id="connectedPartiesLabel">
+              <h5> Connected Parties: </h5>
+            </div>
             <ol id="knownPeers" class="list-group card-columns" style="columns: 2" start="6">
             </ol>
           </div>
@@ -127,8 +129,7 @@
           <div id="chatSidebar">
 
             <div class="input-group mb-1" id="chatInputGroup">
-              <textarea id="chatInput" type="text" class="form-control"
-                placeholder="Send a message to all parties..."></textarea>
+              <textarea id="chatInput" type="text" class="form-control" placeholder="Message parties..."></textarea>
               <button id="sendMessageButton" data-bs-toggle="tooltip" data-bs-title="Send" class="btn btn-primary">
                 <span class="material-symbols-rounded material-symbols-filled">send</span>
               </button>

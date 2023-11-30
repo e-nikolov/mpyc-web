@@ -115,6 +115,7 @@ class Client(AbstractClient):
         # logger.info("send_runtime_message")
         # logger.info(["runtime", pid, message])
         # logger.info(to_js(["runtime", pid, message]))
+        # add timestamp
         self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message)
         # self._loop.create_task(self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message))
         # asyncio.ensure_future(self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message))

@@ -234,12 +234,14 @@ export class Controller {
         const resizeDemoSelector = (mqe: MediaQueryListEvent | MediaQueryList) => {
             if (mqe.matches) {
                 $("#mpc-demos").hidden = true
+                $("#connectedPartiesLabel").hidden = true
                 this.demoSelect.size = 1;
                 $("#demoSelectorLocation2").insertAdjacentElement('beforeend', this.demoSelect)
                 $("#chatFooter").insertAdjacentElement('beforeend', $("#chatInputGroup"))
             } else {
                 $("#mpc-demos").insertAdjacentElement('beforeend', this.demoSelect)
                 $("#mpc-demos").hidden = false
+                $("#connectedPartiesLabel").hidden = false
                 $("#chatSidebar").insertAdjacentElement('beforeend', $("#chatInputGroup"))
                 this.demoSelect.size = window.innerHeight / (4 * 21)
             }
