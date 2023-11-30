@@ -5,7 +5,7 @@
 
 @media (min-width: 1200px) {
     .split {
-        height: 85vh;
+        height: calc(100vh - 100px);
     }
 }
 
@@ -19,9 +19,16 @@
     .split {
         height: 120vh;
     }
-}
 
-@media(orientation: landscape) {}
+    #terminal>textarea,
+    .xterm-screen>textarea,
+    .xterm>textarea,
+    #terminal>div>div.xterm-screen>div.xterm-helpers>textarea {
+        display: none !important;
+        visibility: hidden !important;
+        z-index: -1000 !important;
+    }
+}
 
 .editor,
 .cm-editor {
@@ -53,14 +60,6 @@
     width: 100% !important;
 }
 
-#terminal>textarea,
-.xterm-screen>textarea,
-.xterm>textarea,
-#terminal>div>div.xterm-screen>div.xterm-helpers>textarea {
-    display: none !important;
-    visibility: hidden !important;
-    z-index: -1000 !important;
-}
 
 
 .xterm-screen {

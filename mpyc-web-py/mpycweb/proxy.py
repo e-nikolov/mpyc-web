@@ -10,11 +10,12 @@ import js
 import rich
 import rich.text
 from lib.stats import stats
-from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
 from mpycweb.api.run import run_code
 
 # pyright: reportMissingImports=false
 from pyodide.ffi import JsProxy, to_js
+
+from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
 
 from . import api
 from .run_mpc import run_mpc
@@ -108,7 +109,7 @@ class Client(AbstractClient):
 
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     # @stats.time()
-    @stats.acc(lambda self, pid, message: stats.sent_to(pid, message))
+    @stats.acc(lambda self, pid, message: stats.sent_to(pid, message) | stats.time())
     def send_runtime_message(self, pid: int, message: bytes):
         # logger.debug(message)
         # logger.info("send_runtime_message")
@@ -121,7 +122,7 @@ class Client(AbstractClient):
 
     # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     # @stats.set(lambda self, pid, message: stats.received_from(pid, message))
-    @stats.acc(lambda self, pid, message: stats.received_from(pid, message))
+    @stats.acc(lambda self, pid, message: stats.received_from(pid, message) | stats.time())
     def _on_runtime_message(self, pid: int, message: bytes):
         # self._loop.create_task(self.transports[pid].on_runtime_message(message))
         self.transports[pid].on_runtime_message(message)
