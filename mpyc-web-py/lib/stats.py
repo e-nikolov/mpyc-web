@@ -141,15 +141,42 @@ import datetime as dt
 
 
 def format_time(time):
-    return humanize.naturaldelta(dt.timedelta(microseconds=time["avg"] / 1000), minimum_unit="microseconds")
+    return humanize.metric(time["avg"] / 1_000_000_000, "s")
 
 
 def format_file_size(size):
     return naturalsize(size, binary=True)
 
 
-def format_count(count):
-    return humanize.intword(count)
+def format_count(count, unit=""):
+    return humanize.metric(count, unit=unit)
+    # return humanize.intword(count)
+
+
+def format_asyncio_stats(stats):
+    return f'{format_count(stats["tasks"], unit="")} / {format_count(stats["max_tasks"], unit="")} Tasks'
+
+
+def format_data(data):
+    sent, received = 0, 0
+    if "sent" in data:
+        sent = data["sent"]
+
+    if "received" in data:
+        received = data["received"]
+
+    return f"{format_file_size(sent)} / {format_file_size(received)}"
+
+
+def format_messages(messages):
+    sent, received = 0, 0
+    if "sent" in messages:
+        sent = messages["sent"]
+
+    if "received" in messages:
+        received = messages["received"]
+
+    return f"{format_count(sent)} / {format_count(received)}"
 
 
 class BaseStatsCollector:
@@ -169,6 +196,9 @@ class BaseStatsCollector:
         "total_bytes_received": format_file_size,
         "total_bytes_sent": format_file_size,
         "time": format_time,
+        "messages s/r": format_messages,
+        "asyncio": format_asyncio_stats,
+        "data s/r": format_data,
     }
 
     def dec(
@@ -285,10 +315,10 @@ class BaseStatsCollector:
         tasks = len(asyncio.all_tasks())
         if tasks > self.max_tasks:
             self.max_tasks = tasks
+
         return {
             "tasks": tasks,
             "max_tasks": self.max_tasks,
-            # "setTimeouts": js.counter,
         }
 
     def gc_stats(self):
@@ -309,11 +339,21 @@ class BaseStatsCollector:
         tree = Tree("", style="gray50")
 
         if self.enabled:
+            fstats = {"mpyc": {}}
+
             if len(self.stats) > 1 or len(self.stats[self.func]) > 0:
-                self._to_tree(self.stats, tree.add("mpyc"))
-            self._to_tree(self.asyncio_stats(), tree.add("asyncio"))
+                fstats["mpyc"] = self.stats
+                # self._to_tree(self.stats, tree.add("mpyc"))
+
+            fstats["asyncio"] = self.asyncio_stats()
+            # self._to_tree(self.asyncio_stats(), tree.add("asyncio"))
             # self._to_tree(self.channel_pool_stats(), tree.add("channel_pool"))
-            self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
+
+            if logger.isEnabledFor(log_levels.TRACE):
+                fstats["gc"] = self.gc_stats()
+                # self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
+
+        self._to_tree(fstats, tree)
 
         return rich_to_ansi(Panel.fit(tree, title="stats", subtitle=time_delta_fmt(datetime.now(), self.start_time), border_style="blue"))
         # return rich_to_ansi('[bold green]My[/][bold red]awesome[/][bold yellow]text[/]')
@@ -327,26 +367,29 @@ class BaseStatsCollector:
                 elif isinstance(v, dict | list):
                     if len(v) > 0:
                         self._to_tree(v, tree.add(k))
-                else:
+                elif isinstance(v, int | float):
                     tree.add(f"{k}: {format_count(v)}")
+                else:
+                    tree.add(f"{k}: {v}")
+
         if isinstance(s, list):
             for index, item in enumerate(s):
                 tree.add(f"{json.dumps(item)}")
 
-    def to_string(self):
-        """
-        Returns the collected statistics.
-        """
-        txt = ""
-        if self.enabled:
-            txt += f"{self.dumps('mpyc', self.stats)}\n"
+    # def to_string(self):
+    #     """
+    #     Returns the collected statistics.
+    #     """
+    #     txt = ""
+    #     if self.enabled:
+    #         txt += f"{self.dumps('mpyc', self.stats)}\n"
 
-            if logger.isEnabledFor(log_levels.TRACE):
-                txt += f"{self.dumps('mpyc', self.stats)}\n"
-                txt += f"{self.dumps('asyncio', {'tasks': len(asyncio.all_tasks())})}\n"
-                gc.collect()
-                txt += f"{self.dumps('gc', gc.get_stats())}\n"
-        return txt
+    #         if logger.isEnabledFor(log_levels.TRACE):
+    #             txt += f"{self.dumps('mpyc', self.stats)}\n"
+    #             txt += f"{self.dumps('asyncio', {'tasks': len(asyncio.all_tasks())})}\n"
+    #             gc.collect()
+    #             txt += f"{self.dumps('gc', gc.get_stats())}\n"
+    #     return txt
 
     def dumps(self, name, stats_data):
         """
@@ -428,9 +471,15 @@ class StatsCollector(BaseStatsCollector):
             A dictionary containing the updated statistics.
         """
         return {
-            "total_messages_sent": +1,
+            "messages s/r": {
+                "sent": +1,
+            },
+            "data s/r": {
+                "sent": +len(msg),
+            },
+            # "messages": +1,
             # f"messages_sent_to[{pid}]": +1,
-            "total_bytes_sent": +len(msg),
+            # "total_bytes_sent": +len(msg),
             # f"bytes_sent_to[{pid}]": +len(msg),
         }
 
@@ -450,9 +499,15 @@ class StatsCollector(BaseStatsCollector):
             - bytes_received_from[pid]: The number of bytes received from the given party.
         """
         return {
-            "total_messages_received": +1,
+            "messages s/r": {
+                "received": +1,
+            },
+            "data s/r": {
+                "received": +len(msg),
+            },
+            # "total_messages_received": +1,
             # f"messages_received_from[{pid}]": +1,
-            "total_bytes_received": +len(msg),
+            # "total_bytes_received": +len(msg),
             # f"bytes_received_from[{pid}]": +len(msg),
         }
 

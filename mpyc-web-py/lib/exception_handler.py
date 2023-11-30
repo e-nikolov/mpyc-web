@@ -1,8 +1,8 @@
 import logging
+import sys
+import traceback
 
 import rich
-import traceback
-import sys
 
 
 def exception_handler(loop, context):
@@ -10,7 +10,6 @@ def exception_handler(loop, context):
 
     logging.error("Exception handler")
 
-    print("(mpyc exception handler)", file=sys.stderr)
     if "handle" in context:
         if "mpc_coro" in context["message"]:
             del context["message"]  # suppress detailed message
