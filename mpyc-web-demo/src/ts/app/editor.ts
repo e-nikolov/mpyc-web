@@ -6,8 +6,6 @@ import { keymap } from '@codemirror/view';
 import { MPCManager } from '@mpyc-web/core';
 import { EditorView, basicSetup } from 'codemirror';
 import { birdsOfParadise } from 'thememirror';
-import { $, debounce } from '../utils';
-import { Controller } from './controller';
 
 export class Editor extends EditorView {
     constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPCManager) {
@@ -74,40 +72,6 @@ export class Editor extends EditorView {
         });
         this.focus();
     }
-}
-
-export function setupDemoSelector(this: Controller) {
-    const mql = window.matchMedia("(max-width: 1199px)")
-    const resizeDemoSelector = debounce((mqe: MediaQueryListEvent | MediaQueryList) => {
-        if (mqe.matches) {
-            $("#mpc-demos").hidden = true
-            this.demoSelect.size = 1;
-            $("#editor-buttons").insertAdjacentElement('beforeend', this.demoSelect)
-            $("#chatFooter").insertAdjacentElement('beforeend', $("#chatInputGroup"))
-        } else {
-            $("#mpc-demos").insertAdjacentElement('beforeend', this.demoSelect)
-            $("#mpc-demos").hidden = false
-            $("#chatSidebar").insertAdjacentElement('beforeend', $("#chatInputGroup"))
-            this.demoSelect.size = window.innerHeight / (4 * 21)
-        }
-    })
-
-    mql.addEventListener('change', resizeDemoSelector)
-    resizeDemoSelector(mql);
-
-    // window.addEventListener('resize', debounce(() => {
-    //     resizeDemoSelector();
-    // }, 100))
-
-    this.demoSelect.addEventListener('change', async () => {
-        localStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
-        sessionStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
-        let demoCode = await fetchSelectedDemo(this.demoSelect);
-        this.editor.updateCode(demoCode);
-    });
-
-    this.demoSelect.selectedIndex = parseInt(sessionStorage.demoSelectorSelectedIndex || localStorage.demoSelectorSelectedIndex || 1);
-    this.demoSelect.dispatchEvent(new Event('change'));
 }
 
 export async function fetchSelectedDemo(demoSelect: HTMLSelectElement): Promise<string> {
