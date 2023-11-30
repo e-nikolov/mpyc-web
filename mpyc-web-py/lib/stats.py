@@ -137,6 +137,13 @@ def time_delta_fmt(time_a, time_b):
     return datetime.utcfromtimestamp((time_a - time_b).total_seconds()).strftime("%X")
 
 
+import datetime as dt
+
+
+def format_time(time):
+    return humanize.naturaldelta(dt.timedelta(microseconds=time["avg"] / 1000), minimum_unit="microseconds")
+
+
 def format_file_size(size):
     return naturalsize(size, binary=True)
 
@@ -155,16 +162,17 @@ class BaseStatsCollector:
     """
 
     func: str = "$func"
-    stats = DeepCounter[str]({})
+    stats = DeepCounter[str]({func: {}})
     enabled = False
     start_time = datetime.now()
     formatters: dict[str, Callable[[str], str]] = {
         "total_bytes_received": format_file_size,
         "total_bytes_sent": format_file_size,
+        "time": format_time,
     }
 
     def dec(
-        self, counter_func: Callable[P, NestedDict[str, Numeric]], ff: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
+        self, counter_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
     ) -> Callable[[Callable[P, R]], Callable[P, R]]:
         """
         A decorator function for collecting statistics.
@@ -180,12 +188,45 @@ class BaseStatsCollector:
         def decorator(func: Callable[P, R]) -> Callable[P, R]:
             @wraps(func)
             def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-                if self.enabled:
-                    d = counter_func(*args, **kwargs)
-                    if self.func in d:
-                        d[self.func] = {func.__name__: d.pop(self.func)}
-                    ff()(d)
-                return func(*args, **kwargs)
+                if not self.enabled:
+                    return func(*args, **kwargs)
+
+                start_time = time.perf_counter_ns()
+                res = func(*args, **kwargs)
+                elapsed_time = time.perf_counter_ns() - start_time
+
+                d = counter_func(*args, **kwargs)
+                if self.func in d:
+                    func_stats = d.pop(self.func)
+                    d[self.func] = {func.__name__: func_stats}
+
+                    f_name = func.__name__
+
+                    if self.func not in self.stats:
+                        self.stats[self.func] = {}
+
+                    if f_name not in self.stats[self.func]:
+                        self.stats[self.func][f_name] = {}
+
+                    if "time" not in self.stats[self.func][f_name]:
+                        self.stats[self.func][f_name]["time"] = {
+                            "calls": 0,
+                            "total": 0,
+                            "avg": 0,
+                        }
+
+                    time_stats = self.stats[self.func][f_name]["time"]
+
+                    calls = time_stats["calls"] + 1
+                    total_time = time_stats["total"] + elapsed_time
+
+                    time_stats["calls"] = calls
+                    time_stats["total"] = total_time
+                    time_stats["avg"] = total_time / calls
+
+                update_func()(d)
+
+                return res
 
             return wrapper
 
@@ -215,23 +256,11 @@ class BaseStatsCollector:
         """
         return self.dec(counter_func, lambda: self.stats.update)
 
-    def time(self, counter_func: Callable[P, NestedDict[str, Numeric]]) -> Callable[[Callable[P, R]], Callable[P, R]]:
-        """
-        A decorator function for accumulating statistics.
-
-        Args:
-            counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
-
-        Returns:
-            Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
-        """
-        return self.dec(counter_func, lambda: self.stats.update)
-
     def reset(self):
         """
         Resets the statistics counter and enables statistics collection.
         """
-        self.stats = DeepCounter[str]()
+        self.stats = DeepCounter[str]({self.func: {}})
         self.max_tasks = 0
         self.start_time = datetime.now()
         # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
@@ -280,7 +309,8 @@ class BaseStatsCollector:
         tree = Tree("", style="gray50")
 
         if self.enabled:
-            self._to_tree(self.stats, tree.add("mpyc"))
+            if len(self.stats) > 1 or len(self.stats[self.func]) > 0:
+                self._to_tree(self.stats, tree.add("mpyc"))
             self._to_tree(self.asyncio_stats(), tree.add("asyncio"))
             # self._to_tree(self.channel_pool_stats(), tree.add("channel_pool"))
             self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
@@ -292,14 +322,13 @@ class BaseStatsCollector:
     def _to_tree(self, s: dict | list[dict], tree: Tree):
         if isinstance(s, dict):
             for k, v in s.items():
-                if isinstance(v, dict | list):
-                    self._to_tree(v, tree.add(k))
+                if k in self.formatters:
+                    tree.add(f"{k}: {self.formatters[k](v)}")
+                elif isinstance(v, dict | list):
+                    if len(v) > 0:
+                        self._to_tree(v, tree.add(k))
                 else:
-                    if k in self.formatters:
-                        v = self.formatters[k](v)
-                    else:
-                        v = format_count(v)
-                    tree.add(f"{k}: {v}")
+                    tree.add(f"{k}: {format_count(v)}")
         if isinstance(s, list):
             for index, item in enumerate(s):
                 tree.add(f"{json.dumps(item)}")
@@ -366,6 +395,18 @@ class StatsCollector(BaseStatsCollector):
             NestedDict[str, float]: A nested dictionary of statistics computed on the input dictionary.
         """
         return s
+
+    def time(self) -> NestedDict[str, float]:
+        """
+        A decorator function for accumulating statistics.
+
+        Args:
+            counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
+
+        Returns:
+            Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
+        """
+        return {self.func: {}}
 
     def total_calls(self) -> NestedDict[str, float]:
         """

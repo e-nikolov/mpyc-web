@@ -62,7 +62,6 @@ from .patches import *
 from .transport import *
 
 # asyncio.ensure_future(api.async_proxy.notify_runtime_ready())
-api.async_proxy.notify_runtime_ready()
 
 asyncio.create_task(api.stats_printer())
 
@@ -71,3 +70,5 @@ logger.debug(f"Python version={sys.version}")
 (a, b, c) = sys._emscripten_info.emscripten_version  # pyright: ignore
 logger.debug(f"Emscripten version={a}.{b}.{c}")
 logger.debug(f"Pyodide version={pyodide.__version__}")
+
+api.async_proxy.notify_runtime_ready()
