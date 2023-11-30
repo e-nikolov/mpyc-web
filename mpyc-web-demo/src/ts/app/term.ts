@@ -24,6 +24,10 @@ import { $, debounce } from '../utils';
 import { MPCManager } from '@mpyc-web/core';
 import { format } from './format';
 
+const isNode = (typeof navigator === 'undefined') ? true : false;
+const userAgent = (isNode) ? 'node' : navigator.userAgent;
+export const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+
 // export const DEFAULT_ATTR_DATA = Object.freeze(new AttributeData());
 export class Term extends Terminal {
     fitAddon: FitAddon;
@@ -178,7 +182,6 @@ export class Term extends Terminal {
         });
         this.fitAddon = new FitAddon();
         this.searchAddon = new SearchAddon();
-        this.webglAddon = new WebglAddon();
         this.searchBarAddon = new SearchBarAddon({ searchAddon: this.searchAddon });
         this.webLinksAddon = new WebLinksAddon()
         this.readlineAddon = new Readline()
@@ -187,7 +190,12 @@ export class Term extends Terminal {
         this.loadAddon(this.fitAddon);
         this.loadAddon(this.searchAddon);
         this.loadAddon(this.searchBarAddon);
-        this.loadAddon(this.webglAddon);
+
+        if (!isSafari) {
+            this.webglAddon = new WebglAddon();
+            this.loadAddon(this.webglAddon);
+        }
+
         this.loadAddon(this.webLinksAddon);
         this.loadAddon(this.readlineAddon);
         // this.loadAddon(new UnicodeGraphemesAddon());
