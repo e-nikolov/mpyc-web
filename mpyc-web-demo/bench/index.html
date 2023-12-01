@@ -1,24 +1,46 @@
-<!doctype html>
-<html lang="en" data-bs-theme="dark">
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script type="module">
-    document.title = "MPyC Web - Bench" + (__BUILD_INFO__.deployment ? ` (${__BUILD_INFO__.deployment})` : "");
-  </script>
-  <script src="/coi-serviceworker.js"></script>
-  <!-- <script src="/mini-coi.js"></script> -->
-  <link rel="stylesheet" href="/src/scss/style.scss" />
-  <link rel="icon" href="/favicon.ico" />
-
+  <title>QR Code Scanner</title>
+  <style>
+    /* Add your CSS styling here */
+    #output {
+      margin-top: 20px;
+    }
+  </style>
 </head>
 
-<body style="background: darkslategrey;">
-  <ul>
-    <li><a href="./all/">All Benches</a></li>
-    <li><a href="./serializers/">Serializers Bench</a></li>
-    <li><a href="./timeouts/">Timeouts Bench</a></li>
+<body>
+  <h1>QRR Code Scanner</h1>
+  <div style="width: 500px" id="reader"></div>
+  <div id="output"></div>
+  <script type="module">
+import {Html5QrcodeScanner, Html5Qrcode, Html5QrcodeScanType, Html5QrcodeSupportedFormats} from 'html5-qrcode'
+
+
+import eruda from 'eruda'
+let el = document.createElement('div');
+document.body.appendChild(el);
+
+eruda.init({
+    container: el,
+    tool: ['console', 'elements']
+}); 
+ const html5QrCode = new Html5Qrcode(
+  "reader", { formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] });
+const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+  document.querySelector("#output").innerHTML = decodedText;
+  html5QrCode.stop()
+    /* handle success */
+};
+const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+// If you want to prefer front camera
+html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback);
+    </script>
 </body>
 
 </html>

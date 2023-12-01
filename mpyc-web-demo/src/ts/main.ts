@@ -32,7 +32,6 @@ let blobURL = (code: string) => {
 // }
 
 
-
 function main() {
     app.ensureStorageSchema(18);
     let peerID = app.loadPeerID();

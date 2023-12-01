@@ -3,15 +3,17 @@ import * as app from '.';
 import { format } from "./format";
 
 import { EditorView } from '@codemirror/view';
-import { AnyData, MPCManager, PeerJSTransport } from '@mpyc-web/core';
-import { Tooltip } from 'bootstrap';
+import { AnyData, MPCManager, PeerJSTransport, isMobile } from '@mpyc-web/core';
+import { Modal, Tooltip } from 'bootstrap';
 import { ControllerOptions } from './elements';
 
+import { Html5Qrcode, Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { $, $$, debounce, getStorage, safe, setStorage } from '../utils';
 
 // import * as polyscript from "polyscript";
+import eruda from 'eruda';
+import erudaFeatures from 'eruda-features';
 import { makeSplitJS } from './split';
-
 export class Controller {
     mpyc: MPCManager;
 
@@ -33,6 +35,11 @@ export class Controller {
     scanQRInput: HTMLInputElement;
     versionDiv: HTMLDivElement;
     toggleStatsEl: HTMLInputElement;
+    qrScanner: Html5Qrcode;
+    scanQRCodeButton: HTMLButtonElement;
+    qrScannerModal: Modal;
+    qrScannerModalDiv: HTMLDivElement;
+    closeQRScannerButton: HTMLButtonElement;
 
     constructor(mpyc: MPCManager, opts: ControllerOptions) {
         this.mpyc = mpyc;
@@ -53,6 +60,10 @@ export class Controller {
         this.scanQRInput = $<HTMLInputElement>(opts.scanQRInputSelector);
         this.toggleStatsEl = $<HTMLInputElement>(opts.toggleStatsSelector);
         this.versionDiv = $<HTMLDivElement>(opts.versionSelector);
+        this.scanQRCodeButton = $<HTMLButtonElement>("#scanQRCodeButton");
+        this.closeQRScannerButton = $<HTMLButtonElement>("#closeQRCodeScannerButton");
+        this.qrScannerModalDiv = $<HTMLDivElement>('#qrScannerModal');
+        this.qrScannerModal = new Modal(this.qrScannerModalDiv);
 
         this.term = new app.Term(opts.terminalSelector, mpyc);
         this.editor = new app.Editor(opts.editorSelector, this.demoSelect, mpyc);
@@ -135,6 +146,11 @@ export class Controller {
         // mpyc.on('transport:conn:data:mpyc', async () => { this.updatePeersDiv(mpyc); });
     }
 
+    closeQRScanner() {
+        this.qrScanner.stop();
+        this.qrScannerModal.hide();
+    }
+
     setupButtonEvents(mpyc: MPCManager, opts: ControllerOptions) {
         this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
@@ -143,6 +159,27 @@ export class Controller {
         this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
         this.sendMessageButton.addEventListener('click', async () => { this.sendChatMessage(); });
         this.clearTerminalButton.addEventListener('click', async () => { this.term.clear(); });
+        this.closeQRScannerButton.addEventListener('click', async () => { this.closeQRScanner() });
+        this.scanQRCodeButton.addEventListener('click', async () => {
+            // If you want to prefer front camera
+
+            const config = { fps: 10, qrbox: { width: 150, height: 150 } };
+            const successCallback = (decodedText: string, result: Html5QrcodeResult) => {
+                this.hostPeerIDInput.value = decodedText;
+                this.hostPeerIDInput.dispatchEvent(new Event('input'));
+                this.closeQRScanner()
+            };
+
+            this.qrScanner.start({ facingMode: "environment" }, config, successCallback, undefined);
+            this.qrScannerModal.show()
+        });
+        this.qrScannerModalDiv.addEventListener('hidden.bs.modal', async () => { this.qrScanner.stop() });
+
+        if (isMobile(navigator.userAgent)) {
+            this.scanQRCodeButton.hidden = false;
+            this.setupEruda()
+            this.qrScanner = new Html5Qrcode("qrScannerEl", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
+        }
 
         this.toggleStatsEl.addEventListener('click', async () => {
             if (this.toggleStatsEl.checked) {
@@ -172,10 +209,23 @@ export class Controller {
             }
         });
 
+
+
         app.makeQRButton(opts.showQRCodeButtonSelector, () => { return this.myPeerIDEl.value });
         new app.CopyButton(opts.myPeerIDSelector, opts.copyPeerIDButtonSelector);
     }
 
+    setupEruda() {
+        let el = document.createElement('div');
+        document.body.prepend(el);
+        eruda.init({
+            container: el,
+            autoScale: true,
+            tool: ['console', 'elements', 'network', 'info', 'resources']
+        });
+        eruda.add(erudaFeatures);
+        eruda.position({ x: 0, y: 0 });
+    }
 
     setupGlobals() {
         window.mpyc = this.mpyc;

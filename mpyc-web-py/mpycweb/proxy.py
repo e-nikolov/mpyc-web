@@ -22,12 +22,6 @@ from .run_mpc import run_mpc
 from .transport import AbstractClient, PeerJSTransport
 
 logger = logging.getLogger(__name__)
-
-
-def noop(*args, **kwargs):
-    pass
-
-
 loop = asyncio.get_event_loop()
 
 
@@ -83,12 +77,10 @@ class Client(AbstractClient):
         self.transports[pid] = t
         return t, p
 
-    # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
     @stats.acc(lambda self, pid, message: stats.sent_to(pid, message))
     def send_ready_message(self, pid: int, message: str):
         self.async_proxy.send("proxy:js:mpc:msg:ready", pid, message)
 
-    # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
     @stats.acc(lambda self, pid, message: stats.received_from(pid, message))
     def on_ready_message(self, pid: int, message: str):
         """
@@ -105,29 +97,13 @@ class Client(AbstractClient):
             logger.warning(f"Received ready message from {pid} but no transport exists for that pid yet")
             return
         self.transports[pid].on_ready_message(message)
-        # self._loop.create_task(self.transports[pid].on_ready_message(message))
 
-    # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.sent_to(pid, message))
-    # @stats.time()
     @stats.acc(lambda self, pid, message: stats.sent_to(pid, message) | stats.time())
     def send_runtime_message(self, pid: int, message: bytes):
-        # logger.debug(message)
-        # logger.info("send_runtime_message")
-        # logger.info(["runtime", pid, message])
-        # logger.info(to_js(["runtime", pid, message]))
         # add timestamp
         self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message)
-        # self._loop.create_task(self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message))
-        # asyncio.ensure_future(self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message))
-        # loop.create_task(self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message))
 
-    # @stats.acc(lambda self, pid, message: stats.total_calls() | stats.received_from(pid, message))
-    # @stats.set(lambda self, pid, message: stats.received_from(pid, message))
     @stats.acc(lambda self, pid, message: stats.received_from(pid, message) | stats.time())
-    def _on_runtime_message(self, pid: int, message: bytes):
-        # self._loop.create_task(self.transports[pid].on_runtime_message(message))
-        self.transports[pid].on_runtime_message(message)
-
     def on_runtime_message(self, pid: int, message: JsProxy) -> None:
         """
         Handle a runtime message from a peer.
@@ -136,12 +112,4 @@ class Client(AbstractClient):
             pid (int): The ID of the peer sending the message.
             message (JsProxy): The message received from the peer.
         """
-        # logger.info("on_runtime_message")
-        # logger.info(type(message))
-        # logger.info(message)
-        # logger.info(message.to_memoryview())
-        # logger.info(message.to_bytes())
-        # logger.info(type(message))
-        # self._loop.create_task(self._on_runtime_message(pid, message.to_py()))
-        # self._loop.call_soon(self._on_runtime_message, pid, message.to_py())
-        self._on_runtime_message(pid, message)
+        self.transports[pid].on_runtime_message(message)

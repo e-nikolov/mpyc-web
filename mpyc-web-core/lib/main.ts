@@ -1,11 +1,11 @@
 'use strict';
 
-export * from './mpyc';
+
 export * from './bench';
+export * from './mpyc';
 export * from './runtimes';
 export * from './transports';
 export * from './utils';
-
 
 declare global {
     interface Window {

@@ -579,6 +579,8 @@ __metadata:
     cross-env: "npm:^7.0.3"
     dompurify: "npm:^3.0.6"
     emittery: "npm:^1.0.1"
+    eruda: "npm:^3.0.1"
+    eruda-features: "npm:^2.0.0"
     eventemitter3: "npm:^5.0.1"
     events: "npm:^3.3.0"
     fontfaceobserver: "npm:^2.3.0"
@@ -586,6 +588,7 @@ __metadata:
     gh-pages: "npm:^6.1.0"
     git-rev-sync: "npm:^3.0.2"
     hotkeys-js: "npm:^3.12.2"
+    html5-qrcode: "npm:^2.3.8"
     material-symbols: "npm:^0.14.1"
     msgpackr: "npm:^1.10.0"
     node-fetch: "npm:^3.3.2"
@@ -2449,6 +2452,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eruda-features@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "eruda-features@npm:2.0.0"
+  checksum: a8568573d6080e7ded8b1a0673823a2476cf3ac8974a5f6970d6eae4de7cc7be4374f8e3c05353f8fbed34eca063559c156695887840075b20d14541be8281ef
+  languageName: node
+  linkType: hard
+
+"eruda@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "eruda@npm:3.0.1"
+  checksum: 99c384007c2d3d3b2ddc9aeeca8a216087bbd3399eeb4ee04faf14c4265f155b8b9039406909ef7937fc84a4389bd0a03e6ff6417d2e14f0862afab9cd2c8cc9
+  languageName: node
+  linkType: hard
+
 "esbuild@npm:^0.19.3, esbuild@npm:^0.19.5":
   version: 0.19.8
   resolution: "esbuild@npm:0.19.8"
@@ -3198,6 +3215,13 @@ __metadata:
   version: 3.0.3
   resolution: "html-escaper@npm:3.0.3"
   checksum: 7795141912bd82f0ece3c65fa329cdf40cd0ea6c1b9c556ac88ff2212e878ddc55b64219709f5fcb252406fe420ae15e5bd5626e36c0215ff1054f9d601ca382
+  languageName: node
+  linkType: hard
+
+"html5-qrcode@npm:^2.3.8":
+  version: 2.3.8
+  resolution: "html5-qrcode@npm:2.3.8"
+  checksum: c907d5b7715b77756875862243484f61bd06c890f05c56df6965fcb93c90b152f7220742149315533c541d539ee8d9771000797690d85ada2caa11e590862ada
   languageName: node
   linkType: hard
 
