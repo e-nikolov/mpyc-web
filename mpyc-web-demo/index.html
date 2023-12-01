@@ -17,179 +17,194 @@
 </head>
 
 <body>
-  <div style="overflow: hidden;  ">
-
-    <div class="main-container container-fluid">
-      <div class="row">
-        <h3 class="d-flex align-items-center justify-content-center">MPyC Web</h3>
-      </div>
-      <div class="row h-95">
-        <div class="col-xl-2">
-          <div>
-            <!-- <div class="container"> -->
-            <!-- * My Party ID -->
-            <!-- <div class="row"> -->
-            <!-- <div class="col-6 col-xl-12  "> -->
-            <div class="input-group">
-              <div class="form-floating">
-                <input type="text" class="form-control" onClick="this.select();" readonly id="myPeerID"
-                  placeholder="My ID">
-                <label for="myPeerID">My ID</label>
-              </div>
-
-              <!-- * My Party ID - Buttons -->
-              <button id="show-qr" class="btn btn-primary">
-                <span class="material-symbols-rounded">qr_code</span>
-              </button>
-              <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copy to clipboard"
-                class="btn btn-primary">
-                <span class="material-symbols-rounded">content_paste</span>
-              </button>
-              <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copied!" class="btn btn-success"
-                style="display: none;">
-
-                <span class="material-symbols-rounded">inventory</span>
-              </button>
-              <button id="resetPeerID" data-bs-toggle="tooltip" data-bs-title="Reset party ID" class="btn btn-primary">
-                <span class="material-symbols-rounded">refresh</span>
-              </button>
+  <div class="main-container container-fluid" style="overflow: hidden;  ">
+    <div class="row">
+      <h3 class="d-flex align-items-center justify-content-center">MPyC Web</h3>
+    </div>
+    <div class="row h-95">
+      <div class="col-xl-2">
+        <div>
+          <!-- <div class="container"> -->
+          <!-- * My Party ID -->
+          <!-- <div class="row"> -->
+          <!-- <div class="col-6 col-xl-12  "> -->
+          <div class="input-group">
+            <div class="form-floating">
+              <input type="text" class="form-control" onClick="this.select();" readonly id="myPeerID"
+                placeholder="My ID">
+              <label for="myPeerID">My ID</label>
             </div>
-            <!-- * Host Party ID -->
-            <!-- </div> -->
 
-            <!-- <div class="col-6 col-xl-12  "> -->
-            <div class="input-group  ">
-              <div class="form-floating">
-                <input id="hostPeerID" type="text" onClick="this.select();" class="form-control"
-                  placeholder="Party ID" />
-                <label for="hostPeerID">
-                  Party ID
-                  <!-- <strong>Party ID</strong> -->
-                </label>
-              </div>
-              <!-- * Host Party ID - Buttons -->
-              <button id="connect" data-bs-toggle="tooltip" data-bs-title="Connect to party" class="btn btn-primary">
-                <span class="material-symbols-rounded">person_add</span>
-              </button>
-              <!-- </div> -->
-              <!-- </div> -->
-            </div>
-          </div>
-          <!-- * Demos -->
-          <div class="mb-3" id="mpc-demos">
-            <h5> MPC Demos: </h5>
-            <select size=15 id="select-demo" class="w-100 form-select" aria-label="Select Demo">
-              <option value="./py/saved.py">Your Code</option>
-              <option selected value="./py/demo.py">Demo</option>
-              <option value="./py/demos/secretsanta.py">Secret Santa</option>
-              <option value="./py/demos/helloworld.py">Hello World</option>
-              <option value="./py/demos/oneliners.py">Oneliners</option>
-              <option value="./py/demos/bnnmnist.py">Binarized Neural Network MNIST classifier</option>
-              <option value="./py/demos/np_bnnmnist.py">NumPy Binarized Neural Network MNIST classifier</option>
-              <option value="./py/demos/cnnmnist.py">Convolutional Neural Network MNIST classifier</option>
-              <option value="./py/demos/np_cnnmnist.py">NumPy Convolutional Neural Network MNIST classifier</option>
-              <option value="./py/demos/dsa.py">Threshold DSA</option>
-              <option value="./py/demos/aes.py">Threshold AES cipher</option>
-              <option value="./py/demos/np_aes.py">NumPy Threshold AES cipher</option>
-              <option value="./py/demos/lpsolver.py">Linear Programming (LP) solver / Integers</option>
-              <option value="./py/demos/np_lpsolver.py">NumPy Linear Programming (LP) solver / Integers</option>
-              <option value="./py/demos/lpsolverfxp.py">Linear Programming (LP) solver / Fixed Points</option>
-              <option value="./py/demos/np_lpsolverfxp.py">NumPy Linear Programming (LP) solver / Fixed Points
-              </option>
-              <option value="./py/demos/kmsurvival.py">Kaplan-Meier surivival analysis</option>
-              <option value="./py/demos/elgamal.py">Threshold ElGamal cryptosystem</option>
-              <option value="./py/demos/id3gini.py">ID3 Decision tree learning</option>
-              <option value="./py/demos/np_id3gini.py">NumPy ID3 decision tree learning</option>
-              <option value="./py/demos/indextounitvector.py">Unit Vectors</option>
-              <option value="./py/demos/ridgeregression.py">Linear and ridge regression</option>
-              <option value="./py/demos/multilateration.py">Multilateration (MLAT) / Schmidt's localization</option>
-              <option value="./py/demos/ot.py">Oblivious transfer</option>
-              <option value="./py/demos/unanimous.py">Unanimous voting</option>
-              <option value="./py/benches/various.py">Benchmarks - various</option>
-              <option value="./py/benches/serializers.py">Benchmarks - serializers</option>
-              <option value="./py/benches/channels.py">Benchmarks - channels</option>
-              <option value="./py/benches/tasks.py">Benchmarks - tasks</option>
-              <option value="./py/benches/timeouts.py">Benchmarks - timeouts</option>
-              <option value="./py/benches/runtime.py">Benchmarks - runtime</option>
-              <option value="./py/features/plots.py">Features - plots 1</option>
-              <option value="./py/features/plots2.py">Features - plots 2</option>
-            </select>
-          </div>
-
-          <div class="connected-parties mt-1 mb-1">
-            <!-- * Connected Parties -->
-            <div id="connectedPartiesLabel">
-              <h5> Connected Parties: </h5>
-            </div>
-            <ol id="knownPeers" class="list-group card-columns" style="columns: 2" start="6">
-            </ol>
-          </div>
-
-          <!-- * Chat -->
-          <div id="chatSidebar">
-
-            <div class="input-group mb-1" id="chatInputGroup">
-              <textarea id="chatInput" type="text" class="form-control" placeholder="Message parties..."></textarea>
-              <button id="sendMessageButton" data-bs-toggle="tooltip" data-bs-title="Send" class="btn btn-primary">
-                <span class="material-symbols-rounded material-symbols-filled">send</span>
-              </button>
-            </div>
-          </div>
-
-        </div>
-        <div class="col-xl-10">
-          <!-- * Editor - Buttons -->
-          <div class="btn-group w-100" role="group" id="editor-buttons">
-            <button id="startButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC"
-              style="padding-left: 5px !important; " class="btn btn-primary">
-              <style>
-                .material-symbols-outlined {
-                  font-variation-settings:
-                    'FILL' 0,
-                    'wght' 400,
-                    'GRAD' 0,
-                    'opsz' 24
-                }
-              </style>
-              <span class="material-symbols-rounded material-symbols-filled">play_arrow</span>
+            <!-- * My Party ID - Buttons -->
+            <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copy to clipboard" class="btn btn-primary">
+              <span class="material-symbols-rounded">content_paste</span>
             </button>
-            <button id="startAsyncButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC Async"
-              class="btn btn-primary">
-              <span class="material-symbols-rounded material-symbols-filled">play_circle</span>
+            <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copied!" class="btn btn-success"
+              style="display: none;">
+
+              <span class="material-symbols-rounded">inventory</span>
             </button>
-            <button id="stopButton" data-bs-toggle="tooltip" data-bs-title="Reset python runtime"
-              class="btn btn-primary">
+            <button id="show-qr" class="btn btn-primary">
+              <span class="material-symbols-rounded">qr_code</span>
+            </button>
+            <button id="resetPeerID" data-bs-toggle="tooltip" data-bs-title="Reset party ID" class="btn btn-primary">
               <span class="material-symbols-rounded">refresh</span>
             </button>
-            <button id="clearTerminal" data-bs-toggle="tooltip" data-bs-title="Clear terminal" class="btn btn-primary">
-              <span class="material-symbols-rounded">cleaning_services</span>
-              <!-- <span class="material-symbols-rounded">mop</span> -->
+          </div>
+          <!-- * Host Party ID -->
+          <!-- </div> -->
+
+          <!-- <div class="col-6 col-xl-12  "> -->
+          <div class="input-group  ">
+            <div class="form-floating">
+              <input id="hostPeerID" type="text" onClick="this.select();" class="form-control" placeholder="Party ID" />
+              <label for="hostPeerID">
+                Party ID
+                <!-- <strong>Party ID</strong> -->
+              </label>
+            </div>
+
+            <!-- * Host Party ID - Buttons -->
+            <button id="scanQRCodeButton" data-bs-title="Scan QR code" hidden data-bs-toggle="tooltip"
+              class="btn btn-primary">
+              <span class="material-symbols-rounded">qr_code_scanner</span>
             </button>
-            <input type="checkbox" class="btn-check" id="toggleStatsEl" autocomplete="off">
-            <label id="toggleStatsLabel" data-bs-toggle="tooltip" data-bs-title="Enable runtime stats"
-              class="btn btn-outline-primary" for="toggleStatsEl">
-              <span class="material-symbols-rounded material-symbols-filled">monitoring</span>
-            </label>
-            <div style="width: 100% !important" class=" " id="demoSelectorLocation2">
-
-            </div>
+            <button id="connect" data-bs-toggle="tooltip" data-bs-title="Connect to party" class="btn btn-primary">
+              <span class="material-symbols-rounded">person_add</span>
+            </button>
+            <!-- </div> -->
+            <!-- </div> -->
           </div>
-          <div class="split">
-            <div class="split-panel-editor">
-              <!-- * Editor -->
-              <div id="editor" class="editor"></div>
-            </div>
-            <div class="split-panel-terminal">
-              <!-- * Terminal -->
-              <div id="terminal" class="terminal-wrapper term"></div>
-            </div>
-          </div>
-          <div id="chatFooter"></div>
+        </div>
+        <!-- * Demos -->
+        <div class="mb-3" id="mpc-demos">
+          <h5> MPC Demos: </h5>
+          <select size=15 id="select-demo" class="w-100 form-select" aria-label="Select Demo">
+            <option value="./py/saved.py">Your Code</option>
+            <option selected value="./py/demo.py">Demo</option>
+            <option value="./py/demos/secretsanta.py">Secret Santa</option>
+            <option value="./py/demos/helloworld.py">Hello World</option>
+            <option value="./py/demos/oneliners.py">Oneliners</option>
+            <option value="./py/demos/bnnmnist.py">Binarized Neural Network MNIST classifier</option>
+            <option value="./py/demos/np_bnnmnist.py">NumPy Binarized Neural Network MNIST classifier</option>
+            <option value="./py/demos/cnnmnist.py">Convolutional Neural Network MNIST classifier</option>
+            <option value="./py/demos/np_cnnmnist.py">NumPy Convolutional Neural Network MNIST classifier</option>
+            <option value="./py/demos/dsa.py">Threshold DSA</option>
+            <option value="./py/demos/aes.py">Threshold AES cipher</option>
+            <option value="./py/demos/np_aes.py">NumPy Threshold AES cipher</option>
+            <option value="./py/demos/lpsolver.py">Linear Programming (LP) solver / Integers</option>
+            <option value="./py/demos/np_lpsolver.py">NumPy Linear Programming (LP) solver / Integers</option>
+            <option value="./py/demos/lpsolverfxp.py">Linear Programming (LP) solver / Fixed Points</option>
+            <option value="./py/demos/np_lpsolverfxp.py">NumPy Linear Programming (LP) solver / Fixed Points
+            </option>
+            <option value="./py/demos/kmsurvival.py">Kaplan-Meier surivival analysis</option>
+            <option value="./py/demos/elgamal.py">Threshold ElGamal cryptosystem</option>
+            <option value="./py/demos/id3gini.py">ID3 Decision tree learning</option>
+            <option value="./py/demos/np_id3gini.py">NumPy ID3 decision tree learning</option>
+            <option value="./py/demos/indextounitvector.py">Unit Vectors</option>
+            <option value="./py/demos/ridgeregression.py">Linear and ridge regression</option>
+            <option value="./py/demos/multilateration.py">Multilateration (MLAT) / Schmidt's localization</option>
+            <option value="./py/demos/ot.py">Oblivious transfer</option>
+            <option value="./py/demos/unanimous.py">Unanimous voting</option>
+            <option value="./py/benches/various.py">Benchmarks - various</option>
+            <option value="./py/benches/serializers.py">Benchmarks - serializers</option>
+            <option value="./py/benches/channels.py">Benchmarks - channels</option>
+            <option value="./py/benches/tasks.py">Benchmarks - tasks</option>
+            <option value="./py/benches/timeouts.py">Benchmarks - timeouts</option>
+            <option value="./py/benches/runtime.py">Benchmarks - runtime</option>
+            <option value="./py/features/plots.py">Features - plots 1</option>
+            <option value="./py/features/plots2.py">Features - plots 2</option>
+          </select>
+        </div>
 
+        <div class="connected-parties mt-1 mb-1">
+          <!-- * Connected Parties -->
+          <div id="connectedPartiesLabel">
+            <h5> Connected Parties: </h5>
+          </div>
+          <ol id="knownPeers" class="list-group card-columns" style="columns: 2" start="6">
+          </ol>
+        </div>
+
+        <!-- * Chat -->
+        <div id="chatSidebar">
+
+          <div class="input-group mb-1" id="chatInputGroup">
+            <textarea id="chatInput" type="text" class="form-control" placeholder="Message parties..."></textarea>
+            <button id="sendMessageButton" data-bs-toggle="tooltip" data-bs-title="Send" class="btn btn-primary">
+              <span class="material-symbols-rounded material-symbols-filled">send</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-xl-10">
+        <!-- * Editor - Buttons -->
+        <div class="btn-group w-100" role="group" id="editor-buttons">
+          <button id="startButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC"
+            style="padding-left: 5px !important; " class="btn btn-primary">
+            <style>
+              .material-symbols-outlined {
+                font-variation-settings:
+                  'FILL' 0,
+                  'wght' 400,
+                  'GRAD' 0,
+                  'opsz' 24
+              }
+            </style>
+            <span class="material-symbols-rounded material-symbols-filled">play_arrow</span>
+          </button>
+          <button id="startAsyncButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC Async" class="btn btn-primary">
+            <span class="material-symbols-rounded material-symbols-filled">play_circle</span>
+          </button>
+          <button id="stopButton" data-bs-toggle="tooltip" data-bs-title="Reset python runtime" class="btn btn-primary">
+            <span class="material-symbols-rounded">refresh</span>
+          </button>
+          <button id="clearTerminal" data-bs-toggle="tooltip" data-bs-title="Clear terminal" class="btn btn-primary">
+            <span class="material-symbols-rounded">cleaning_services</span>
+            <!-- <span class="material-symbols-rounded">mop</span> -->
+          </button>
+          <input type="checkbox" class="btn-check" id="toggleStatsEl" autocomplete="off">
+          <label id="toggleStatsLabel" data-bs-toggle="tooltip" data-bs-title="Enable runtime stats"
+            class="btn btn-outline-primary" for="toggleStatsEl">
+            <span class="material-symbols-rounded material-symbols-filled">monitoring</span>
+          </label>
+          <div style="width: 100% !important" class=" " id="demoSelectorLocation2">
+
+          </div>
+        </div>
+        <div class="split">
+          <div class="split-panel-editor">
+            <!-- * Editor -->
+            <div id="editor" class="editor"></div>
+          </div>
+          <div class="split-panel-terminal">
+            <!-- * Terminal -->
+            <div id="terminal" class="terminal-wrapper term"></div>
+          </div>
+        </div>
+        <div id="chatFooter"></div>
+
+      </div>
+    </div>
+    <div class="modal fade" id="qrScannerModal" tabindex="-1" aria-labelledby="qrScannerModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen-sm-down">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="qrScannerModalLabel">QR Code scanner</h1>
+            <button type="button" id="closeQRCodeScannerButton" class="btn-close" data-bs-dismiss="modal"
+              aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="qrScannerEl"></div>
+          </div>
         </div>
       </div>
-      <div id="version" style="font-size: 9px" class="float-sm-start"></div>
-      <script type="module">
+    </div>
+
+    <div id="version" style="font-size: 9px" class="float-sm-start"></div>
+    <script type="module">
 
       function makeVersion() {
         let info = __BUILD_INFO__;
@@ -207,7 +222,6 @@
       }
       makeVersion();
     </script>
-    </div>
   </div>
 </body>
 

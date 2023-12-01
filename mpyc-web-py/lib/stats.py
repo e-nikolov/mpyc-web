@@ -23,6 +23,7 @@ import io
 import json
 import logging
 import time
+from collections import deque
 from datetime import datetime
 from functools import wraps
 from typing import Callable, ParamSpec, TypeVar
@@ -141,7 +142,11 @@ import datetime as dt
 
 
 def format_time(time):
-    return humanize.metric(time["avg"] / 1_000_000_000, "s")
+    return f'{_format_time(time["min"])} / {_format_time(time["mavg"])} / {_format_time(time["avg"])} / {_format_time(time["max"])}'
+
+
+def _format_time(time: Numeric):
+    return humanize.metric(time / 1_000_000_000, "s")
 
 
 def format_file_size(size):
@@ -242,17 +247,37 @@ class BaseStatsCollector:
                         self.stats[self.func][f_name]["time"] = {
                             "calls": 0,
                             "total": 0,
+                            "total_mavg": 0,
+                            "mavg": 0,
                             "avg": 0,
+                            "min": None,
+                            "max": None,
+                            "ring": deque(maxlen=10),
                         }
 
                     time_stats = self.stats[self.func][f_name]["time"]
 
                     calls = time_stats["calls"] + 1
                     total_time = time_stats["total"] + elapsed_time
+                    total_mavg = time_stats["total_mavg"]
+                    assert isinstance(total_mavg, Numeric)
+                    ring = time_stats["ring"]
+                    assert isinstance(ring, deque)
 
+                    if len(ring) == ring.maxlen:
+                        total_mavg -= ring.popleft()
+
+                    total_mavg += elapsed_time
+                    ring.append(elapsed_time)
+
+                    time_stats["ring"] = ring
                     time_stats["calls"] = calls
                     time_stats["total"] = total_time
+                    time_stats["total_mavg"] = total_mavg
                     time_stats["avg"] = total_time / calls
+                    time_stats["mavg"] = total_mavg / len(ring)
+                    time_stats["min"] = min(elapsed_time, time_stats["min"]) if time_stats["min"] else elapsed_time
+                    time_stats["max"] = max(elapsed_time, time_stats["max"]) if time_stats["max"] else elapsed_time
 
                 update_func()(d)
 
@@ -336,13 +361,13 @@ class BaseStatsCollector:
         if not self.enabled:
             return ""
 
-        tree = Tree("", style="gray50")
+        tree = Tree("mpyc", style="gray50")
 
         if self.enabled:
-            fstats = {"mpyc": {}}
+            fstats = {}
 
             if len(self.stats) > 1 or len(self.stats[self.func]) > 0:
-                fstats["mpyc"] = self.stats
+                fstats |= self.stats
                 # self._to_tree(self.stats, tree.add("mpyc"))
 
             fstats["asyncio"] = self.asyncio_stats()

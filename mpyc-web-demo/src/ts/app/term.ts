@@ -194,6 +194,8 @@ export class Term extends Terminal {
         if (!isSafari) {
             this.webglAddon = new WebglAddon();
             this.loadAddon(this.webglAddon);
+        } else {
+            console.warn("safari detected, not using webgl")
         }
 
         this.loadAddon(this.webLinksAddon);

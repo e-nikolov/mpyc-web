@@ -160,6 +160,16 @@ body {
   font-weight: 700 !important;
 }
 
+
+.form-floating>label {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.form-floating>.form-control {
+  height: 20px;
+}
+
 .form-floating>.form-control:not(:placeholder-shown):focus~label::after {
   background-color: $form-control-focus-background;
 }
