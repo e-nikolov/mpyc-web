@@ -2,6 +2,10 @@
 /*! mini-coi - Andrea Giammarchi and contributors, licensed under MIT */
 (({ document: d, navigator: { serviceWorker: s } }) => {
   if (d) {
+    // If we're already coi: do nothing. Perhaps it's due to this script doing its job, or COOP/COEP are
+    // already set from the origin server. Also if the browser has no notion of crossOriginIsolated, just give up here.
+    if (window.crossOriginIsolated !== false) return;
+    
     const { currentScript: c } = d;
     s.register(c.src, { scope: c.getAttribute('scope') || '.' }).then(r => {
       r.addEventListener('updatefound', () => location.reload());
@@ -9,6 +13,7 @@
     });
   }
   else {
+    
     addEventListener('install', () => skipWaiting());
     addEventListener('activate', e => e.waitUntil(clients.claim()));
     addEventListener('fetch', e => {

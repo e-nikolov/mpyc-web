@@ -4,6 +4,9 @@
 }
 
 @media (min-width: 1200px) {
+
+    .connected-parties {}
+
     .split {
         height: calc(100vh - 100px);
     }
@@ -15,10 +18,7 @@
     }
 }
 
-@media (max-height: 500px) {
-    .split {
-        height: 120vh;
-    }
+@media (max-height: 800px) {
 
     #terminal>textarea,
     .xterm-screen>textarea,
@@ -28,6 +28,13 @@
         visibility: hidden !important;
         z-index: -1000 !important;
     }
+}
+
+@media (max-height: 500px) {
+    .split {
+        height: 120vh;
+    }
+
 }
 
 .editor,
@@ -196,21 +203,20 @@ textarea.form-control {
 //     height: 100% !important;
 // }
 
-// xterm-js * {
-//     scrollbar-color:
-//         var(--scrollbar-foreground, #ccc) var(--scrollbar-background, transparent);
+// * {
+//     scrollbar-color: #ccc transparent;
 // }
 
-// xterm-js *::-webkit-scrollbar {
-//     width: 14px;
-//     height: 14px;
-// }
+// // xterm-js *::-webkit-scrollbar {
+// //     width: 14px;
+// //     height: 14px;
+// // }
 
-// xterm-js *::-webkit-scrollbar-thumb {
+// *::-webkit-scrollbar-thumb {
 //     background: var(--scrollbar-foreground, #ccc);
 // }
 
-// xterm-js *::-webkit-scrollbar-track {
+// *::-webkit-scrollbar-track {
 //     background: var(--scrollbar-backgroundm, transparent);
 // }
 
