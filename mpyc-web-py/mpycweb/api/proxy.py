@@ -69,6 +69,7 @@ class SyncRuntimeProxy:
 import rich
 
 loop = asyncio.get_event_loop()
+from datetime import datetime
 
 
 class AsyncRuntimeProxy:

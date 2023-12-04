@@ -3,7 +3,7 @@ import * as app from '.';
 import { format } from "./format";
 
 import { EditorView } from '@codemirror/view';
-import { AnyData, MPCManager, PeerJSTransport, isMobile } from '@mpyc-web/core';
+import { AnyData, MPCManager, PeerJSTransport, isMobileFn } from '@mpyc-web/core';
 import { Modal, Tooltip } from 'bootstrap';
 import { ControllerOptions } from './elements';
 
@@ -175,7 +175,7 @@ export class Controller {
         });
         this.qrScannerModalDiv.addEventListener('hidden.bs.modal', async () => { this.qrScanner.stop() });
 
-        if (isMobile(navigator.userAgent)) {
+        if (isMobileFn(navigator.userAgent)) {
             this.scanQRCodeButton.hidden = false;
             this.setupEruda()
             this.qrScanner = new Html5Qrcode("qrScannerEl", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
@@ -208,8 +208,6 @@ export class Controller {
                 return this.sendChatMessage();
             }
         });
-
-
 
         app.makeQRButton(opts.showQRCodeButtonSelector, () => { return this.myPeerIDEl.value });
         new app.CopyButton(opts.myPeerIDSelector, opts.copyPeerIDButtonSelector);

@@ -21,12 +21,9 @@ const ERASE_IN_LINE = "\x1b[2K"
 
 import { $, debounce } from '../utils';
 
-import { MPCManager } from '@mpyc-web/core';
+import { MPCManager, isMobile, isSafari } from '@mpyc-web/core';
 import { format } from './format';
 
-const isNode = (typeof navigator === 'undefined') ? true : false;
-const userAgent = (isNode) ? 'node' : navigator.userAgent;
-export const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
 
 // export const DEFAULT_ATTR_DATA = Object.freeze(new AttributeData());
 export class Term extends Terminal {
@@ -130,7 +127,7 @@ export class Term extends Terminal {
             allowProposedApi: true,
             customGlyphs: true,
             // windowsMode: true, // breaks the split panel
-            drawBoldTextInBrightColors: true,
+            // drawBoldTextInBrightColors: true,
             // windowsPty: {
             //     // backend: 'winpty',
             //     backend: 'conpty',
@@ -276,9 +273,10 @@ export class Term extends Terminal {
         this._log(format.italic.grey(message), format.gray("⚒"));
     }
 
+    infoChar = isMobile ? "ⓘ" : "🛈"
 
     info(message: string) {
-        this._log(format.greenBright(message), format.greenBright("ⓘ"));
+        this._log(format.greenBright(message), format.greenBright(this.infoChar));
         // this._log(format.greenBright(message), format.greenBright("ⓘ  🅘  🛈  Ⓘ"));
     }
 

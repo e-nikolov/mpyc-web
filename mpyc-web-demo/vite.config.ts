@@ -79,8 +79,8 @@ export default defineConfig(({ mode }) => {
       // }),
     ],
     server: {
-      host: "0.0.0.0",
-      port: 4001,
+      // host: "0.0.0.0",
+      port: 8000,
       https: !process.env.VITE_HTTPS ? false : {
         key: process.env.VITE_HTTPS_KEY,
         cert: process.env.VITE_HTTPS_CERT,

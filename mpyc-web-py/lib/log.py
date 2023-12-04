@@ -181,6 +181,23 @@ def set_log_level(level, verbosity=0):
 
 import rich
 
+infoChar = "🛈"
+
+try:
+    import js
+    from pyodide.code import run_js
+
+    run_js("""
+        function isMobile() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+        }
+    """)
+    infoChar = "ⓘ" if js.isMobile() else "🛈"
+
+except:
+    infoChar = "🛈"
+
 
 class Handler(RichHandler):
     """
@@ -219,7 +236,7 @@ class Handler(RichHandler):
             case ["INFO", *_]:
                 # level = Text(" ℹ".ljust(3))
                 message.style = Style(color="bright_green")
-                level = Text(" ⓘ".ljust(3), "bright_green")
+                level = Text(f" {infoChar}".ljust(3), "bright_green")
             case ["DEBUG", *_]:
                 # level = Text("🐞 🪲 ⬤ ℹ️ ⚙️ 🔧 🛠 ⚒ 🛠️ ".ljust(3))
                 level = Text(" ⚒".ljust(3), "grey50")
