@@ -116,6 +116,31 @@ class DeepCounter(NestedDict[K, Numeric]):
 
 P = ParamSpec("P")
 R = TypeVar("R")
+import math
+
+
+def metric(value: float, unit: str = "", precision: int = 3) -> str:
+    if not math.isfinite(value):
+        return humanize._format_not_finite(value)
+    exponent = int(math.floor(math.log10(abs(value)))) if value != 0 else 0
+
+    if exponent >= 33 or exponent < -30:
+        return humanize.scientific(value, precision - 1) + unit
+
+    value /= 10 ** (exponent // 3 * 3)
+    if exponent >= 3:
+        ordinal_ = "kMGTPEZYRQ"[exponent // 3 - 1]
+    elif exponent < 0:
+        ordinal_ = "mμnpfazyrq"[(-exponent - 1) // 3]
+    else:
+        ordinal_ = ""
+    value_ = format(value, ".%if" % max(0, precision - (exponent % 3) - 1))
+    if not (unit or ordinal_) or unit in ("°", "′", "″"):
+        space = ""
+    else:
+        space = " "
+
+    return f"{value_}{space}{ordinal_}{unit}"
 
 
 def print_to_string(*args, **kwargs):
@@ -146,7 +171,7 @@ def format_time(time):
 
 
 def _format_time(time: Numeric):
-    return humanize.metric(time / 1_000_000_000, "s")
+    return metric(time / 1_000_000_000, "s")
 
 
 def format_file_size(size):
@@ -154,7 +179,7 @@ def format_file_size(size):
 
 
 def format_count(count, unit=""):
-    return humanize.metric(count, unit=unit)
+    return metric(count, unit=unit, precision=0)
     # return humanize.intword(count)
 
 
@@ -184,6 +209,9 @@ def format_messages(messages):
     return f"{format_count(sent)} / {format_count(received)}"
 
 
+FUNC_ARG: str = "$func"
+
+
 class BaseStatsCollector:
     """
     A base class for collecting statistics.
@@ -193,8 +221,7 @@ class BaseStatsCollector:
         enabled (bool): A flag indicating whether the statistics collection is enabled.
     """
 
-    func: str = "$func"
-    stats = DeepCounter[str]({func: {}})
+    stats = DeepCounter[str]({FUNC_ARG: {}})
     enabled = False
     start_time = datetime.now()
     formatters: dict[str, Callable[[str], str]] = {
@@ -231,20 +258,22 @@ class BaseStatsCollector:
                 elapsed_time = time.perf_counter_ns() - start_time
 
                 d = counter_func(*args, **kwargs)
-                if self.func in d:
-                    func_stats = d.pop(self.func)
-                    d[self.func] = {func.__name__: func_stats}
+                if FUNC_ARG in d:
+                    func_stats = d.pop(FUNC_ARG)
+                    d[FUNC_ARG] = {func.__name__: func_stats}
 
                     f_name = func.__name__
 
-                    if self.func not in self.stats:
-                        self.stats[self.func] = {}
+                    if FUNC_ARG not in self.stats:
+                        self.stats[FUNC_ARG] = {}
 
-                    if f_name not in self.stats[self.func]:
-                        self.stats[self.func][f_name] = {}
+                    assert isinstance(self.stats[FUNC_ARG], dict)
 
-                    if "time" not in self.stats[self.func][f_name]:
-                        self.stats[self.func][f_name]["time"] = {
+                    if f_name not in self.stats[FUNC_ARG]:
+                        self.stats[FUNC_ARG][f_name] = {}
+
+                    if "time" not in self.stats[FUNC_ARG][f_name]:
+                        self.stats[FUNC_ARG][f_name]["time"] = {
                             "calls": 0,
                             "total": 0,
                             "total_mavg": 0,
@@ -252,10 +281,16 @@ class BaseStatsCollector:
                             "avg": 0,
                             "min": None,
                             "max": None,
-                            "ring": deque(maxlen=10),
+                            "ring": deque(maxlen=20),
                         }
 
-                    time_stats = self.stats[self.func][f_name]["time"]
+                    assert isinstance(self.stats[FUNC_ARG], dict)
+                    time_stats = self.stats[FUNC_ARG][f_name]["time"]
+                    assert isinstance(time_stats, dict)
+                    assert isinstance(time_stats["calls"], Numeric)
+                    assert isinstance(time_stats["total"], Numeric)
+                    assert isinstance(time_stats["min"], Numeric | None)
+                    assert isinstance(time_stats["max"], Numeric | None)
 
                     calls = time_stats["calls"] + 1
                     total_time = time_stats["total"] + elapsed_time
@@ -315,7 +350,7 @@ class BaseStatsCollector:
         """
         Resets the statistics counter and enables statistics collection.
         """
-        self.stats = DeepCounter[str]({self.func: {}})
+        self.stats = DeepCounter[str]({FUNC_ARG: {}})
         self.max_tasks = 0
         self.start_time = datetime.now()
         # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
@@ -366,7 +401,7 @@ class BaseStatsCollector:
         if self.enabled:
             fstats = {}
 
-            if len(self.stats) > 1 or len(self.stats[self.func]) > 0:
+            if len(self.stats) > 1 or len(self.stats[FUNC_ARG]) > 0:
                 fstats |= self.stats
                 # self._to_tree(self.stats, tree.add("mpyc"))
 
@@ -386,7 +421,7 @@ class BaseStatsCollector:
 
     def _to_tree(self, s: dict | list[dict], tree: Tree):
         if isinstance(s, dict):
-            for k, v in s.items():
+            for k, v in sorted(s.items()):
                 if k in self.formatters:
                     tree.add(f"{k}: {self.formatters[k](v)}")
                 elif isinstance(v, dict | list):
@@ -474,7 +509,7 @@ class StatsCollector(BaseStatsCollector):
         Returns:
             Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
         """
-        return {self.func: {}}
+        return {FUNC_ARG: {}}
 
     def total_calls(self) -> NestedDict[str, float]:
         """
@@ -482,7 +517,7 @@ class StatsCollector(BaseStatsCollector):
         with a single key-value pair, where the key is "calls" and the value is +1. This method is used to track the total
         number of calls to a function.
         """
-        return {self.func: {"calls": +1}}
+        return {FUNC_ARG: {"calls": +1}}
 
     def sent_to(self, pid: int, msg: bytes) -> NestedDict[str, float]:
         """
