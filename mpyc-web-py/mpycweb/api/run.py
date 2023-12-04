@@ -1,20 +1,18 @@
+import ast
+import asyncio
+import importlib.util
 import logging
 import types
 import typing
-import asyncio
-import ast
-import importlib.util
 
 import js
+import micropip
 import pyodide
 from pyodide.ffi import to_js
-import micropip  # pyright: ignore[reportMissingImports] pylint: disable=import-error
-
-from lib.stats import stats
 
 logger = logging.getLogger(__name__)
 
-from lib.log import *  ## add imports here to make them available by default to the demos run inside the pyodide runtime
+from lib.log import *  # # add imports here to make them available by default to the demos run inside the pyodide runtime
 
 
 async def run_file(file: str):
@@ -59,9 +57,9 @@ async def run_code_async(source: str, filename: str):
     return func()  # pylint: disable=not-callable
 
 
-import rich
-
 import traceback
+
+import rich
 
 
 async def run_code(code: str, filename=None):
@@ -76,7 +74,7 @@ async def run_code(code: str, filename=None):
     """
     await load_missing_packages(code)
     # return await run_code_async(code, filename)
-    await pyodide.code.eval_code_async(code, globals() | {"__name__": "__main__"}, filename=filename)
+    await pyodide.code.eval_code_async(code, globals() | {"__name__": "__main__"}, filename=filename)  # pyright: ignore
     # try:
     #     await load_missing_packages(code)
     #     # return await run_code_async(code, filename)
@@ -110,7 +108,7 @@ async def load_missing_packages(code: str):
     Returns:
         None
     """
-    imports = pyodide.code.find_imports(code)
+    imports = pyodide.code.find_imports(code)  # pyright: ignore
     imports = [item for item in imports if importlib.util.find_spec(item) is None]
     load_matplotlib = "matplotlib" in imports
     if len(imports) > 0:

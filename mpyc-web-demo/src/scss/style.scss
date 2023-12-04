@@ -50,12 +50,6 @@ body {
   width: 100% !important;
 }
 
-@media (orientation: portrait) {
-  .main-container {
-    height: 95vh;
-  }
-}
-
 .material-symbols,
 .material-symbols-filled,
 .material-symbols-sharp,
@@ -103,7 +97,7 @@ body {
 
 #knownPeers {
   font-size: 14px;
-  max-height: 150px;
+  max-height: 115px;
   overflow: auto;
 
   columns: 2;
@@ -133,6 +127,12 @@ body {
 //   flex: 0 0 13%;
 //   min-width: 90px;
 // }
+
+.col-xl-2,
+.col-xl-10 {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
+}
 
 .form-select {
   background-color: $form-control-background;

@@ -15,13 +15,11 @@ from asyncio import Future
 
 import js
 from lib.exception_handler import exception_handler
-from lib.stats import stats
 from mpyc.runtime import Runtime, mpc  # pylint: disable=import-error,disable=no-name-in-module
 
 from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
 
 asyncio.get_event_loop().set_exception_handler(exception_handler)
-# pyright: reportMissingImports=false
 from polyscript import xworker
 
 from . import api, proxy

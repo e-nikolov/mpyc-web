@@ -3,10 +3,13 @@
     flex-direction: column;
 }
 
+@media (orientation: portrait) {
+    .main-container {
+        height: calc(100vh - 10px);
+    }
+}
+
 @media (min-width: 1200px) {
-
-    .connected-parties {}
-
     .split {
         height: calc(100vh - 100px);
     }
@@ -14,7 +17,7 @@
 
 @media (max-width: 1199px) {
     .split {
-        height: calc(85vh - 230px);
+        height: calc(100vh - 270px);
     }
 }
 

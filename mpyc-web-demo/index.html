@@ -23,57 +23,65 @@
     </div>
     <div class="row h-95">
       <div class="col-xl-2">
-        <div>
-          <!-- <div class="container"> -->
+        <!-- <div> -->
+        <div class="container-fluid">
           <!-- * My Party ID -->
-          <!-- <div class="row"> -->
-          <!-- <div class="col-6 col-xl-12  "> -->
-          <div class="input-group">
-            <div class="form-floating">
-              <input type="text" class="form-control" onClick="this.select();" readonly id="myPeerID"
-                placeholder="My ID">
-              <label for="myPeerID">My ID</label>
+          <div class="row">
+            <div class="col-8 col-xl-12  " style="padding: 0 !important">
+              <div class="input-group">
+                <div class="form-floating">
+                  <input type="text" class="form-control" onClick="this.select();" readonly id="myPeerID"
+                    placeholder="My ID">
+                  <label for="myPeerID">My ID</label>
+                </div>
+
+                <!-- * My Party ID - Buttons -->
+                <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copy to clipboard"
+                  class="btn btn-primary">
+                  <span class="material-symbols-rounded">content_paste</span>
+                </button>
+                <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copied!" class="btn btn-success"
+                  style="display: none;">
+
+                  <span class="material-symbols-rounded">inventory</span>
+                </button>
+                <button id="show-qr" class="btn btn-primary">
+                  <span class="material-symbols-rounded">qr_code</span>
+                </button>
+                <button id="resetPeerID" data-bs-toggle="tooltip" data-bs-title="Reset party ID"
+                  class="btn btn-primary">
+                  <span class="material-symbols-rounded">refresh</span>
+                </button>
+              </div>
+              <!-- * Host Party ID -->
+              <!-- </div> -->
+
+              <!-- <div class="col-6 col-xl-12  "> -->
+              <div class="input-group  ">
+                <div class="form-floating">
+                  <input id="hostPeerID" type="text" onClick="this.select();" class="form-control"
+                    placeholder="Party ID" />
+                  <label for="hostPeerID">
+                    Party ID
+                    <!-- <strong>Party ID</strong> -->
+                  </label>
+                </div>
+
+                <!-- * Host Party ID - Buttons -->
+                <button id="scanQRCodeButton" data-bs-title="Scan QR code" hidden data-bs-toggle="tooltip"
+                  class="btn btn-primary">
+                  <span class="material-symbols-rounded">qr_code_scanner</span>
+                </button>
+                <button id="connect" data-bs-toggle="tooltip" data-bs-title="Connect to party" class="btn btn-primary">
+                  <span class="material-symbols-rounded">person_add</span>
+                </button>
+              </div>
             </div>
+            <div class="col-4 col-xl-12  " style="padding: 0px; padding-left: 5px;">
 
-            <!-- * My Party ID - Buttons -->
-            <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copy to clipboard" class="btn btn-primary">
-              <span class="material-symbols-rounded">content_paste</span>
-            </button>
-            <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copied!" class="btn btn-success"
-              style="display: none;">
-
-              <span class="material-symbols-rounded">inventory</span>
-            </button>
-            <button id="show-qr" class="btn btn-primary">
-              <span class="material-symbols-rounded">qr_code</span>
-            </button>
-            <button id="resetPeerID" data-bs-toggle="tooltip" data-bs-title="Reset party ID" class="btn btn-primary">
-              <span class="material-symbols-rounded">refresh</span>
-            </button>
-          </div>
-          <!-- * Host Party ID -->
-          <!-- </div> -->
-
-          <!-- <div class="col-6 col-xl-12  "> -->
-          <div class="input-group  ">
-            <div class="form-floating">
-              <input id="hostPeerID" type="text" onClick="this.select();" class="form-control" placeholder="Party ID" />
-              <label for="hostPeerID">
-                Party ID
-                <!-- <strong>Party ID</strong> -->
-              </label>
+              <div id="connectedPartiesLocationMobile">
+              </div>
             </div>
-
-            <!-- * Host Party ID - Buttons -->
-            <button id="scanQRCodeButton" data-bs-title="Scan QR code" hidden data-bs-toggle="tooltip"
-              class="btn btn-primary">
-              <span class="material-symbols-rounded">qr_code_scanner</span>
-            </button>
-            <button id="connect" data-bs-toggle="tooltip" data-bs-title="Connect to party" class="btn btn-primary">
-              <span class="material-symbols-rounded">person_add</span>
-            </button>
-            <!-- </div> -->
-            <!-- </div> -->
           </div>
         </div>
         <!-- * Demos -->
@@ -117,7 +125,7 @@
           </select>
         </div>
 
-        <div class="connected-parties mt-1 mb-1">
+        <div id="connectedPartiesLocationDesktop" class="connected-parties mt-1 mb-1">
           <!-- * Connected Parties -->
           <div id="connectedPartiesLabel">
             <h5> Connected Parties: </h5>
@@ -141,7 +149,7 @@
 
       <div class="col-xl-10">
         <!-- * Editor - Buttons -->
-        <div class="btn-group w-100" role="group" id="editor-buttons">
+        <div class="btn-group w-100" style="padding-left: 1px;" role="group" id="editor-buttons">
           <button id="startButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC"
             style="padding-left: 5px !important; " class="btn btn-primary">
             <style>
@@ -155,9 +163,6 @@
             </style>
             <span class="material-symbols-rounded material-symbols-filled">play_arrow</span>
           </button>
-          <button id="startAsyncButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC Async" class="btn btn-primary">
-            <span class="material-symbols-rounded material-symbols-filled">play_circle</span>
-          </button>
           <button id="stopButton" data-bs-toggle="tooltip" data-bs-title="Reset python runtime" class="btn btn-primary">
             <span class="material-symbols-rounded">refresh</span>
           </button>
@@ -170,7 +175,8 @@
             class="btn btn-outline-primary" for="toggleStatsEl">
             <span class="material-symbols-rounded material-symbols-filled">monitoring</span>
           </label>
-          <div style="width: 100% !important" class=" " id="demoSelectorLocation2">
+          <div style="width: 100% !important; padding-right: 1px; padding-left: 5px;" class=" "
+            id="demoSelectorLocation2">
 
           </div>
         </div>

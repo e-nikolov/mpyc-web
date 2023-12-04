@@ -1,20 +1,10 @@
 import asyncio
 import time
+from typing import Any, Awaitable, Callable, ParamSpec, TypeVar
 
-
-from typing import (
-    Awaitable,
-    TypeVar,
-    Callable,
-    ParamSpec,
-    Any,
-)
-
-
-from polyscript import xworker  # pylint: disable=import-error # pyright: ignore[reportUnknownVariableType]
+from lib.bench import bench
 from mpycweb import *
-
-# pyright: reportMissingImports=false
+from polyscript import xworker
 
 P = ParamSpec("P")
 R = TypeVar("R")

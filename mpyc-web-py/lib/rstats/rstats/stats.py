@@ -17,32 +17,28 @@ about the arguments passed to a function.
 The `__init__` function at the end of the module initializes a global `stats` object of type `StatsCollector`.
 """
 
-import logging
-
-
-from typing import TypeVar, Callable, ParamSpec
-from functools import wraps
-import json
 import asyncio
 import gc
+import io
+import json
+import logging
 import time
 from datetime import datetime
-import io
-import js
+from functools import wraps
+from typing import Callable, ParamSpec, TypeVar
 
-import yaml
-import rich
-from rich.console import Console
-from rich.tree import Tree
-from rich.text import Text
-from rich.panel import Panel
-from rich.align import Align
-from humanize import naturalsize
 import humanize
-
+import js
+import rich
+import yaml
+from humanize import naturalsize
 from lib import log_levels
+from rich.align import Align
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+from rich.tree import Tree
 
-# pyright: reportMissingImports=false
 logger = logging.getLogger(__name__)
 
 K = TypeVar("K")

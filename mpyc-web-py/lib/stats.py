@@ -1,3 +1,5 @@
+# pyright: ignore
+
 """
 This module provides a `StatsCollector` class that can be used to collect and print statistics about various events
 in the program. The `StatsCollector` class is a subclass of `BaseStatsCollector`, which provides the core functionality
@@ -40,7 +42,7 @@ from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
-# pyright: reportMissingImports=false
+# type: ignore-all
 logger = logging.getLogger(__name__)
 
 K = TypeVar("K")
@@ -50,6 +52,8 @@ NestedDict = dict[K, V | "NestedDict[K, V]"]
 Numeric = int | float
 
 N = TypeVar("N", int, float)
+
+# pyright: ignore-all
 
 
 class DeepCounter(NestedDict[K, Numeric]):
@@ -167,7 +171,8 @@ import datetime as dt
 
 
 def format_time(time):
-    return f'{_format_time(time["min"])} / {_format_time(time["mavg"])} / {_format_time(time["avg"])} / {_format_time(time["max"])}'
+    # return f'{_format_time(time["min"])} / {_format_time(time["mavg"])} / {_format_time(time["avg"])} / {_format_time(time["max"])}'
+    return f'{_format_time(time["min"])} / {_format_time(time["mavg"])} / {_format_time(time["max"])}'
 
 
 def _format_time(time: Numeric):
@@ -231,6 +236,7 @@ class BaseStatsCollector:
         "messages s/r": format_messages,
         "asyncio": format_asyncio_stats,
         "data s/r": format_data,
+        "latency": format_time,
     }
 
     def dec(
@@ -269,11 +275,11 @@ class BaseStatsCollector:
 
                     assert isinstance(self.stats[FUNC_ARG], dict)
 
-                    if f_name not in self.stats[FUNC_ARG]:
-                        self.stats[FUNC_ARG][f_name] = {}
+                    if f_name not in self.stats[FUNC_ARG]:  # pyright: ignore
+                        self.stats[FUNC_ARG][f_name] = {}  # pyright: ignore
 
-                    if "time" not in self.stats[FUNC_ARG][f_name]:
-                        self.stats[FUNC_ARG][f_name]["time"] = {
+                    if "time" not in self.stats[FUNC_ARG][f_name]:  # pyright: ignore
+                        self.stats[FUNC_ARG][f_name]["time"] = {  # pyright: ignore
                             "calls": 0,
                             "total": 0,
                             "total_mavg": 0,
@@ -285,7 +291,7 @@ class BaseStatsCollector:
                         }
 
                     assert isinstance(self.stats[FUNC_ARG], dict)
-                    time_stats = self.stats[FUNC_ARG][f_name]["time"]
+                    time_stats = self.stats[FUNC_ARG][f_name]["time"]  # pyright: ignore
                     assert isinstance(time_stats, dict)
                     assert isinstance(time_stats["calls"], Numeric)
                     assert isinstance(time_stats["total"], Numeric)
@@ -510,6 +516,34 @@ class StatsCollector(BaseStatsCollector):
             Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
         """
         return {FUNC_ARG: {}}
+
+    def latency(self, ts: int) -> NestedDict[str, float]:  # pyright: ignore
+        l: int = time.time_ns() - ts * 1000
+
+        if "latency" not in self.stats:
+            self.stats["latency"] = {  # pyright: ignore
+                "min": None,
+                "max": 0,
+                "total_mavg": 0,
+                "ring": deque([], maxlen=20),
+            }
+
+        ring = self.stats["latency"]["ring"]  # pyright: ignore
+        total_mavg = self.stats["latency"]["total_mavg"]  # pyright: ignore
+
+        total_mavg += l  # pyright: ignore
+        if len(ring) == ring.maxlen:  # pyright: ignore
+            total_mavg -= ring.popleft()  # pyright: ignore
+        ring.append(l)  # pyright: ignore
+
+        self.stats["latency"]["min"] = min(l, self.stats["latency"]["min"]) if self.stats["latency"]["min"] else l  # pyright: ignore
+        self.stats["latency"]["max"] = max(l, self.stats["latency"]["max"]) if self.stats["latency"]["max"] else l  # pyright: ignore
+
+        self.stats["latency"]["ring"] = ring  # pyright: ignore
+        self.stats["latency"]["total_mavg"] = total_mavg  # pyright: ignore
+        self.stats["latency"]["mavg"] = total_mavg / len(ring)  # pyright: ignore
+
+        return {}
 
     def total_calls(self) -> NestedDict[str, float]:
         """

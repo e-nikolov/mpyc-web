@@ -154,8 +154,7 @@ export class Controller {
     setupButtonEvents(mpyc: MPCManager, opts: ControllerOptions) {
         this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
-        this.runMPyCButton.addEventListener('click', async () => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, false); });
-        this.runMPyCAsyncButton.addEventListener('click', async () => mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, true));
+        this.runMPyCButton.addEventListener('click', async (ev) => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, !ev.ctrlKey && !ev.shiftKey); });
         this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
         this.sendMessageButton.addEventListener('click', async () => { this.sendChatMessage(); });
         this.clearTerminalButton.addEventListener('click', async () => { this.term.clear(); });
@@ -284,10 +283,12 @@ export class Controller {
                 $("#mpc-demos").hidden = true
                 $("#connectedPartiesLabel").hidden = true
                 this.demoSelect.size = 1;
+                $("#connectedPartiesLocationMobile").insertAdjacentElement('beforeend', this.knownPeersEl)
                 $("#demoSelectorLocation2").insertAdjacentElement('beforeend', this.demoSelect)
                 $("#chatFooter").insertAdjacentElement('beforeend', $("#chatInputGroup"))
             } else {
                 $("#mpc-demos").insertAdjacentElement('beforeend', this.demoSelect)
+                $("#connectedPartiesLocationDesktop").insertAdjacentElement('beforeend', this.knownPeersEl)
                 $("#mpc-demos").hidden = false
                 $("#connectedPartiesLabel").hidden = false
                 $("#chatSidebar").insertAdjacentElement('beforeend', $("#chatInputGroup"))

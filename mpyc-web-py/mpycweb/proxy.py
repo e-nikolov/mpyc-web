@@ -11,8 +11,6 @@ import rich
 import rich.text
 from lib.stats import stats
 from mpycweb.api.run import run_code
-
-# pyright: reportMissingImports=false
 from pyodide.ffi import JsProxy, to_js
 
 from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
@@ -103,8 +101,8 @@ class Client(AbstractClient):
         # add timestamp
         self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message)
 
-    @stats.acc(lambda self, pid, message: stats.received_from(pid, message) | stats.time())
-    def on_runtime_message(self, pid: int, message: JsProxy) -> None:
+    @stats.acc(lambda self, pid, message, ts: stats.received_from(pid, message) | stats.time() | stats.latency(ts))
+    def on_runtime_message(self, pid: int, message: JsProxy, ts) -> None:
         """
         Handle a runtime message from a peer.
 
