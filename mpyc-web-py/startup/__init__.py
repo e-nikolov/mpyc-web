@@ -2,8 +2,6 @@
     Shim for the PyScript port of MPyC.
 """
 
-# pyright: reportMissingImports=false
-
 import logging
 
 import js
@@ -25,7 +23,7 @@ asyncio.get_event_loop().set_exception_handler(exception_handler)
 try:
     RUNNING_IN_WORKER = not hasattr(js, "document")
     if RUNNING_IN_WORKER:
-        from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+        from polyscript import xworker
 
     from mpycweb import *
 

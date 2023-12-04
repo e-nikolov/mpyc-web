@@ -4,7 +4,7 @@ import os
 from enum import StrEnum, auto
 from typing import Any, Awaitable, Callable, Coroutine, Dict, List, Literal, Tuple, TypeVarTuple
 
-import js  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+import js
 import rich
 from lib.stats import stats
 from pyodide.ffi import JsProxy, to_js
@@ -69,6 +69,7 @@ class SyncRuntimeProxy:
 import rich
 
 loop = asyncio.get_event_loop()
+import time
 from datetime import datetime
 
 
@@ -89,7 +90,7 @@ class AsyncRuntimeProxy:
 
     # async def send(self, _type: str, pid: int, message: Any):
     def send(self, _type: str, pid: int, message: Any):
-        self.postMessage(to_js([_type, pid, message]))
+        self.postMessage(to_js([_type, pid, [message, time.time_ns() // 1000]]))
 
     # async def notify_runtime_ready(self):
     def notify_runtime_ready(self):
@@ -109,11 +110,6 @@ class AsyncRuntimeProxy:
         [message_type, *rest] = event.data
 
         match message_type:
-            case ProxyEventType.MPC_READY:
-                [pid, message] = rest
-                self.on_ready_message(pid, message)
-                # loop.create_task(self.on_ready_message(pid, message))
-                # loop.call_soon(on_ready_message, pid, message)
             case ProxyEventType.STATS_TOGGLE:
                 stats.enabled = not stats.enabled
             case ProxyEventType.STATS_SHOW:
@@ -122,9 +118,19 @@ class AsyncRuntimeProxy:
                 stats.enabled = False
             case ProxyEventType.STATS_RESET:
                 stats.reset()
-            case ProxyEventType.MPC_RUNTIME:
+            case ProxyEventType.MPC_READY:
                 [pid, message] = rest
-                self.on_runtime_message(pid, message.to_py())
+                message, ts = message.to_py()
+
+                self.on_ready_message(pid, message)
+                # loop.create_task(self.on_ready_message(pid, message))
+                # loop.call_soon(on_ready_message, pid, message)
+            case ProxyEventType.MPC_RUNTIME:
+                pid, message = rest
+
+                message, ts = message.to_py()
+
+                self.on_runtime_message(pid, message, ts)
                 # loop.create_task(self.on_runtime_message(pid, message))
                 # loop.call_soon(on_runtime_message, pid, message)
             case ProxyEventType.MPC_EXEC:
@@ -168,7 +174,7 @@ sync_proxy = None
 
 
 if RUNNING_IN_WORKER:
-    from polyscript import xworker  # pyright: ignore[reportMissingImports] pylint: disable=import-error
+    from polyscript import xworker
 
     async_proxy = AsyncRuntimeProxy(xworker)
     sync_proxy = SyncRuntimeProxy(xworker.sync)

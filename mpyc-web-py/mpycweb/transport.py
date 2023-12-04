@@ -5,11 +5,7 @@
 import asyncio
 import logging
 
-# pyright: reportMissingImports=false
-
-
 from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
-
 
 logger = logging.getLogger(__name__)
 

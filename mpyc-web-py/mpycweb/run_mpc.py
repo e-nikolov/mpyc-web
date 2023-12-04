@@ -1,25 +1,23 @@
+import ast
+import asyncio
+import importlib.util
 import logging
 import types
 import typing
-import asyncio
-import ast
-import importlib.util
-from lib.exception_handler import exception_handler
 
-
+import micropip
 import pyodide
-import micropip  # pyright: ignore[reportMissingImports] pylint: disable=import-error
-
-from mpyc.runtime import Party, mpc  # pyright: ignore[reportMissingImports] pylint: disable=import-error,disable=no-name-in-module
+from lib.exception_handler import exception_handler
 from lib.stats import stats
-
+from mpyc.runtime import Party, mpc
 from mpycweb.api.run import run_code
 
 logger = logging.getLogger(__name__)
 
-from lib.log import *
-import os
 import linecache
+import os
+
+from lib.log import *
 
 loop = asyncio.get_event_loop()
 
