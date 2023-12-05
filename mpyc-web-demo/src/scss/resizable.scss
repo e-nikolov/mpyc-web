@@ -40,30 +40,67 @@
     border: 1px solid $gray-900;
 }
 
-.split-panel-terminal {
-    // overflow: scroll !important;
-    width: 100% !important;
-    // overflow-y: hidden;
-    // overflow-x: scroll;
-    // overflow-y: hidden;
+// .split-panel-terminal {
+//     // overflow: scroll !important;
+//     width: 100% !important;
+//     overflow-x: scroll;
+//     white-space: nowrap;
+//     // overflow-y: hidden;
+//     // overflow-x: scroll;
+//     // overflow-y: hidden;
+// }
+// #terminal-container-scroll {
+//     height: 300px !important;
+// }
+
+#terminal-container {
+    position: relative;
+    // width: calc(100% + 10px);
+    width: 100%;
+    /* or set a fixed width */
+    overflow: scroll;
+    // white-space: nowrap;
 }
 
+.xterm-scroll-area-clone {
+    position: absolute;
+    cursor: default;
+    top: 0;
+    // left: 0;
+    z-index: -1;
+}
+
+// #terminal-container::-webkit-scrollbar {
+//     height: 12px;
+// }
+
+// #terminal-container::-webkit-scrollbar-thumb {
+//     background-color: darkgrey;
+//     border-radius: 10px;
+// }
+
 .terminal-wrapper {
+    top: 0;
+    position: sticky !important;
     height: 100%;
     width: 100%;
 }
 
-.xterm-screen {
-    width: 100% !important; // 15px is scrollbar width
-    height: 100% !important; // 15px is scrollbar width
-    width: calc(100% - 15px) !important; // 15px is scrollbar width
-    // height: calc(100% - 10px) !important;
-    // overflow: auto !important;
-    overflow-y: hidden;
-    overflow-x: auto;
-    // overflow-y: visible !important;
-    // overflow-y: scroll !important;
+.xterm-viewport {
+    overflow: hidden !important;
 }
+
+// .xterm-screen {
+//     width: 100% !important; // 15px is scrollbar width
+//     height: 100% !important; // 15px is scrollbar width
+//     width: calc(100% - 15px) !important; // 15px is scrollbar width
+//     // height: calc(100% - 10px) !important;
+//     // overflow: auto !important;
+//     overflow-y: hidden;
+//     overflow-x: auto;
+//     // overflow-y: visible !important;
+//     // overflow-y: scroll !important;
+// }
 
 .terminal.xterm {
     // padding-right: 15px;
