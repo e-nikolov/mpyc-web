@@ -9,8 +9,6 @@ from pyodide import webloop
 from pyodide.code import run_js
 from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
 
-from .stats import stats
-
 run_js("""    
     self.webChannel = new MessageChannel()
 """)
@@ -106,11 +104,11 @@ class WebLooper(webloop.WebLoop):
             self.queue.appendleft(run_handle)
             # print("posting message", self.queue)
             chan.port2.postMessage("")
-            self.call_later_count += 1
+            self.call_immediate_count += 1
             return h
 
         # self._ready.append(h)
-        self.call_immediate_count += 1
+        self.call_later_count += 1
         setTimeout(create_once_callable(run_handle), delay * 1000)
         return h
 

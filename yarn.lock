@@ -610,7 +610,9 @@ __metadata:
     vite-plugin-run: "npm:^0.5.1"
     vite-plugin-top-level-await: "npm:^1.3.1"
     xterm: "npm:^5.3.0"
+    xterm-addon-canvas: "npm:^0.5.0"
     xterm-addon-fit: "npm:^0.8.0"
+    xterm-addon-ligatures: "npm:^0.7.0"
     xterm-addon-search: "npm:^0.13.0"
     xterm-addon-unicode11: "npm:^0.6.0"
     xterm-addon-web-links: "npm:^0.9.0"
@@ -2771,6 +2773,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"font-finder@npm:^1.0.3, font-finder@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "font-finder@npm:1.1.0"
+  dependencies:
+    get-system-fonts: "npm:^2.0.0"
+    promise-stream-reader: "npm:^1.0.1"
+  checksum: edf905d52daff88d5e8a9baa33b5b703b1716460cf808263cb740218ec9fbb361c6d6add4e6f18ec803e1ca787993f5473aed95af75435794c3c8f9dd4a2f1eb
+  languageName: node
+  linkType: hard
+
+"font-ligatures@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "font-ligatures@npm:1.4.1"
+  dependencies:
+    font-finder: "npm:^1.0.3"
+    lru-cache: "npm:^6.0.0"
+    opentype.js: "npm:^0.8.0"
+  checksum: 2a22bf772b97be3681dad97c44372d9e7ff4258190d7b5ac92493cec2be415c4772022e75d3d56d80c34039adc44939adb675c35e13f3e4de7fc66cf4c4667c7
+  languageName: node
+  linkType: hard
+
 "fontfaceobserver@npm:^2.3.0":
   version: 2.3.0
   resolution: "fontfaceobserver@npm:2.3.0"
@@ -2953,6 +2976,13 @@ __metadata:
   version: 6.0.1
   resolution: "get-stream@npm:6.0.1"
   checksum: 781266d29725f35c59f1d214aedc92b0ae855800a980800e2923b3fbc4e56b3cb6e462c42e09a1cf1a00c64e056a78fa407cbe06c7c92b7e5cd49b4b85c2a497
+  languageName: node
+  linkType: hard
+
+"get-system-fonts@npm:^2.0.0":
+  version: 2.0.2
+  resolution: "get-system-fonts@npm:2.0.2"
+  checksum: 5134fc4a1984c6da77f68e2d4fd04eba759de3931d966baf4b1472f5b31e5d969aa81f9e41502aaf9990d822c7f87d43a7526c9242cd70a10524e5b07bedd05a
   languageName: node
   linkType: hard
 
@@ -4413,6 +4443,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"opentype.js@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "opentype.js@npm:0.8.0"
+  dependencies:
+    tiny-inflate: "npm:^1.0.2"
+  bin:
+    ot: ./bin/ot
+  checksum: 34d8c045e440d0aee78996ff5afdfbebae8268de5a6c4c1c8abca263fc33bfcf52970553daba38eb85a5faa138ebcf00ffea1445eea4ce7716e75f3cb7e5d05c
+  languageName: node
+  linkType: hard
+
 "p-limit@npm:^2.2.0":
   version: 2.3.0
   resolution: "p-limit@npm:2.3.0"
@@ -4676,6 +4717,13 @@ __metadata:
     err-code: "npm:^2.0.2"
     retry: "npm:^0.12.0"
   checksum: 96e1a82453c6c96eef53a37a1d6134c9f2482f94068f98a59145d0986ca4e497bf110a410adf73857e588165eab3899f0ebcf7b3890c1b3ce802abc0d65967d4
+  languageName: node
+  linkType: hard
+
+"promise-stream-reader@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "promise-stream-reader@npm:1.0.1"
+  checksum: a02052c529c5a6a4f1f1d87dd6061abe4e6dbe2853e56a7bf3651f00a0ed4714dbaefd2b2a45b24ad9b3b4be195ef30dd4a2386808a77ad6a313339f23820dac
   languageName: node
   linkType: hard
 
@@ -5628,6 +5676,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tiny-inflate@npm:^1.0.2":
+  version: 1.0.3
+  resolution: "tiny-inflate@npm:1.0.3"
+  checksum: f620114fb51ea4a16ea7b4c62d6dd753f8faf41808a133c53d431ed4bf2ca377b21443653a0096894f2be22ca11bb327f148e7e5431f9246068917724ec01ffc
+  languageName: node
+  linkType: hard
+
 "tiny-invariant@npm:^1.1.0":
   version: 1.3.1
   resolution: "tiny-invariant@npm:1.3.1"
@@ -6273,12 +6328,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"xterm-addon-canvas@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "xterm-addon-canvas@npm:0.5.0"
+  peerDependencies:
+    xterm: ^5.0.0
+  checksum: 8d62c19453bf2e61d7716ebceef626116db79cac683a4b00ce8f3f616b38c6c1c8c5ae679f4f9e813090eb46467783126d0e969b0b228acda8497ac85715944e
+  languageName: node
+  linkType: hard
+
 "xterm-addon-fit@npm:^0.8.0":
   version: 0.8.0
   resolution: "xterm-addon-fit@npm:0.8.0"
   peerDependencies:
     xterm: ^5.0.0
   checksum: 5af2041b442f7c804eda2e6f62e3b68b5159b0ae6bd96e2aa8d85b26441df57291cbfed653d1196d4af5d9b94bfc39993df8b409a25c35e0d36bdaf6f5cdfe5f
+  languageName: node
+  linkType: hard
+
+"xterm-addon-ligatures@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "xterm-addon-ligatures@npm:0.7.0"
+  dependencies:
+    font-finder: "npm:^1.1.0"
+    font-ligatures: "npm:^1.4.1"
+  peerDependencies:
+    xterm: ^5.0.0
+  checksum: 067cfa462fdcabe32df3f3b8105c365252c69d6d6ac36d9d8ee64f3de71b4336006b4095b6e3b4cc2cd8d1df1c9cc2ac9bc5e4548cb789ec053d749a7b695dfc
   languageName: node
   linkType: hard
 

@@ -27,6 +27,10 @@ import asyncio
 import logging
 import sys
 
+from lib.weblooper import WebLooper
+
+asyncio.set_event_loop(WebLooper())
+
 import js
 import pyodide
 import rich
@@ -54,9 +58,6 @@ api.sync_proxy.load_env()
 
 logger = logging.getLogger(__name__)
 
-from lib.weblooper import WebLooper
-
-asyncio.set_event_loop(WebLooper())
 
 import mpyc
 
