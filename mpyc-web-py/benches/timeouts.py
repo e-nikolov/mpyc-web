@@ -1,78 +1,33 @@
 # pylint: disable-all
-# pylint: disable-all
 
-import rich
-from rich.traceback import install
-
-install(show_locals=True)
-
-import logging
-from rich.logging import RichHandler
-
-logging.basicConfig(level=logging.DEBUG, handlers=[RichHandler()])
-
-import js
-from pyodide.code import run_js
-
-sleep0_v1 = run_js("""
-    let makeSleep0 = (cb) => () => new Promise(resolve => cb(resolve));
-
-    var counter = 0;
-    var queue = {};
-
-    var channel = new MessageChannel();
-
-    channel.port1.onmessage = function (event) {
-        var id = event.data;
-
-        var callback = queue[id];
-        delete queue[id];
-        callback();
-    };
-
-    const setImmediate = (callback) => {
-        queue[++counter] = callback;
-        channel.port2.postMessage(counter);
-    }
-
-    self.sleep0_v1 = makeSleep0(setImmediate)
-    console.log(self.sleep0_v1)
-    sleep0_v1
-""")
-
-sleep0_v2 = js.sleep0_v1
-
-
-@bench
-async def sleepBench_v1():
-    await sleep0_v1()
-
-
-@bench
-async def sleepBench_v2():
-    await sleep0_v2()
-
-
-await sleepBench_v1()
-await sleepBench_v2()
-
-
-@bench
-def time_sleep_0():
-    time.sleep(0)
-
-
-@bench
-async def asyncio_sleep_0():
-    await asyncio.sleep(0)
 
 import asyncio
+import logging
+import time
+from typing import Any, Awaitable, Callable, ParamSpec, TypeVar
 
-asyncio.get_event_loop().
+from rstats import bench
 
-time_sleep_0()
+loop = asyncio.get_event_loop()
 
-await asyncio_sleep_0()
+
+# For async functions
+@bench
+async def async_function():
+    await asyncio.sleep(1)
+    print("Async Function")
+
+
+# For sync functions
+@bench
+def sync_function():
+    time.sleep(1)
+    print("Sync Function")
+
+
+@bench
+async def async_sleep_0123(a: Any, b: Any, c: Any = 4):
+    await asyncio.sleep(0.123)
 
 
 @bench
@@ -85,6 +40,64 @@ def sync_nothing():
     pass
 
 
-sync_nothing()
+@bench
+async def async_sleep_0():
+    await asyncio.sleep(0)
 
-await async_nothing()
+
+@bench
+def sync_sleep_0():
+    time.sleep(0)
+
+
+@bench
+async def async_sleep_0001():
+    await asyncio.sleep(0.001)
+
+
+@bench
+async def async_sleep_0002():
+    await asyncio.sleep(0.002)
+
+
+@bench
+async def async_sleep_0004():
+    await asyncio.sleep(0.004)
+
+
+@bench
+def add(a: Any, b: Any, c: Any = 4):
+    1 + 1
+
+
+@bench
+def add2(a: Any, b: Any, c: Any = 4):
+    a = 1
+    b = 2
+    c = a + b
+
+
+@bench
+def add3(a: Any, b: Any, c: Any = 4):
+    return a + b
+
+
+@bench
+def loopz(a: Any, b: Any, c: Any = 4):
+    x = 1
+    for i in range(1000):
+        x += i
+    return x
+
+
+async def main():
+    await async_sleep_0()
+
+    sync_sleep_0()
+
+    await async_nothing()
+    sync_nothing()
+    logging.info("---done---")
+
+
+loop.run_until_complete(main())

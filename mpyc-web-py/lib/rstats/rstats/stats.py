@@ -32,12 +32,13 @@ import js
 import rich
 import yaml
 from humanize import naturalsize
-from lib import log_levels
 from rich.align import Align
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
+
+from . import log_levels
 
 logger = logging.getLogger(__name__)
 
