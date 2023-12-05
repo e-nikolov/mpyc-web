@@ -2,16 +2,18 @@
 import { Terminal } from 'xterm';
 // import { AttributeData } from 'xterm/src/common/buffer/AttributeData';
 
+import { CanvasAddon } from 'xterm-addon-canvas';
 import { FitAddon } from 'xterm-addon-fit';
+import { LigaturesAddon } from 'xterm-addon-ligatures';
 import { SearchAddon } from 'xterm-addon-search';
+import { Unicode11Addon } from 'xterm-addon-unicode11';
 import { WebLinksAddon } from 'xterm-addon-web-links';
 import { WebglAddon } from 'xterm-addon-webgl';
 import { Readline } from 'xterm-readline';
 import { SearchBarAddon } from './xterm-addon-search-bar';
-// import { LigaturesAddon } from 'xterm-addon-ligatures';
-import { Unicode11Addon } from 'xterm-addon-unicode11';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
 import { safe } from '../utils';
+// import { UnicodeGraphemesAddon } from './xterm-unicode-graphemes';
 import { loadWebFont } from './xterm-webfont';
 
 // import { ScrollSource } from 'xterm';
@@ -21,7 +23,7 @@ const ERASE_IN_LINE = "\x1b[2K"
 
 import { $, debounce } from '../utils';
 
-import { MPCManager, isMobile, isSafari } from '@mpyc-web/core';
+import { MPCManager, isMobile } from '@mpyc-web/core';
 import { format } from './format';
 
 
@@ -30,6 +32,7 @@ export class Term extends Terminal {
     fitAddon: FitAddon;
     searchAddon: SearchAddon;
     webglAddon: WebglAddon;
+    canvasAddon: CanvasAddon;
     searchBarAddon: SearchBarAddon;
     webLinksAddon: WebLinksAddon;
     readlineAddon: Readline;
@@ -120,7 +123,8 @@ export class Term extends Terminal {
     constructor(sel: string, mpyc: MPCManager) {
         let el = $(sel);
         super({
-            screenReaderMode: true,
+            // screenReaderMode: true,
+            screenReaderMode: false,
             cols: 80,
             // scrollOnUserInput: false,
             // rows: 6,
@@ -133,11 +137,10 @@ export class Term extends Terminal {
             //     backend: 'conpty',
             // },
             rightClickSelectsWord: true,
-            // customGlyphs: true,
             windowOptions: {
 
             },
-            // scrollback: 1000,
+            scrollback: 1000,
             cursorBlink: false,
             convertEol: true,
             // fontFamily: "Fira Code, Hack",
@@ -188,11 +191,13 @@ export class Term extends Terminal {
         this.loadAddon(this.searchAddon);
         this.loadAddon(this.searchBarAddon);
 
-        if (!isSafari) {
+        try {
             this.webglAddon = new WebglAddon();
             this.loadAddon(this.webglAddon);
-        } else {
-            console.warn("safari detected, not using webgl")
+        } catch (e) {
+            console.warn("term: webgl 2.0 not supported, falling back to canvas renderer", e)
+            this.canvasAddon = new CanvasAddon();
+            this.loadAddon(this.canvasAddon);
         }
 
         this.loadAddon(this.webLinksAddon);
@@ -200,11 +205,15 @@ export class Term extends Terminal {
         // this.loadAddon(new UnicodeGraphemesAddon());
         this.loadAddon(new Unicode11Addon());
         this.unicode.activeVersion = '11';
-        // let ligaturesAddon = new LigaturesAddon();
 
         loadWebFont(this).then(() => {
             this.open(el);
-            // this.loadAddon(ligaturesAddon);
+            $<HTMLTextAreaElement>(`${sel} textarea`).readOnly = true;
+            try {
+                this.loadAddon(new LigaturesAddon());
+            } catch (e) {
+            }
+
             this.fit();
         });
 
@@ -383,11 +392,13 @@ export class Term extends Terminal {
         this._log(format.italic(message), format.yellow(format.symbols.warning));
     }
     chatMe(message: string) {
-        message = `${format.green('Me')}: ${safe(message)}`
+        // message = `${format.green('Me')}: ${safe(message)}`
+        message = `${format.green('Me')}: ${message}`
         this._log(message);
     }
     chat(peerID: string, message: string) {
-        message = `${format.peerID(safe(peerID))}: ${safe(message)}`
+        // message = `${format.peerID(safe(peerID.substring(0, 8)))}: ${safe(message)}`
+        message = `${format.peerID(safe(peerID.substring(0, 8)))}: ${message}`
         this._log(message);
     }
     error(message: string) {
@@ -419,8 +430,9 @@ export class Term extends Terminal {
             return;
         }
 
-        dims.rows = Math.max(dims.rows, 15);
+        dims.rows = Math.max(dims.rows, 10);
         // dims.rows = Math.max(dims.rows, this.rows);
+        // dims.cols = Math.max(dims.cols, 80);
         dims.cols = Math.max(dims.cols, this.cols);
 
         if (dims.cols == this.cols && dims.rows == this.rows) {
