@@ -42,6 +42,10 @@ export class Term extends Terminal {
     livePanel: string = "";
     livePanelLines = 0;
     currentLivePanelMessage = ''; // Stores the current live panel message
+    terminalContainer: HTMLDivElement;
+    scrollAreaClone: HTMLDivElement;
+    scrollArea: HTMLDivElement;
+    viewportDiv: HTMLDivElement;
 
     calculateWrappedLines(message) {
         const lines = message.split('\n');
@@ -176,6 +180,8 @@ export class Term extends Terminal {
             }
         });
         this.mpyc = mpyc;
+        this.terminalContainer = $<HTMLDivElement>('#terminal-container');
+        this.scrollAreaClone = $<HTMLDivElement>('div.xterm-scroll-area-clone');
 
         this.onResize((_) => {
             this.updateTermSizeEnv();
@@ -208,14 +214,40 @@ export class Term extends Terminal {
 
         loadWebFont(this).then(() => {
             this.open(el);
+
+            this.viewportDiv = $<HTMLDivElement>('#terminal-container .xterm-viewport');
+            this.scrollArea = this.viewportDiv.querySelector('div.xterm-scroll-area');
             $<HTMLTextAreaElement>(`${sel} textarea`).readOnly = true;
+            new ResizeObserver(() => {
+                // console.warn("resized scroll area")
+                this.scrollAreaClone.style.height = this.scrollArea.clientHeight + "px";
+                this.scrollAreaClone.style.width = this.scrollArea.clientWidth + "px";
+            }).observe(this.scrollArea)
+
+            // this.terminalContainer.addEventListener('scroll', (e) => {
+            //     // Match the scrollTop value of div2 with div1
+            //     e.stopPropagation();
+            //     e.preventDefault();
+            //     console.warn("terminalContainer scroll", e.cancelable)
+            //     this.viewportDiv.scrollTop = this.terminalContainer.scrollTop;
+            // });
+            // this.viewportDiv.addEventListener('scroll', (e) => {
+            //     e.stopPropagation();
+            //     e.preventDefault();
+            //     console.warn("viewport scroll", e.cancelable)
+            //     // Match the scrollTop value of div2 with div1
+            //     this.terminalContainer.scrollTop = this.viewportDiv.scrollTop;
+            // });
+
             try {
                 this.loadAddon(new LigaturesAddon());
             } catch (e) {
             }
 
             this.fit();
+            scrollSync(this.terminalContainer, this.viewportDiv)
         });
+
 
 
         this.mpyc.runtime.setReadlineFn((prompt: string): Promise<string> => {
@@ -481,4 +513,126 @@ export class Term extends Terminal {
         console.log("updating terminal size env: ", this.cols, this.rows);
         this.mpyc.runtime.updateEnv({ COLUMNS: this.cols.toString(), LINES: this.rows.toString() })
     })
+}
+
+function scrollSync3(...divs: HTMLElement[]) {
+    let isSyncing = false;
+    let lastScrolledDiv: HTMLElement;
+
+    divs.forEach(div => {
+        div.addEventListener('scroll', function (e) {
+            if (isSyncing && lastScrolledDiv === this) {
+                isSyncing = false;
+
+                console.warn('ignoring-scroll', lastScrolledDiv, this.id)
+                return;
+            }
+
+            isSyncing = true;
+            lastScrolledDiv = this;
+
+            divs.forEach(otherDiv => {
+                if (otherDiv !== this) {
+                    otherDiv.scrollTop = this.scrollTop;
+                    // otherDiv.scrollLeft = this.scrollLeft;
+                }
+            });
+        });
+    });
+}
+
+export const _scrollSync = debounce(function (this: HTMLElement, isSyncing: boolean, lastScrolledDiv: HTMLElement, ...divs: HTMLElement[]) {
+    if (isSyncing && lastScrolledDiv == this) {
+        isSyncing = false;
+
+        console.warn('ignoring-scroll', lastScrolledDiv.id, this.id)
+        return;
+    }
+
+    console.warn("not ignoring", isSyncing, lastScrolledDiv, this)
+
+    isSyncing = true;
+    lastScrolledDiv = this;
+
+    divs.forEach(otherDiv => {
+        if (otherDiv != this) {
+            if (otherDiv.scrollTop != this.scrollTop) {
+                console.warn(`updating scroll ${otherDiv.id || 'xtermjs-viewport'} = ${this.id || 'xtermjs-viewport'}`)
+                otherDiv.scrollTop = this.scrollTop;
+            }
+            // otherDiv.scrollLeft = this.scrollLeft;
+        }
+    });
+}, 10)
+
+export const scrollSync = (divA: HTMLDivElement, divB: HTMLDivElement) => {
+    // export const scrollSync = (...divs: HTMLElement[]) => {
+    let isSyncingDivA = false;
+    let isSyncingDivB = false;
+
+    divA.addEventListener('scroll', function (ev) {
+        if (!isSyncingDivA) {
+            isSyncingDivB = true;
+
+            divB.scrollTop = divA.scrollTop;
+        } else {
+            // console.warn("ignoring-div-a")
+        }
+        isSyncingDivA = false;
+    });
+
+    divB.addEventListener('scroll', function (ev) {
+        if (!isSyncingDivB) {
+            isSyncingDivA = true;
+
+            divA.scrollTop = divB.scrollTop;
+        } else {
+            // console.warn("ignoring-div-b")
+        }
+        isSyncingDivB = false;
+    });
+    // }
+}
+
+export const scrollSync4 = (...divs: HTMLElement[]) => {
+    // export const scrollSync = (...divs: HTMLElement[]) => {
+    let isSyncing = false;
+    let lastScrolledDiv;
+
+    divs.forEach(div => {
+        // div.addEventListener('scroll', function (ev) {
+
+        div.onscroll = function (ev) {
+            _scrollSync.apply(ev.target, [isSyncing, lastScrolledDiv, ...divs])
+        };
+    });
+    // }
+}
+
+function scrollSync2(...elements: HTMLElement[]) {
+    let ignoreNext = false;
+
+    elements.forEach(function (element) {
+        element.addEventListener("scroll", function (e) {
+            if (ignoreNext) {
+                console.warn('ignoring-scroll-event', element)
+                return;
+            };
+
+            console.warn("scroll", element)
+            ignoreNext = true;
+
+            elements.forEach(function (target) {
+                if (element === target) {
+                    console.warn("ignoring self", element, target)
+                    return;
+                }
+
+                target.scrollTop = element.scrollTop;
+                // target.scrollLeft = element.scrollLeft;
+            });
+
+            ignoreNext = false;
+        });
+    });
 }
