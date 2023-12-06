@@ -31,7 +31,6 @@ from functools import wraps
 from typing import Callable, ParamSpec, TypeVar
 
 import humanize
-import js
 import rich
 import yaml
 from humanize import naturalsize
@@ -242,8 +241,10 @@ class BaseStatsCollector:
         "latency": format_time,
     }
 
+    loop = asyncio.get_event_loop()
+
     def dec(
-        self, counter_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[NestedDict[str, Numeric]], None]
+        self, counter_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
     ) -> Callable[[Callable[P, R]], Callable[P, R]]:
         """
         A decorator function for collecting statistics.
@@ -316,8 +317,7 @@ class BaseStatsCollector:
                     time_stats["min"] = min(elapsed_time, time_stats["min"]) if time_stats["min"] else elapsed_time
                     time_stats["max"] = max(elapsed_time, time_stats["max"]) if time_stats["max"] else elapsed_time
 
-                update_func(d)
-
+                update_func()(d)
                 return res
 
             return wrapper
@@ -334,7 +334,7 @@ class BaseStatsCollector:
         Returns:
             A callable function that takes a parameter of type R and returns a callable function that takes a parameter of type P and returns a value of type R.
         """
-        return self.dec(counter_func, self.stats.set)
+        return self.dec(counter_func, lambda: self.stats.set)
 
     def acc(self, counter_func: Callable[P, NestedDict[str, Numeric]]) -> Callable[[Callable[P, R]], Callable[P, R]]:
         """
@@ -346,7 +346,7 @@ class BaseStatsCollector:
         Returns:
             Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
         """
-        return self.dec(counter_func, self.stats.update)
+        return self.dec(counter_func, lambda: self.stats.update)
 
     def reset(self):
         """
@@ -355,14 +355,17 @@ class BaseStatsCollector:
         self.stats = DeepCounter[str]({})
         self.max_tasks = 0
         self.start_time = datetime.now()
+        self.loop = asyncio.get_event_loop()
+        if hasattr(self.loop, "call_later_count"):
+            self.loop.call_later_count = 0
+        if hasattr(self.loop, "call_immediate_count"):
+            self.loop.call_immediate_count = 0
         # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
     max_tasks = 0
 
     # @set(lambda self: {"asyncio": {"tasks": len(asyncio.all_tasks()), "max_tasks": self.stats.asyncio.max_tasks}})
     def asyncio_stats(self):
-        loop = asyncio.get_event_loop()
-
         tasks = len(asyncio.all_tasks())
         if tasks > self.max_tasks:
             self.max_tasks = tasks
@@ -370,20 +373,12 @@ class BaseStatsCollector:
         return {
             "tasks": tasks,
             "max_tasks": self.max_tasks,
-            "call_later_count": loop.call_later_count,  # pyright: ignore
-            "call_immediate_count": loop.call_immediate_count,  # pyright: ignore
+            "call_later_count": getattr(self.loop, "call_later_count", 0),
+            "call_immediate_count": getattr(self.loop, "call_immediate_count", 0),
         }
 
     def gc_stats(self):
         return gc.get_stats()
-
-    def channel_pool_stats(self):
-        return {
-            "size": js.channelPool.size,
-            "available": js.channelPool.available,
-            "borrowed": js.channelPool.borrowed,
-            "pending": js.channelPool.pending,
-        }
 
     def to_tree(self):
         if not self.enabled:
@@ -400,7 +395,6 @@ class BaseStatsCollector:
 
         fstats["asyncio"] = self.asyncio_stats()
         # self._to_tree(self.asyncio_stats(), tree.add("asyncio"))
-        # self._to_tree(self.channel_pool_stats(), tree.add("channel_pool"))
 
         if logger.isEnabledFor(log_levels.TRACE):
             fstats["gc"] = self.gc_stats()
