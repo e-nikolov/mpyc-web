@@ -10,17 +10,18 @@ $grid-breakpoints: (
   xxl: 1400px
 );
 
-@import '@fontsource/jetbrains-mono';
+// @import '@fontsource/jetbrains-mono';
 
 @import "xterm/css/xterm.css";
 @import "./theme-superhero-before.scss";
 @import "bootstrap/scss/bootstrap";
+
 $form-control-background: $gray-800;
 // @import "./xterm.scss";
 @import "./theme-superhero-after.scss";
-@import '@material-symbols/font-400/outlined.css';
-@import 'material-symbols/rounded.css';
-@import 'material-symbols/sharp.css';
+// @import '@material-symbols/font-400/outlined.css';
+// @import 'material-symbols/rounded.css';
+// @import 'material-symbols/sharp.css';
 @import "./resizable.scss";
 
 // .w-auto {

@@ -14,7 +14,6 @@ import { SearchBarAddon } from './xterm-addon-search-bar';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
 import { safe } from '../utils';
 // import { UnicodeGraphemesAddon } from './xterm-unicode-graphemes';
-import { loadWebFont } from './xterm-webfont';
 
 // import { ScrollSource } from 'xterm';
 const CARRIAGE_RETURN = "\r"
@@ -25,6 +24,7 @@ import { $, debounce } from '../utils';
 
 import { MPCManager, isMobile } from '@mpyc-web/core';
 import { format } from './format';
+import { loadWebFont } from './xterm-webfont';
 
 
 // export const DEFAULT_ATTR_DATA = Object.freeze(new AttributeData());
@@ -35,6 +35,7 @@ export class Term extends Terminal {
     canvasAddon: CanvasAddon;
     searchBarAddon: SearchBarAddon;
     webLinksAddon: WebLinksAddon;
+    ligaturesAddon: LigaturesAddon;
     readlineAddon: Readline;
     mpyc: MPCManager;
 
@@ -144,11 +145,14 @@ export class Term extends Terminal {
             windowOptions: {
 
             },
-            scrollback: 1000,
+            // scrollback: 1000,
             cursorBlink: false,
             convertEol: true,
             // fontFamily: "Fira Code, Hack",
             // fontFamily: "Fira Code",
+            // fontFamily: '"Fira Code", courier-new, courier, monospace, "Powerline Extra Symbols"',
+            // fontFamily: '"JetBrains Mono", courier-new, courier, monospace, "Powerline Extra Symbols"',
+            // fontFamily: "Courier",
             fontFamily: "JetBrains Mono",
             fontSize: 16,
             fontWeight: 400,
@@ -180,6 +184,7 @@ export class Term extends Terminal {
             }
         });
         this.mpyc = mpyc;
+
         this.terminalContainer = $<HTMLDivElement>('#terminal-container');
         this.scrollAreaClone = $<HTMLDivElement>('div.xterm-scroll-area-clone');
 
@@ -213,8 +218,10 @@ export class Term extends Terminal {
         this.unicode.activeVersion = '11';
 
         loadWebFont(this).then(() => {
+            // document.fonts.ready.then(() => {
+            // this.ligaturesAddon = new LigaturesAddon();
             this.open(el);
-
+            // this.loadAddon(this.ligaturesAddon);
             this.viewportDiv = $<HTMLDivElement>('#terminal-container .xterm-viewport');
             this.scrollArea = this.viewportDiv.querySelector('div.xterm-scroll-area');
             $<HTMLTextAreaElement>(`${sel} textarea`).readOnly = true;
@@ -238,11 +245,6 @@ export class Term extends Terminal {
             //     // Match the scrollTop value of div2 with div1
             //     this.terminalContainer.scrollTop = this.viewportDiv.scrollTop;
             // });
-
-            try {
-                this.loadAddon(new LigaturesAddon());
-            } catch (e) {
-            }
 
             this.fit();
             scrollSync(this.terminalContainer, this.viewportDiv)
@@ -462,7 +464,7 @@ export class Term extends Terminal {
             return;
         }
 
-        dims.rows = Math.max(dims.rows, 10);
+        dims.rows = Math.max(dims.rows, 12);
         // dims.rows = Math.max(dims.rows, this.rows);
         // dims.cols = Math.max(dims.cols, 80);
         dims.cols = Math.max(dims.cols, this.cols);
