@@ -98,7 +98,8 @@ export class Controller {
 
     setupMPyCEvents(mpyc: MPCManager) {
         addEventListener("error", (e) => {
-            this.term.error(e.error);
+            console.error(e);
+            this.term.error(e.message);
         });
         mpyc.on('transport:ready', async (peerID: string) => {
             this.myPeerIDEl.value = safe(peerID);
