@@ -8,7 +8,7 @@
     "build:py": "mkdir -p ./dist/py ./public/py && poetry build -f wheel && cp ../dist/*.whl ./public/py/ && cp ../dist/*.whl ./dist/py/",
     "build": "tsc && bun build:py && vite build",
     "preview": "vite preview",
-    "static": "python -m http.server -d dist",
+    "static": "python -m http.server",
     "ghp": "gh-pages -d dist -t true",
     "gh-pages": "APP_DEPLOYMENT='' bun build && gh-pages -d dist -t true",
     "gh-pages-test": "APP_DEPLOYMENT='test' bun build && gh-pages -d dist -t true --remote test",
