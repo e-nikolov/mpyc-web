@@ -1,5 +1,7 @@
-import secretsanta
+import js
+
 from mpyc.runtime import mpc
+import secretsanta
 
 
 async def main():
