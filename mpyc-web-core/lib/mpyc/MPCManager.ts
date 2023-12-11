@@ -100,8 +100,6 @@ export class MPCManager extends Emittery<MPCEvents> {
         })
     }
 
-
-
     public runMPC(code: string, filename: string, is_async: boolean = true) {
         this.running = true;
         let peers = this.transport.getPeers(true)

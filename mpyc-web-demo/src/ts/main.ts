@@ -56,7 +56,13 @@ function main() {
         }
     }
 
-    const runtimeFactory = () => new PyScriptWorkerRuntime(undefined, "./config.toml");
+    // const runtimeFactory = () => new PyScriptWorkerRuntime();
+    const runtimeFactory = () => new PyScriptWorkerRuntime({
+        config: {
+            fetch: [{ from: "./py/", to_folder: "./", files: ["mpyc_web-0.6.0-py3-none-any.whl", "demo.py"] }],
+            packages: ["emfs:./mpyc_web-0.6.0-py3-none-any.whl"],
+        }
+    });
     // const runtimeFactory = () => new PyodideWorkerRuntime();
     // const runtimeFactory = (mpc: MPCManager) => new PyScriptInterpreter(mpc, "./py/mpycweb/shim/shim.py", "./config.toml", { COLUMNS: "110" });
 

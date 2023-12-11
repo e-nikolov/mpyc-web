@@ -1,6 +1,6 @@
 {
   "name": "@mpyc-web/demo",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "type": "module",
   "packageManager": "yarn@4.0.1",
   "scripts": {

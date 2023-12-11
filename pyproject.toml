@@ -12,9 +12,9 @@ reportAsyncNotInAsyncFunction = false
 
 [tool.poetry]
 name = "mpyc-web"
-version = "0.5.0"
-description = "MPyC for Multiparty Computation in Python"
-authors = ["Berry Schoenmakers <berry@win.tue.nl>"]
+version = "0.6.0"
+description = "MPyC for Multiparty Computation in Python for the Web"
+authors = ["Emil Nikolov <eenikolov@proton.me>"]
 packages = [
     { include = "./mpycweb", from = "./mpyc-web-py" },
     { include = "./lib", from = "./mpyc-web-py" },

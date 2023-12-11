@@ -6,7 +6,7 @@ import { Hook, XWorker } from "polyscript/xworker";
 // import { XWorker, Hook } from "polyscript";
 import { MPCRuntimeBase } from '../MPCRuntimeBase';
 
-function XXWorker(startupURL: string, configFilePath: string, hooks: any) {
+function XXWorker(startupURL: string, configFilePath: string | any, hooks: any) {
     let opts: unknown = {
         async: true, type: "pyodide", version: "0.24.1", config: configFilePath
     }
@@ -16,8 +16,6 @@ function XXWorker(startupURL: string, configFilePath: string, hooks: any) {
     return XWorker.call(new Hook(null, hooks), startupURL, opts as Required<WorkerOptions>);
     // return XWorker(shimFilePath, { async: true, type: "pyodide", config: configFilePath })
 }
-
-
 
 let blobURL = (code: string) => {
     return URL.createObjectURL(
@@ -33,20 +31,33 @@ let emptyBlob = URL.createObjectURL(
     }),
 )
 
+type PyScriptWorkerRuntimeOptions = {
+    startup?: string | any,
+    config?: string | any,
+    env?: any
+}
 export class PyScriptWorkerRuntime extends MPCRuntimeBase {
     _close(): void {
         this.worker.terminate()
     }
     worker: Worker;
 
-    constructor(shimFilePath: string, configFilePath: string, env: any = {}) {
-        if (!shimFilePath || shimFilePath == "") {
-            shimFilePath = emptyBlob
+    constructor(opts?: PyScriptWorkerRuntimeOptions) {
+        let startup = emptyBlob;
+        let config = {
+            packages: ["mpyc-web"],
+        };
+
+        if (opts?.startup && opts?.startup != "") {
+            startup = opts.startup
         }
 
-        let worker = XXWorker(shimFilePath, configFilePath, {
-            worker: {
+        if (opts?.config && opts?.config != "") {
+            config = opts.config
+        }
 
+        let worker = XXWorker(startup, config, {
+            worker: {
                 onReady: (wrap: any, xworker: ReturnType<typeof XXWorker>) => {
                     console.log("worker onReady/init")
                     wrap.io.stderr = (message: any) => {
@@ -128,7 +139,7 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
         }
         // console.log(worker)
 
-        super(worker.sync, worker, env)
+        super(worker.sync, worker, opts?.env)
         // worker.postMessage(["proxy:py:exec", startup])
         this.worker = worker;
     }

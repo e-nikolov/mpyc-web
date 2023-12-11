@@ -1,4 +1,4 @@
-import Emittery from 'emittery'
+import Emittery from 'emittery';
 
 export type MPCEvents = {
     'runtime:error': ErrorEvent
@@ -23,8 +23,6 @@ export type MPCEvents = {
     'transport:conn:data:custom': { peerID: string, data: AnyData }
 
 };
-
-
 
 export interface Conn {
     send(data: any): void;

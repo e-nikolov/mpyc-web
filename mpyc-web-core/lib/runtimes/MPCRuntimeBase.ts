@@ -50,7 +50,7 @@ export abstract class MPCRuntimeBase extends Emittery<RuntimeEvents> {
     abstract type(): string
 
     // constructor( emitter: MPCRuntimeManager, shimFilePath: string, configFilePath: string, env: any = {},) {
-    constructor(syncProxyPy: any, asyncProxyPy: MessagePort, env: any = {},) {
+    constructor(syncProxyPy: any, asyncProxyPy: MessagePort, env: any = {}) {
         super()
 
         syncProxyPy.getEnv = this.getEnv.bind(this)
