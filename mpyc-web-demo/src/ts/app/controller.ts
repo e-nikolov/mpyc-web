@@ -4,13 +4,12 @@ import { format } from "./format";
 
 import { EditorView } from '@codemirror/view';
 import { AnyData, MPCManager, PeerJSTransport, isMobileFn } from '@mpyc-web/core';
-import { Modal, Tooltip } from 'bootstrap';
 import { ControllerOptions } from './elements';
 
-import { Html5Qrcode, Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { $, $$, debounce, getStorage, safe, setStorage } from '../utils';
 
 // import * as polyscript from "polyscript";
+import { Tooltip } from 'bootstrap';
 import eruda from 'eruda';
 import erudaFeatures from 'eruda-features';
 import { makeSplitJS } from './split';
@@ -31,15 +30,9 @@ export class Controller {
     connectToPeerButton: HTMLButtonElement;
     sendMessageButton: HTMLButtonElement;
     clearTerminalButton: HTMLButtonElement;
-    showQRCodeButton: HTMLButtonElement;
-    scanQRInput: HTMLInputElement;
     versionDiv: HTMLDivElement;
     toggleStatsEl: HTMLInputElement;
-    qrScanner: Html5Qrcode;
-    scanQRCodeButton: HTMLButtonElement;
-    qrScannerModal: Modal;
-    qrScannerModalDiv: HTMLDivElement;
-    closeQRScannerButton: HTMLButtonElement;
+    qr: app.QRComponent
 
     constructor(mpyc: MPCManager, opts: ControllerOptions) {
         this.mpyc = mpyc;
@@ -56,14 +49,19 @@ export class Controller {
         this.connectToPeerButton = $<HTMLButtonElement>(opts.connectToPeerButtonSelector);
         this.sendMessageButton = $<HTMLButtonElement>(opts.sendMessageButtonSelector);
         this.clearTerminalButton = $<HTMLButtonElement>(opts.clearTerminalButtonSelector);
-        this.showQRCodeButton = $<HTMLButtonElement>(opts.showQRCodeButtonSelector);
-        this.scanQRInput = $<HTMLInputElement>(opts.scanQRInputSelector);
         this.toggleStatsEl = $<HTMLInputElement>(opts.toggleStatsSelector);
         this.versionDiv = $<HTMLDivElement>(opts.versionSelector);
-        this.scanQRCodeButton = $<HTMLButtonElement>("#scanQRCodeButton");
-        this.closeQRScannerButton = $<HTMLButtonElement>("#closeQRCodeScannerButton");
-        this.qrScannerModalDiv = $<HTMLDivElement>('#qrScannerModal');
-        this.qrScannerModal = new Modal(this.qrScannerModalDiv);
+
+        $$('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el, { trigger: 'hover' }));
+
+        this.qr = new app.QRComponent($<HTMLButtonElement>(opts.qrGenBtnSelector), $<HTMLButtonElement>(opts.qrScanBtnSelector), $<HTMLInputElement>(opts.qrScanInputSelector), () => this.mpyc.transport.id());
+        this.qr.on('qr:scanned', (peerID: string) => {
+            this.hostPeerIDInput.value = peerID;
+            this.hostPeerIDInput.dispatchEvent(new Event('input'));
+        })
+        this.qr.on('qr:error', (err: Error) => {
+            this.term.error(err.message);
+        })
 
         this.term = new app.Term(opts.terminalSelector, mpyc);
         this.editor = new app.Editor(opts.editorSelector, this.demoSelect, mpyc);
@@ -88,7 +86,6 @@ export class Controller {
             }
         }));
 
-        $$('[data-bs-toggle="tooltip"]').forEach(el => new Tooltip(el, { trigger: 'hover' }));
 
         this.setupMPyCEvents(mpyc);
         this.setupButtonEvents(mpyc, opts);
@@ -146,40 +143,32 @@ export class Controller {
         // mpyc.on('transport:conn:data:mpyc', async () => { this.updatePeersDiv(mpyc); });
     }
 
-    closeQRScanner() {
-        this.qrScanner.stop();
-        this.qrScannerModal.hide();
-    }
 
     setupButtonEvents(mpyc: MPCManager, opts: ControllerOptions) {
+        if (isMobileFn(navigator.userAgent)) {
+            this.setupEruda()
+        }
         this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
         this.runMPyCButton.addEventListener('click', async (ev) => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); });
         this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
         this.sendMessageButton.addEventListener('click', async () => { this.sendChatMessage(); });
         this.clearTerminalButton.addEventListener('click', async () => { this.term.clear(); });
-        this.closeQRScannerButton.addEventListener('click', async () => { this.closeQRScanner() });
-        this.scanQRCodeButton.addEventListener('click', async () => {
-            // If you want to prefer front camera
+        this.setupStatsToggle()
 
-            const config = { fps: 10, qrbox: { width: 150, height: 150 } };
-            const successCallback = (decodedText: string, result: Html5QrcodeResult) => {
-                this.hostPeerIDInput.value = decodedText;
-                this.hostPeerIDInput.dispatchEvent(new Event('input'));
-                this.closeQRScanner()
-            };
+        // CHAT
+        this.chatInput.addEventListener('keypress', async (e: Event) => {
+            let ev = e as KeyboardEvent;
 
-            this.qrScanner.start({ facingMode: "environment" }, config, successCallback, undefined);
-            this.qrScannerModal.show()
+            if (ev.key === 'Enter' && !ev.shiftKey) {
+                ev.preventDefault();
+                return this.sendChatMessage();
+            }
         });
-        this.qrScannerModalDiv.addEventListener('hidden.bs.modal', async () => { this.qrScanner.stop() });
 
-        if (isMobileFn(navigator.userAgent)) {
-            this.scanQRCodeButton.hidden = false;
-            this.setupEruda()
-            this.qrScanner = new Html5Qrcode("qrScannerEl", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
-        }
-
+        new app.CopyButton(opts.myPeerIDSelector, opts.copyPeerIDButtonSelector);
+    }
+    setupStatsToggle() {
         this.toggleStatsEl.addEventListener('click', async () => {
             if (this.toggleStatsEl.checked) {
                 setStorage('showStats', 'true');
@@ -197,19 +186,6 @@ export class Controller {
         const showStats = getStorage('showStats');
         this.toggleStatsEl.checked = showStats === 'true';
         this.toggleStatsEl.dispatchEvent(new Event('click'));
-
-        // CHAT
-        this.chatInput.addEventListener('keypress', async (e: Event) => {
-            let ev = e as KeyboardEvent;
-
-            if (ev.key === 'Enter' && !ev.shiftKey) {
-                ev.preventDefault();
-                return this.sendChatMessage();
-            }
-        });
-
-        app.makeQRButton(opts.showQRCodeButtonSelector, () => { return this.myPeerIDEl.value });
-        new app.CopyButton(opts.myPeerIDSelector, opts.copyPeerIDButtonSelector);
     }
 
     setupEruda() {
@@ -218,6 +194,9 @@ export class Controller {
         eruda.init({
             container: el,
             autoScale: true,
+            defaults: {
+                theme: 'dark',
+            },
             tool: ['console', 'elements', 'network', 'info', 'resources']
         });
         eruda.add(erudaFeatures);

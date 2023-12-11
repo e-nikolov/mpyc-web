@@ -16,8 +16,9 @@ export interface ControllerOptions {
     connectToPeerButtonSelector: string,
     sendMessageButtonSelector: string,
     clearTerminalButtonSelector: string,
-    showQRCodeButtonSelector: string,
-    scanQRInputSelector: string,
+    qrGenBtnSelector: string,
+    qrScanBtnSelector: string,
+    qrScanInputSelector: string,
     versionSelector: string,
     toggleStatsSelector: string,
 }
