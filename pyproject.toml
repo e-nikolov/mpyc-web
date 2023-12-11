@@ -12,7 +12,7 @@ reportAsyncNotInAsyncFunction = false
 
 [tool.poetry]
 name = "mpyc-web"
-version = "0.6.0"
+version = "0.6.1"
 description = "MPyC for Multiparty Computation in Python for the Web"
 authors = ["Emil Nikolov <eenikolov@proton.me>"]
 packages = [
