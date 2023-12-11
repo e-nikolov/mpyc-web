@@ -55,7 +55,7 @@ export class Editor extends EditorView {
         extensions.push(birdsOfParadise);
 
         super({
-            extensions,
+            extensions: extensions,
             parent: document.querySelector(selector)!,
         });
     }
