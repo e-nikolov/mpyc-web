@@ -10,41 +10,18 @@ $grid-breakpoints: (
   xxl: 1400px
 );
 
-// @import '@fontsource/jetbrains-mono';
-
 @import "xterm/css/xterm.css";
 @import "./theme-superhero-before.scss";
 @import "bootstrap/scss/bootstrap";
 
 $form-control-background: $gray-800;
-// @import "./xterm.scss";
 @import "./theme-superhero-after.scss";
-// @import '@material-symbols/font-400/outlined.css';
-// @import 'material-symbols/rounded.css';
-// @import 'material-symbols/sharp.css';
 @import "./resizable.scss";
 
-// .w-auto {
-//   width: calc(50% - 5px);
-// }
 body {
   font-family: 'Segoe UI', system-ui;
-
   font-weight: normal;
   font-style: normal;
-
-  /* Support for all WebKit browsers. */
-  // -webkit-font-smoothing: antialiased;
-  // /* Support for Safari and Chrome. */
-  // text-rendering: optimizeLegibility;
-
-  // /* Support for Firefox. */
-  // -moz-osx-font-smoothing: grayscale;
-
-  // /* Support for IE. */
-  // font-feature-settings: 'liga';
-  // // font-family: 'JetBrains Mono', system-ui;
-
 }
 
 #select-demo {
@@ -58,40 +35,14 @@ body {
 .material-symbols-sharp,
 .material-symbols-rounded,
 .material-symbols-outlined {
-  // font-weight: normal;
-  // font-style: normal;
   font-size: 24px;
-  /* Preferred icon size */
-  // display: inline-block;
-  // line-height: 1;
-  // text-transform: none;
-  // letter-spacing: normal;
-  // word-wrap: normal;
-  // white-space: nowrap;
-  // direction: ltr;
-
-  /* Support for all WebKit browsers. */
-  // -webkit-font-smoothing: antialiased;
-  // /* Support for Safari and Chrome. */
-  // text-rendering: optimizeLegibility;
-
-  // /* Support for Firefox. */
-  // -moz-osx-font-smoothing: grayscale;
-
-  // /* Support for IE. */
-  // font-feature-settings: 'liga';
-  // vertical-align: middle !important;
   vertical-align: -6px;
-  font-size: 1.5em !important;
-  max-width: 20px !important;
-  // align-content: center !important;
-  // justify-self: start !important;
-  // // border: 0.05em solid black !important;
+  font-size: 1.5em;
+  max-width: 20px;
 }
 
-.btn-primary {
-  // border: 0.05em solid red !important;
-  // justify-content: center !important;
+#chatInput {
+  resize: none;
 }
 
 .material-symbols-filled {
@@ -104,33 +55,10 @@ body {
   overflow: auto;
 }
 
-// .list-group-item {
-//   margin: 0;
-//   padding: 0;
-// }
-
-// ul {
-//   font-size: 14px;
-//   max-height: 150px;
-//   overflow: auto;
-//   margin: 0;
-//   margin-block: 0;
-//   background-color: $form-control-background;
-//   columns: 2;
-//   -webkit-columns: 2;
-//   -moz-columns: 2;
-// }
-
-
-// .peer-ids>.input-group>.input-group-text {
-//   flex: 0 0 13%;
-//   min-width: 90px;
-// }
-
 .col-xl-2,
 .col-xl-10 {
-  padding-left: 5px !important;
-  padding-right: 5px !important;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .form-select {
@@ -141,27 +69,8 @@ body {
 }
 
 option:checked {
-  background: linear-gradient(#c3c3c3, #c3c3c3) !important;
-  color: black !important;
-}
-
-// placeholder-shown:focus,
-// placeholder-shown:focus,
-// select:checked,
-// select:focus,
-// select:focus-visible,
-// select:focus-within,
-// select:active,
-// select:active:focus:focus-visible:checked,
-// select:checked -moz-cellhighlight {
-//   background-color: #c3c3c3 !important;
-//   color: black !important;
-//   border-color: #c3c3c3 !important;
-//   color-interpolation-filters: $form-control-background !important;
-// }
-
-:root {
-  --bs-focus-ring-opacity: 0%;
+  background: linear-gradient(#c3c3c3, #c3c3c3);
+  color: black;
 }
 
 .btn {
