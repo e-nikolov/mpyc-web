@@ -87,7 +87,7 @@ class AsyncRuntimeProxy:
 
     async def fetch(self, filename: str, **opts):
         return pyfetch(filename, **opts)
-
+ 
     # async def send(self, _type: str, pid: int, message: Any):
     def send(self, _type: str, pid: int, message: Any):
         self.postMessage(to_js([_type, pid, [message, time.time_ns() // 1000]]))
@@ -96,7 +96,7 @@ class AsyncRuntimeProxy:
     def notify_runtime_ready(self):
         js.console.log("runtime ready")
         self.postMessage(to_js(["proxy:js:runtime:ready"]))
-
+ 
     def onmessage(self, event: ProxyEvent):
         try:
             self._onmessage(event)
@@ -109,7 +109,7 @@ class AsyncRuntimeProxy:
         # [message_type, *rest] = event.data.to_py()
         [message_type, *rest] = event.data
 
-        match message_type:
+        match message_type: 
             case ProxyEventType.STATS_TOGGLE:
                 stats.enabled = not stats.enabled
             case ProxyEventType.STATS_SHOW:

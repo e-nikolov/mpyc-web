@@ -1,17 +1,28 @@
 'use strict';
 
 import { BenchSuite } from "../../src/ts/bench";
-import { callSoon_pool, callSoon_async, sleep_callSoon_setTimeout, sleep_callSoon_async, sleep_callSoon_pool, sleep_callSoon_new, sleep, callSoon_singleChan, sleep_callSoon_singleChan, callSoon_new, sleep_callSoon_queueMicrotask, callSoon_queueMicrotask } from "../../src/ts/utils";
+import { sleep_callSoon_async, sleep_callSoon_pool, sleep_callSoon_singleChan } from "../../src/ts/utils";
 
 
 export class TimeoutsBench extends BenchSuite {
     x = 3
 
-    async async_nothing() {
+    async sleep_pool() {
+        await sleep_callSoon_pool(0)
+    }
+    async sleep_singleChan() {
+        await sleep_callSoon_singleChan(0)
+    }
+    async sleep_async() {
+        await sleep_callSoon_async(0)
     }
 
     sync_nothing() {
     }
+
+    async async_nothing() {
+    }
+
 
     async add() {
         1 + 1

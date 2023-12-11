@@ -1,7 +1,9 @@
 import fs from 'fs';
 import git from 'git-rev-sync';
+import { glob } from 'glob';
 import { resolve } from 'path';
 import { defineConfig, loadEnv } from 'vite';
+
 // import 'vite/types/importMeta.d';
 // import PyodidePlugin from "@pyodide/webpack-plugin"
 const hexLoader = {
@@ -46,19 +48,22 @@ export default defineConfig(({ mode }) => {
     },
     base: "./",
     build: {
+      sourcemap: true,
       outDir: "dist",
       emptyOutDir: true,
       chunkSizeWarningLimit: 1500,
       target: 'esnext',
       rollupOptions: {
         // external: ['@pyscript/core'],
-        input: {
-          main: resolve(__dirname, 'index.html'),
-          bench_serializers: resolve(__dirname, 'bench/serializers/index.html'),
-          bench_timeouts: resolve(__dirname, 'bench/timeouts/index.html'),
-          bench_all: resolve(__dirname, 'bench/all/index.html'),
-          bench: resolve(__dirname, 'bench/index.html'),
-        }
+        input: [
+          resolve(__dirname, 'index.html'),
+          ...glob.sync('bench/**/*.html').map((path) => resolve(__dirname, path)),
+          ...glob.sync('test/**/*.html').map((path) => resolve(__dirname, path)),
+          // resolve(__dirname, 'bench/serializers/index.html'),
+          // resolve(__dirname, 'bench/timeouts/index.html'),
+          // resolve(__dirname, 'bench/all/index.html'),
+          // resolve(__dirname, 'bench/index.html'),
+        ]
       }
     },
     cacheDir: ".vite",
@@ -91,6 +96,7 @@ export default defineConfig(({ mode }) => {
       headers: {
         "Cross-Origin-Embedder-Policy": "require-corp",
         "Cross-Origin-Opener-Policy": "same-origin",
+        'Cross-Origin-Resource-Policy': 'cross-origin',
         "Accept-Ranges": "bytes"
       },
       watch: {

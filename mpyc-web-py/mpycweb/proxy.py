@@ -56,7 +56,11 @@ class Client(AbstractClient):
         # xworker.onmessage = onmessage(self.on_ready_message, self.on_runtime_message)
 
     async def create_connection(
-        self, protocol_factory: Callable[[], asyncoro.MessageExchanger], loop: asyncio.AbstractEventLoop, pid: int, listener: bool
+        self,
+        protocol_factory: Callable[[], asyncoro.MessageExchanger],
+        loop: asyncio.AbstractEventLoop,
+        pid: int,
+        listener: bool,
     ) -> tuple[asyncio.Transport, asyncio.Protocol]:
         """
         Creates a new connection with the given protocol factory and event loop.

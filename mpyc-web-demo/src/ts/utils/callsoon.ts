@@ -1,4 +1,4 @@
-import pool from 'generic-pool'
+import pool from 'generic-pool';
 
 export const channelPool = pool.createPool(
     {
@@ -44,9 +44,9 @@ export function callSoon_pool(callback: (args: void) => void, delay?: number) {
 }
 
 export function callSoon_new(callback: (args: void) => void, delay?: number) {
-    if (delay == undefined || isNaN(delay) || delay < 0) {
-        delay = 0;
-    }
+    // if (delay == undefined || isNaN(delay) || delay < 0) {
+    //     delay = 0;
+    // }
     if (delay < 1) {
         let channel = new MessageChannel()
         channel.port1.onmessage = () => { callback() };
