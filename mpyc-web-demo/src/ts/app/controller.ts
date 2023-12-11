@@ -3,7 +3,7 @@ import * as app from '.';
 import { format } from "./format";
 
 import { EditorView } from '@codemirror/view';
-import { AnyData, MPCManager, PeerJSTransport, isMobileFn } from '@mpyc-web/core';
+import { AnyData, MPCManager, PeerJSTransport, isMobile } from '@mpyc-web/core';
 import { ControllerOptions } from './elements';
 
 import { $, $$, debounce, getStorage, safe, setStorage } from '../utils';
@@ -146,9 +146,14 @@ export class Controller {
 
 
     setupButtonEvents(mpyc: MPCManager, opts: ControllerOptions) {
-        if (isMobileFn(navigator.userAgent)) {
-            this.setupEruda()
+        if (isMobile) {
+            try {
+                this.setupEruda()
+            } catch (e) {
+                console.warn(e)
+            }
         }
+
         this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
         this.runMPyCButton.addEventListener('click', async (ev) => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); });
