@@ -16,13 +16,12 @@
     import { EditorView, basicSetup } from "https://cdn.jsdelivr.net/npm/codemirror@6.0.1/+esm";
     import { Terminal } from "https://cdn.jsdelivr.net/npm/xterm@5.3.0/+esm";
 
-    let mpyc = new MPCManager(
+    self.mpyc = new MPCManager(
       () => new PeerJSTransport(),
       () => new PyScriptWorkerRuntime(undefined, "./config.toml")
     );
 
-    let term = new Terminal();
-    let editor = new EditorView({
+    self.editor = new EditorView({
       doc: `from mpyc.runtime import mpc
 import secretsanta
 async def main():
@@ -31,31 +30,24 @@ mpc.run(main())`,
       extensions: [basicSetup, python()],
       parent: document.querySelector("#editor"),
     });
-    term.open(document.querySelector("#terminal"));
 
+    self.term = new Terminal();
+    term.open(document.querySelector("#terminal"));
+    
     mpyc.on("transport:ready", async (peerID) => {
-      console.log("Peer ID: " + peerID);
       document.querySelector("#myPeerID").value = peerID;
     });
     mpyc.on("runtime:display", async (message) => {
       term.writeln(message);
     });
     mpyc.on("runtime:display:error", async (message) => {
-      console.error(message);
       term.writeln(message);
     });
-
     mpyc.on("transport:conn:ready", async (peerID) => {
       term.writeln("Connected to " + peerID);
     });
     mpyc.on("transport:conn:disconnected", async (peerID) => {
       term.writeln("Disconnected from" + peerID);
-    });
-    document.querySelector("#connect").addEventListener("click", () => {
-      mpyc.transport.connect(document.querySelector("#hostPeerID").value);
-    });
-    document.querySelector("#startButton").addEventListener("click", () => {
-      mpyc.runMPC(editor.state.doc.toString(), "test.py", false);
     });
   </script>
 </head>
@@ -64,10 +56,10 @@ mpc.run(main())`,
   <h3>MPyC Web - Basic</h3>
   <input id="myPeerID" type="text" onClick="this.select();" readonly placeholder="My ID" />
   <input id="hostPeerID" type="text" onClick="this.select();" placeholder="Party ID" />
-  <button id="connect">Connect</button>
-  <button id="startButton">Run</button>
-  <div id="editor" class="editor"></div>
-  <div id="terminal" class="terminal-wrapper term"></div>
+  <button id="connect" onclick="mpyc.transport.connect(document.querySelector('#hostPeerID').value);">Connect</button>
+  <button id="startButton" onclick="mpyc.runMPC(editor.state.doc.toString(), 'test.py', false);">Run</button>
+  <div id="editor"></div>
+  <div id="terminal"></div>
 </body>
 
 </html>
