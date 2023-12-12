@@ -13,30 +13,30 @@ It uses:
 
 ## Examples
 
-- Basic - <https://github.com/e-nikolov/mpyc-web/tree/master/mpyc-web-demo-basic>
-- Demo - <https://github.com/e-nikolov/mpyc-web/tree/master/mpyc-web-demo>
+- Basic - <https://github.com/e-nikolov/mpyc-web/tree/master/mpyc-web-demo-basic/index.html>
+- Advanced - <https://github.com/e-nikolov/mpyc-web/tree/master/mpyc-web-demo>
 
-## Usage
+### Usage
 
-### Import
+#### Import
 
 ```typescript
 import { MPCManager, PeerJSTransport, PyScriptWorkerRuntime } from 'https://cdn.jsdelivr.net/npm/@mpyc-web/core/+esm';
 ```
 
-### Create an MPCManager
+#### Create an MPCManager
 
 The `MPCManager` requires a transport and a runtime:
 
 ```typescript
 
-mpyc = new MPCManager(
+let mpyc = new MPCManager(
    () => new PeerJSTransport(),
    () => new PyScriptWorkerRuntime()
 );
 ```
 
-### Handle runtime output events
+#### Handle runtime output events
 
 ```typescript
 // Triggered when the mpc runtime writes to stdout:
@@ -50,7 +50,7 @@ mpyc.on("runtime:display:error", async (error) => {
 })
 ```
 
-### Handle transport events
+#### Handle transport events
 
 ```typescript
 // Triggered when the transport is ready and has an ID
@@ -69,26 +69,37 @@ mpyc.on("transport:conn:disconnected", async (peerID) => {
 });
 ```
 
-### Connect to another party via their ID
+#### Connect to another party via their ID
 
 ```typescript
 mpyc.transport.connect("<the other party's ID>")
 ```
 
-### Get the current party's ID
-
-```typescript
-mpyc.on("transport:ready", async (partyID) => {
-   // Do something with the partyID
-})
-
-```
-
-### Execute an MPC with the connected parties
+#### Execute an MPC with the connected parties
 
 ```typescript
 mpyc.runMPC('<Python source code using the MPyC framework>', '<filename to be shown in debug outputs>');
 ```
+
+## Notes
+
+mpyc-web relies on some relatively new browser features:
+
+- [WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly)
+- [WebRTC](https://developer.mozilla.org/en-US/docs/Glossary/WebRTC)
+- [WebWorkers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)
+- [Atomics](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics)
+- [SharedArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer)
+
+Some of those features only work in [secure contexts](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts), which requires some additional headers to be specified by the server:
+
+```bash
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+If it is not possible to configure the server to supply those headers, e.g. on [GitHub Pages](https://pages.github.com/),
+an alternative is to use a ServiceWorker to intercept the responses and add the necessary headers, see [coi-serviceworker](https://github.com/gzuidhof/coi-serviceworker). This solution however does not work in some cases, e.g. a private window on Firefox.
 
 ## Development
 
