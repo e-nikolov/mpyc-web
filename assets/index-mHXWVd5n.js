@@ -1,2 +1,0 @@
-import"./modulepreload-polyfill-xwJNGKPl.js";/* empty css              */import{m as e}from"./index-XwBnzzjP.js";import"./encode-79CO1kuF.js";import"./index-0GPC8bPp.js";import"./purify.es-jU6xpJvk.js";var i={version:"0.9.2",dirty:!0,timestamp:1702413980088,time:"12/12/2023, 21:46:20",revision:"a07c692"};document.title="MPyC Web - Bench Serializers"+(i.deployment?` (${i.deployment})`:""),await e();
-//# sourceMappingURL=index-mHXWVd5n.js.map

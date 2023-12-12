@@ -1,13 +1,7 @@
 
 [build]
-base = "mpyc-web-demo/"
-
 command = """
-    #pip3 install -q poetry && yarn install && yarn build
-    yarn build
 """
-
-publish = "dist"
 
 [context.production]
 publish = "."
