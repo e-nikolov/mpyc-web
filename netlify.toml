@@ -3,3 +3,16 @@
 command = """
     pip3 install -q poetry && yarn install && yarn build
 """
+
+publish = "mpyc-web-demo/dist"
+
+[context.production]
+publish = "."
+
+
+[[headers]]
+for = "/*"
+    [headers.values]
+    Cross-Origin-Embedder-Policy = "credentialless"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "cross-origin"
