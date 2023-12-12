@@ -1,14 +1,27 @@
 
+# [build]
+# command = """
+# """
+# ignore = "stat package.json"
+
+# [context.production]
+# publish = "."
+
+# [[headers]]
+# for = "/*"
+#     [headers.values]
+#     Cross-Origin-Embedder-Policy = "credentialless"
+#     Cross-Origin-Opener-Policy = "same-origin"
+#     Cross-Origin-Resource-Policy = "cross-origin"
+
 [build]
 command = """
-    pip3 install -q poetry && yarn install && yarn build
+    yarn build
 """
-
-publish = "mpyc-web-demo/dist"
-
-[context.production]
-publish = "."
-
+# ignore = "stat package.json"
+publish = "mpyc-web-demo/dist/"
+# [context.production]
+# publish = "."
 
 [[headers]]
 for = "/*"

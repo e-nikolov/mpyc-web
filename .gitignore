@@ -509,3 +509,6 @@ dist-ssr
 *.sw?
 vite.config.js.timestamp-*.mjs
 vite.config.ts.timestamp-*.mjs
+
+# Local Netlify folder
+.netlify
