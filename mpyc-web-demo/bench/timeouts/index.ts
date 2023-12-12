@@ -1,15 +1,12 @@
 'use strict';
 
 import { BenchSuite } from "../../src/ts/bench";
-import { sleep_callSoon_async, sleep_callSoon_pool, sleep_callSoon_singleChan } from "../../src/ts/utils";
+import { sleep_callSoon_async, sleep_callSoon_singleChan } from "../../src/ts/utils";
 
 
 export class TimeoutsBench extends BenchSuite {
     x = 3
 
-    async sleep_pool() {
-        await sleep_callSoon_pool(0)
-    }
     async sleep_singleChan() {
         await sleep_callSoon_singleChan(0)
     }

@@ -1,20 +1,18 @@
 import { copyLineDown, defaultKeymap, deleteLine, indentWithTab, moveLineDown, moveLineUp, redo } from '@codemirror/commands';
 import { python } from '@codemirror/lang-python';
 import { indentUnit } from '@codemirror/language';
-import { Compartment, Prec } from '@codemirror/state';
+import { Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
-import { MPCManager } from '@mpyc-web/core';
+import { MPCManager } from '@mpyc-web/core/lib';
 import { EditorView, basicSetup } from 'codemirror';
 import { birdsOfParadise } from 'thememirror';
 
 export class Editor extends EditorView {
     constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPCManager) {
-        const languageConf = new Compartment();
         let extensions = [
             indentUnit.of('    '),
             basicSetup,
-            languageConf.of(python()),
-
+            python(),
             keymap.of([
                 ...defaultKeymap,
                 indentWithTab,
@@ -50,9 +48,8 @@ export class Editor extends EditorView {
                     { key: 'Ctrl-y', run: deleteLine, preventDefault: true },
                 ])
             ),
+            birdsOfParadise
         ];
-
-        extensions.push(birdsOfParadise);
 
         super({
             extensions: extensions,

@@ -4,8 +4,6 @@ import { glob } from 'glob';
 import { resolve } from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
-// import 'vite/types/importMeta.d';
-// import PyodidePlugin from "@pyodide/webpack-plugin"
 const hexLoader = {
   name: 'hex-loader',
   transform(code, id) {
@@ -47,11 +45,15 @@ export default defineConfig(({ mode }) => {
       "__BUILD_INFO__": { version: env.npm_package_version, dirty: git.isDirty(), deployment: env.APP_DEPLOYMENT, timestamp: Date.now(), time: new Date().toLocaleString("en-IE", { hour12: false }), revision: git.short("../") },
     },
     base: "./",
+    css: {
+      devSourcemap: true,
+    },
     build: {
       sourcemap: true,
       outDir: "dist",
       emptyOutDir: true,
       chunkSizeWarningLimit: 1500,
+      minify: "terser",
       target: 'esnext',
       rollupOptions: {
         // external: ['@pyscript/core'],
@@ -59,11 +61,16 @@ export default defineConfig(({ mode }) => {
           resolve(__dirname, 'index.html'),
           ...glob.sync('bench/**/*.html').map((path) => resolve(__dirname, path)),
           ...glob.sync('test/**/*.html').map((path) => resolve(__dirname, path)),
-          // resolve(__dirname, 'bench/serializers/index.html'),
-          // resolve(__dirname, 'bench/timeouts/index.html'),
-          // resolve(__dirname, 'bench/all/index.html'),
-          // resolve(__dirname, 'bench/index.html'),
-        ]
+        ],
+        output: {
+          manualChunks: {
+            eruda: ['eruda'],
+            xterm: ['xterm'],
+            codemirror: ['codemirror'],
+            html5QRcode: ['html5-qrcode'],
+          },
+        },
+        treeshake: "recommended",
       }
     },
     cacheDir: ".vite",

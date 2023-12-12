@@ -1,5 +1,3 @@
-import { PeerJSTransport } from "@mpyc-web/core";
-import { on } from "events";
 
 // let c = new RTCDataChannel()
 // let pc = new RTCPeerConnection()

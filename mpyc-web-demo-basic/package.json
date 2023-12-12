@@ -1,8 +1,8 @@
 {
   "name": "@mpyc-web/demo-basic",
-  "version": "0.8.0",
+  "version": "0.9.2",
   "type": "module",
-  "packageManager": "yarn@4.0.1",
+  "packageManager": "yarn@4.0.2",
   "scripts": {
     "build:py": "mkdir -p ./dist/py ./public/py && poetry build -f wheel && cp ../dist/*.whl ./public/py/ && cp ../dist/*.whl ./dist/py/",
     "static": "python -m http.server",

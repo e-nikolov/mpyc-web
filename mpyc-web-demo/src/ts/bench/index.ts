@@ -1,4 +1,3 @@
-import { findClusterBreak } from "@codemirror/state"
 import { logTable, sleep, tableLogger } from "../utils"
 
 
@@ -12,25 +11,6 @@ type benchOpts = Required<{
     runtimeGoalMS: number
     this?: any
 }>
-
-import 'reflect-metadata';
-
-const METADATA_KEY = Symbol('Bench');
-
-// export function Bench() {
-
-//     return (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) => {
-//         Reflect.defineMetadata(METADATA_KEY, true, target, propertyKey);
-//         // const originalMethod = descriptor.value;
-//         // descriptor.value = async function () {
-//         //     opts = { ...defaultOpts, ...opts }
-//         //     opts.name = originalMethod.name || "anonymous"
-//         //     opts.name = `${this.benchName} - ${opts.name}`
-//         //     return await bench(originalMethod.bind(this), { ...opts })
-//         // };
-//         return descriptor;
-//     }
-// }
 
 export abstract class BenchSuite {
     static async run2(opts: Partial<benchOpts> = {}, instance?: any) {

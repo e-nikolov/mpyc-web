@@ -2,8 +2,10 @@
 
 import '../scss/style.scss';
 
-import { MPCManager, PeerJSTransport, PyScriptWorkerRuntime } from '@mpyc-web/core';
+import { MPCManager, PeerJSTransport, PyScriptWorkerRuntime } from '@mpyc-web/core/lib';
 import * as app from './app';
+
+const MPYC_WEB_PY_VERSION = "0.6.1"
 
 let blobURL = (code: string) => {
     return URL.createObjectURL(
@@ -59,8 +61,8 @@ function main() {
     // const runtimeFactory = () => new PyScriptWorkerRuntime();
     const runtimeFactory = () => new PyScriptWorkerRuntime({
         config: {
-            fetch: [{ from: "./py/", to_folder: "./", files: ["mpyc_web-0.6.0-py3-none-any.whl", "demo.py"] }],
-            packages: ["emfs:./mpyc_web-0.6.0-py3-none-any.whl"],
+            fetch: [{ from: "./py/", to_folder: "./", files: [`mpyc_web-${MPYC_WEB_PY_VERSION}-py3-none-any.whl`, "demo.py"] }],
+            packages: [`emfs:./mpyc_web-${MPYC_WEB_PY_VERSION}-py3-none-any.whl`],
         }
     });
     // const runtimeFactory = () => new PyodideWorkerRuntime();

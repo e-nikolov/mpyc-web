@@ -1,8 +1,6 @@
 import { Tooltip } from 'bootstrap';
 import { $ } from '../utils';
 
-// const <T extends HTMLElement>$ = (css: string, root = document) => root.querySelector<T>(css);
-
 export class CopyButton {
     contentSelector: string;
     buttonSelector: string;

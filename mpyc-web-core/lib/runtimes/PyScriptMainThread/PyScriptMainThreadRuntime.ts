@@ -1,8 +1,5 @@
-import PyodideWorker from './PyodideWorker?worker'
 import { define } from "polyscript";
-import { EventEmitter } from 'eventemitter3'
-import { MPCRuntimeBase, MPCRuntimeManager, RunMPCOptions } from '../MPCRuntimeBase';
-import { MPCEvents } from '../../mpyc/events';
+import { MPCRuntimeBase, RunMPCOptions } from '../MPCRuntimeBase';
 
 
 type CustomOptions = Parameters<typeof define>[1]

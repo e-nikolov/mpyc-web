@@ -1,9 +1,9 @@
-import { hasCameraFn } from '@mpyc-web/core';
 import { Modal, Tooltip } from 'bootstrap';
 import Emittery from 'emittery';
-import { Html5Qrcode, Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5QrcodeResult, Html5QrcodeSupportedFormats } from 'html5-qrcode/esm/core';
+import { Html5Qrcode } from 'html5-qrcode/esm/html5-qrcode';
 import qr from 'qrcode';
-import { $, safe } from '../utils';
+import { $, hasCameraFn, safe } from '../utils';
 const QR_CANVAS_CLASS = "qr-canvas";
 const QR_URL_SPAN_CLASS = "qr-url-span";
 const CANVAS_SELECTOR = `canvas.${QR_CANVAS_CLASS}`;
@@ -11,13 +11,10 @@ const IMG_SELECTOR = `div.tooltip-inner>img.${QR_CANVAS_CLASS}`;
 const QR_URL_SPAN_SELECTOR = `div.tooltip-inner>span.${QR_URL_SPAN_CLASS}`;
 const TOOLTIP_SELECTOR = `div.tooltip-inner`;
 
-
-
 export type QREvents = {
     'qr:scanned': string
     'qr:error': Error
 };
-
 
 export class QRComponent extends Emittery<QREvents>  {
     scanInput: HTMLInputElement;
@@ -105,19 +102,6 @@ export class QRComponent extends Emittery<QREvents>  {
                 }
             });
         });
-
-        // function copyElementToClipboard(selector: string) {
-        //     // const el = $<HTMLImageElement>("#connectedPartiesLabel")!;
-        //     const el = $<HTMLImageElement>(selector)!;
-        //     console.log(el)
-        //     window.getSelection().removeAllRanges();
-        //     let range = document.createRange();
-        //     range.selectNode(el);
-        //     window.getSelection().addRange(range);
-        //     console.log(range)
-        //     document.execCommand('copy');
-        //     // navigator.clipboard.writeText(el.src);
-        // }
     }
 
     setupQRScanner = () => {

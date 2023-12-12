@@ -1,5 +1,5 @@
 
-import Split from 'split.js'
+import Split from 'split.js';
 
 export function makeSplitJS(selectors: string[]) {
     var sizesJSON = localStorage.getItem('split-sizes')

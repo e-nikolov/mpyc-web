@@ -1,7 +1,6 @@
 'use strict';
 
 
-export * from './bench';
 export * from './mpyc';
 export * from './runtimes';
 export * from './transports';

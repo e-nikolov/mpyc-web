@@ -1,7 +1,5 @@
-import { Controller } from './controller';
-import { safe } from '../utils';
 import { AnyData } from "@mpyc-web/core";
-import { format } from "./format";
+import { Controller } from './controller';
 
 export function sendChatMessage(this: Controller) {
     let message = this.chatInput.value;

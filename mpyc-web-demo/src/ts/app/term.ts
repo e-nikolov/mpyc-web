@@ -1,7 +1,5 @@
 
 import { Terminal } from 'xterm';
-// import { AttributeData } from 'xterm/src/common/buffer/AttributeData';
-
 import { CanvasAddon } from 'xterm-addon-canvas';
 import { FitAddon } from 'xterm-addon-fit';
 import { LigaturesAddon } from 'xterm-addon-ligatures';
@@ -13,21 +11,17 @@ import { Readline } from 'xterm-readline';
 import { SearchBarAddon } from './xterm-addon-search-bar';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
 import { safe } from '../utils';
-// import { UnicodeGraphemesAddon } from './xterm-unicode-graphemes';
 
-// import { ScrollSource } from 'xterm';
 const CARRIAGE_RETURN = "\r"
 const CURSOR_UP = "\x1b[1A"
 const ERASE_IN_LINE = "\x1b[2K"
 
-import { $, debounce } from '../utils';
+import { $, debounce, isMobile } from '../utils';
 
-import { MPCManager, isMobile } from '@mpyc-web/core';
+import { MPCManager } from '@mpyc-web/core/lib';
 import { format } from './format';
 import { loadWebFont } from './xterm-webfont';
 
-
-// export const DEFAULT_ATTR_DATA = Object.freeze(new AttributeData());
 export class Term extends Terminal {
     fitAddon: FitAddon;
     searchAddon: SearchAddon;
@@ -42,124 +36,33 @@ export class Term extends Terminal {
     isLivePanelVisible = true
     livePanel: string = "";
     livePanelLines = 0;
-    currentLivePanelMessage = ''; // Stores the current live panel message
+    currentLivePanelMessage = '';
     terminalContainer: HTMLDivElement;
     scrollAreaClone: HTMLDivElement;
     scrollArea: HTMLDivElement;
     viewportDiv: HTMLDivElement;
 
-    calculateWrappedLines(message) {
-        const lines = message.split('\n');
-        let wrappedLines = 0;
-        for (const line of lines) {
-            const lineLength = line.length;
-            wrappedLines += Math.ceil(lineLength / this.cols) || 1;
-        }
-        return wrappedLines;
-    }
-
-    updateLivePanel(message) {
-        const numLines = this.calculateWrappedLines(message);
-
-        // Save the cursor position and attributes
-        this.write('\x1B7');
-
-        // Clear the current live panel
-        this.write(`\x1B[${this.rows - this.livePanelLines + 1};1H`);
-        for (let i = 0; i < this.livePanelLines; i++) {
-            this.write('\x1B[2K');
-            if (i < this.livePanelLines - 1) {
-                this.write('\x1B[1B\x1B[1G');
-            }
-        }
-
-        // Update the number of lines for the new live panel
-        this.livePanelLines = numLines;
-        this.currentLivePanelMessage = message;
-
-        // Write the new live panel
-        this.write(`\x1B[${this.rows - numLines + 1};1H`);
-        this.write(message);
-
-        // Restore the cursor position and attributes
-        this.write('\x1B8');
-    }
-
-    writeAboveLivePanel(message) {
-        // Store the current live panel message temporarily
-        const tempLivePanelMessage = this.currentLivePanelMessage;
-
-        // Clear the live panel without updating currentLivePanelMessage
-        this.clearLivePanel();
-
-        // Save the cursor position and attributes
-        this.write('\x1B7');
-
-        // Calculate the lines required for the new message
-        const messageLines = this.calculateWrappedLines(message);
-
-        // Move to the start position for the new message
-        this.write(`\x1B[${this.rows - this.livePanelLines - messageLines + 1};1H`);
-
-        // Write the new message above the live panel
-        this.write(message);
-
-        // Restore the cursor position and attributes
-        this.write('\x1B8');
-
-        // Redraw the live panel with the original message
-        this.updateLivePanel(tempLivePanelMessage);
-    }
-
-    clearLivePanel() {
-        // Clear the current live panel without updating currentLivePanelMessage
-        this.write(`\x1B[${this.rows - this.livePanelLines + 1};1H`);
-        for (let i = 0; i < this.livePanelLines; i++) {
-            this.write('\x1B[2K');
-            if (i < this.livePanelLines - 1) {
-                this.write('\x1B[1B\x1B[1G');
-            }
-        }
-        // Reset the number of live panel lines
-        this.livePanelLines = 0;
-    }
-
-
     constructor(sel: string, mpyc: MPCManager) {
         let el = $(sel);
         super({
-            // screenReaderMode: true,
             screenReaderMode: false,
             cols: 80,
-            // scrollOnUserInput: false,
-            // rows: 6,
             allowProposedApi: true,
             customGlyphs: true,
             // windowsMode: true, // breaks the split panel
-            // drawBoldTextInBrightColors: true,
             // windowsPty: {
             //     // backend: 'winpty',
             //     backend: 'conpty',
             // },
             rightClickSelectsWord: true,
-            windowOptions: {
-
-            },
-            // scrollback: 1000,
             cursorBlink: false,
             convertEol: true,
-            // fontFamily: "Fira Code, Hack",
-            // fontFamily: "Fira Code",
-            // fontFamily: '"Fira Code", courier-new, courier, monospace, "Powerline Extra Symbols"',
-            // fontFamily: '"JetBrains Mono", courier-new, courier, monospace, "Powerline Extra Symbols"',
-            // fontFamily: "Courier",
             fontFamily: "JetBrains Mono",
             fontSize: 16,
             fontWeight: 400,
             allowTransparency: true,
             disableStdin: true,
             altClickMovesCursor: true,
-            // macOptionClickForcesSelection: false,
             theme: {
                 "black": "#000000",
                 "red": "#c13900",
@@ -218,7 +121,6 @@ export class Term extends Terminal {
         this.unicode.activeVersion = '11';
 
         loadWebFont(this).then(() => {
-            // document.fonts.ready.then(() => {
             // this.ligaturesAddon = new LigaturesAddon();
             this.open(el);
             // this.loadAddon(this.ligaturesAddon);
@@ -226,25 +128,9 @@ export class Term extends Terminal {
             this.scrollArea = this.viewportDiv.querySelector('div.xterm-scroll-area');
             $<HTMLTextAreaElement>(`${sel} textarea`).readOnly = true;
             new ResizeObserver(() => {
-                // console.warn("resized scroll area")
                 this.scrollAreaClone.style.height = this.scrollArea.clientHeight + "px";
                 this.scrollAreaClone.style.width = this.scrollArea.clientWidth + "px";
             }).observe(this.scrollArea)
-
-            // this.terminalContainer.addEventListener('scroll', (e) => {
-            //     // Match the scrollTop value of div2 with div1
-            //     e.stopPropagation();
-            //     e.preventDefault();
-            //     console.warn("terminalContainer scroll", e.cancelable)
-            //     this.viewportDiv.scrollTop = this.terminalContainer.scrollTop;
-            // });
-            // this.viewportDiv.addEventListener('scroll', (e) => {
-            //     e.stopPropagation();
-            //     e.preventDefault();
-            //     console.warn("viewport scroll", e.cancelable)
-            //     // Match the scrollTop value of div2 with div1
-            //     this.terminalContainer.scrollTop = this.viewportDiv.scrollTop;
-            // });
 
             this.fit();
             scrollSync(this.terminalContainer, this.viewportDiv)
@@ -306,28 +192,24 @@ export class Term extends Terminal {
         ro.observe(document.querySelector(".split-panel-terminal")!)
     }
 
-
     time() {
         return format.cyan.dim(`[${new Date().toLocaleTimeString("en-IE", { hour12: false })}]`);
     }
 
     debug(message: string) {
-        // this.log(format.italic.grey(message), format.gray("🛠"));
-        this._log(format.italic.grey(message), format.gray("⚒"));
+        this._log(format.grey(message), format.gray("⚒"));
     }
 
     infoChar = isMobile ? "ⓘ" : "🛈"
 
     info(message: string) {
         this._log(format.greenBright(message), format.greenBright(this.infoChar));
-        // this._log(format.greenBright(message), format.greenBright("ⓘ  🅘  🛈  Ⓘ"));
     }
 
     _log(message: string, icon: string = " ") {
         message = `${this.time()}  ${icon}  ${message}`
 
         this._write_liveln(message)
-        // this.writeAboveLivePanel(message)
     }
     _write_liveln(message: string) {
         if (this.isLivePanelVisible) {
@@ -339,8 +221,6 @@ export class Term extends Terminal {
     }
     _write_live(message: string) {
         if (this.isLivePanelVisible) {
-            // this.writeAboveLivePanel(message)
-
             this.write(this._control(this.livePanel) + message)
             if (this.livePanel != "") {
                 this.writeln(this.livePanel)
@@ -351,69 +231,19 @@ export class Term extends Terminal {
     _height(message: string) {
         return message.split(/\r\n|\r|\n/).length
     }
-    // clr(lines: number) {
-    //     // this._core.buffer.lines.set(0, this._core.buffer.lines.get(this._core.buffer.ybase + this._core.buffer.y));
-    //     this._core.buffer.resize(this.cols, this.rows - lines)
-    //     // this._core.buffer.fillViewportRows()
 
-    //     this.refresh(0, this.rows - lines - 1);
-    //     // const l = this._core.buffer.lines.length - lines
-    //     // // this._core.buffer.lines = this._core.buffer.lines.slice(0, l);
-    //     // // for (let i = l; i < this.rows; i++) {
-    //     // //     this._core.buffer.lines
-    //     // // }
-    //     // this._core.buffer.lines.length = l;
-    //     // this._core.buffer.ydisp = 0;
-    //     // this._core.buffer.ybase = 0;
-    //     // this._core.buffer.y = 0;
-    //     // for (let i = 1; i < this.rows; i++) {
-    //     //     // this._core.buffer.lines.push(this._core.buffer.getBlankLine(DEFAULT_ATTR_DATA));
-    //     // }
-    //     // this._core._onScroll.fire({ position: this._core.buffer.ydisp });
-    //     // this._core.viewport?.reset();
-    //     // this.refresh(0, this.rows - 1);
-
-    // }
-    // clr2(lines: number) {
-    //     // this._core.buffer.lines.set(0, this._core.buffer.lines.get(this._core.buffer.ybase + this._core.buffer.y));
-
-    //     const l = this._core.buffer.lines.length - lines
-    //     // this._core.buffer.lines = this._core.buffer.lines.slice(0, l);
-    //     // for (let i = l; i < this.rows; i++) {
-    //     //     this._core.buffer.lines
-    //     // }
-    //     this._core.buffer.lines.length = l;
-    //     this._core.buffer.ydisp = 0;
-    //     this._core.buffer.ybase = 0;
-    //     this._core.buffer.y = 0;
-    //     for (let i = 1; i < this.rows; i++) {
-    //         // this._core.buffer.lines.push(this._core.buffer.getBlankLine(DEFAULT_ATTR_DATA));
-    //     }
-    //     this._core._onScroll.fire({ position: this._core.buffer.ydisp });
-    //     this._core.viewport?.reset();
-    //     this.refresh(0, this.rows - 1);
-
-    // }
     _control(message: string = this.livePanel) {
         if (message == "") {
             return ""
         }
-        const ctrlMessage = `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
-
-        // console.log(this._height(message))
-        return ctrlMessage
+        return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
     }
 
     live(message: string) {
         if (this.isLivePanelVisible) {
-            // // message = `${this.time()}\n${format.grey50(message)}`
-            // this.updateLivePanel(message);
             message = `\n${message}`
-            // this.clear()
 
             this.writeln(this._control(this.livePanel) + message)
-            // this.selectLines(0, this.rows);
-            // this.clear();
             this.livePanel = message;
         }
     }
@@ -484,91 +314,13 @@ export class Term extends Terminal {
     }
 
     public fit = debounce(this.__fit)
-
-    // _fit = () => {
-    //     console.log("fitting terminal");
-    //     const d = this.fitAddon.proposeDimensions()
-
-    //     if (!d) {
-    //         return
-    //     }
-
-    //     d.rows = Math.max(d.rows, 15);
-    //     d.cols = Math.max(d.cols, this.cols);
-
-    //     if (d.cols == this.cols && d.rows == this.rows) {
-    //         return;
-    //     }
-
-    //     console.log("resizing terminal to ", d.cols, d.rows);
-    //     (this as any)._core._renderService.clear()
-    //     this.resize(d.cols, d.rows)
-    //     this.refresh(0, this.rows - 1)
-
-
-
-    //     // this.fitAddon.fit();
-    //     // this.updateTermSizeEnv();
-    // }
-
     updateTermSizeEnv = debounce(() => {
         console.log("updating terminal size env: ", this.cols, this.rows);
         this.mpyc.runtime.updateEnv({ COLUMNS: this.cols.toString(), LINES: this.rows.toString() })
     })
 }
 
-function scrollSync3(...divs: HTMLElement[]) {
-    let isSyncing = false;
-    let lastScrolledDiv: HTMLElement;
-
-    divs.forEach(div => {
-        div.addEventListener('scroll', function (e) {
-            if (isSyncing && lastScrolledDiv === this) {
-                isSyncing = false;
-
-                console.warn('ignoring-scroll', lastScrolledDiv, this.id)
-                return;
-            }
-
-            isSyncing = true;
-            lastScrolledDiv = this;
-
-            divs.forEach(otherDiv => {
-                if (otherDiv !== this) {
-                    otherDiv.scrollTop = this.scrollTop;
-                    // otherDiv.scrollLeft = this.scrollLeft;
-                }
-            });
-        });
-    });
-}
-
-export const _scrollSync = debounce(function (this: HTMLElement, isSyncing: boolean, lastScrolledDiv: HTMLElement, ...divs: HTMLElement[]) {
-    if (isSyncing && lastScrolledDiv == this) {
-        isSyncing = false;
-
-        console.warn('ignoring-scroll', lastScrolledDiv.id, this.id)
-        return;
-    }
-
-    console.warn("not ignoring", isSyncing, lastScrolledDiv, this)
-
-    isSyncing = true;
-    lastScrolledDiv = this;
-
-    divs.forEach(otherDiv => {
-        if (otherDiv != this) {
-            if (otherDiv.scrollTop != this.scrollTop) {
-                console.warn(`updating scroll ${otherDiv.id || 'xtermjs-viewport'} = ${this.id || 'xtermjs-viewport'}`)
-                otherDiv.scrollTop = this.scrollTop;
-            }
-            // otherDiv.scrollLeft = this.scrollLeft;
-        }
-    });
-}, 10)
-
 export const scrollSync = (divA: HTMLDivElement, divB: HTMLDivElement) => {
-    // export const scrollSync = (...divs: HTMLElement[]) => {
     let isSyncingDivA = false;
     let isSyncingDivB = false;
 
@@ -577,8 +329,6 @@ export const scrollSync = (divA: HTMLDivElement, divB: HTMLDivElement) => {
             isSyncingDivB = true;
 
             divB.scrollTop = divA.scrollTop;
-        } else {
-            // console.warn("ignoring-div-a")
         }
         isSyncingDivA = false;
     });
@@ -588,53 +338,7 @@ export const scrollSync = (divA: HTMLDivElement, divB: HTMLDivElement) => {
             isSyncingDivA = true;
 
             divA.scrollTop = divB.scrollTop;
-        } else {
-            // console.warn("ignoring-div-b")
         }
         isSyncingDivB = false;
-    });
-    // }
-}
-
-export const scrollSync4 = (...divs: HTMLElement[]) => {
-    // export const scrollSync = (...divs: HTMLElement[]) => {
-    let isSyncing = false;
-    let lastScrolledDiv;
-
-    divs.forEach(div => {
-        // div.addEventListener('scroll', function (ev) {
-
-        div.onscroll = function (ev) {
-            _scrollSync.apply(ev.target, [isSyncing, lastScrolledDiv, ...divs])
-        };
-    });
-    // }
-}
-
-function scrollSync2(...elements: HTMLElement[]) {
-    let ignoreNext = false;
-
-    elements.forEach(function (element) {
-        element.addEventListener("scroll", function (e) {
-            if (ignoreNext) {
-                console.warn('ignoring-scroll-event', element)
-                return;
-            };
-
-            console.warn("scroll", element)
-            ignoreNext = true;
-
-            elements.forEach(function (target) {
-                if (element === target) {
-                    console.warn("ignoring self", element, target)
-                    return;
-                }
-
-                target.scrollTop = element.scrollTop;
-                // target.scrollLeft = element.scrollLeft;
-            });
-
-            ignoreNext = false;
-        });
     });
 }

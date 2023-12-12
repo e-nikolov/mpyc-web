@@ -4,9 +4,8 @@ import * as cbor from "cbor-x";
 import * as msgpackr from 'msgpackr';
 
 import { bench, Benchmark, BenchSuite } from "../../src/ts/bench";
-import 'crypto'
-import { randomBytes } from "crypto";
-import { time } from "console";
+// import 'crypto'
+// import { randomBytes } from "crypto";
 
 export async function main() {
     // '"\x00\x00\x00\xf1b\\\xbf\xff\xff\xff\xff\x04\x00m\xea\x06\x14m\xf7\xd1\x0bk\x1e"\x0fn\xdc\xa32\xcc\x03\x81\x1e\xad+\x00\x02VhA?\x1b\xbf\x17\x17'

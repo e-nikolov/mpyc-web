@@ -1,7 +1,5 @@
-import EventEmitter from 'eventemitter3';
-import { MPCRuntimeBase, MPCRuntimeManager } from '../MPCRuntimeBase';
-import PyodideWorker from './PyodideWorker?worker'
-import { MPCEvents } from '../../mpyc/events';
+import { MPCRuntimeBase } from '../MPCRuntimeBase';
+import PyodideWorker from './PyodideWorker?worker';
 
 export class PyodideWorkerRuntime extends MPCRuntimeBase {
     type(): string {

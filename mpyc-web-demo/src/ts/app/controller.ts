@@ -3,15 +3,15 @@ import * as app from '.';
 import { format } from "./format";
 
 import { EditorView } from '@codemirror/view';
-import { AnyData, MPCManager, PeerJSTransport, isMobile } from '@mpyc-web/core';
+import { AnyData, MPCManager, PeerJSTransport } from '@mpyc-web/core/lib';
 import { ControllerOptions } from './elements';
 
-import { $, $$, debounce, getStorage, safe, setStorage } from '../utils';
+import { $, $$, debounce, getStorage, isMobile, safe, setStorage } from '../utils';
 
 // import * as polyscript from "polyscript";
 import { Tooltip } from 'bootstrap';
 import eruda from 'eruda';
-import erudaFeatures from 'eruda-features';
+// import erudaFeatures from 'eruda-features';
 import { makeSplitJS } from './split';
 export class Controller {
     mpyc: MPCManager;
@@ -205,7 +205,7 @@ export class Controller {
             },
             tool: ['console', 'elements', 'network', 'info', 'resources']
         });
-        eruda.add(erudaFeatures);
+        // eruda.add(erudaFeatures);
         eruda.position({ x: 0, y: 0 });
     }
 
