@@ -101,9 +101,9 @@ export default defineConfig(({ mode }) => {
         overlay: false,
       },
       headers: {
-        // "Cross-Origin-Embedder-Policy": "require-corp",
-        // "Cross-Origin-Opener-Policy": "same-origin",
-        // 'Cross-Origin-Resource-Policy': 'cross-origin',
+        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        'Cross-Origin-Resource-Policy': 'cross-origin',
         "Accept-Ranges": "bytes"
       },
       watch: {
