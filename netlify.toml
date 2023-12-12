@@ -1,0 +1,23 @@
+
+[build]
+base = "mpyc-web-demo/"
+
+command = """
+    #pip3 install -q poetry && yarn install && yarn build
+    yarn build
+"""
+
+publish = "dist"
+
+[context.production]
+publish = "."
+
+[build.environment]
+PYTHON_VERSION = "3.11"
+
+[[headers]]
+for = "/*"
+    [headers.values]
+    Cross-Origin-Embedder-Policy = "credentialless"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "cross-origin"
