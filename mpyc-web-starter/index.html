@@ -5,10 +5,9 @@
   <script src="/coi-serviceworker.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MPyC Web - Basic</title>
+  <title>MPyC Web - Starter</title>
   <link async rel="icon" href="/favicon.ico" />
   <link href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" rel="stylesheet" />
-
   <script type="module">
     import { MPCManager, PeerJSTransport, PyScriptWorkerRuntime } from 'https://cdn.jsdelivr.net/npm/@mpyc-web/core/+esm';
     import { EditorState } from 'https://cdn.jsdelivr.net/npm/@codemirror/state@6.3.3/+esm';
@@ -27,7 +26,7 @@ import secretsanta
 async def main():
   await secretsanta.main()
 mpc.run(main())`,
-      extensions: [basicSetup, python()],
+      extensions: [basicSetup, python(), EditorView.theme({"&": {height: "300px;" }})],
       parent: document.querySelector("#editor"),
     });
 
@@ -53,12 +52,12 @@ mpc.run(main())`,
 </head>
 
 <body>
-  <h3>MPyC Web - Basic</h3>
+  <h3>MPyC Web - Starter</h3>
   <input id="myPeerID" type="text" onClick="this.select();" readonly placeholder="My ID" />
   <input id="hostPeerID" type="text" onClick="this.select();" placeholder="Party ID" />
   <button id="connect" onclick="mpyc.transport.connect(document.querySelector('#hostPeerID').value);">Connect</button>
   <button id="startButton" onclick="mpyc.runMPC(editor.state.doc.toString(), 'test.py', false);">Run</button>
-  <div id="editor"></div>
+  <div id="editor" style="height: 310px;"></div>
   <div id="terminal"></div>
 </body>
 
