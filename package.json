@@ -6,7 +6,7 @@
   "workspaces": [
     "mpyc-web-core",
     "mpyc-web-demo",
-    "mpyc-web-demo-basic",
+    "mpyc-web-starter",
     "mpyc-web-peerjs"
   ],
   "scripts": {

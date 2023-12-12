@@ -545,9 +545,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@mpyc-web/demo-basic@workspace:mpyc-web-demo-basic":
+"@mpyc-web/demo-basic@workspace:mpyc-web-starter":
   version: 0.0.0-use.local
-  resolution: "@mpyc-web/demo-basic@workspace:mpyc-web-demo-basic"
+  resolution: "@mpyc-web/demo-basic@workspace:mpyc-web-starter"
   dependencies:
     "@types/gh-pages": "npm:^5.0.1"
     cross-env: "npm:^7.0.3"
