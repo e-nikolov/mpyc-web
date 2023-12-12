@@ -8,8 +8,12 @@ It uses:
 
 ## Demo deployments
 
-- Stable - <https://e-nikolov.github.io/mpyc-web>
-- Test - <https://e-nikolov.github.io/mpyc-test>
+- Stable:
+  - GitHub Pages -  <https://e-nikolov.github.io/mpyc-web>
+  - Netlify      -  <https://mpyc-web.netlify.app/>
+- Test:
+  - GitHub Pages -  <https://e-nikolov.github.io/mpyc-test>
+  - Netlify      -  <https://mpyc-test.netlify.app/>
 
 ## Examples
 
