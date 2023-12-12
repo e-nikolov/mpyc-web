@@ -106,7 +106,11 @@ export class QRComponent extends Emittery<QREvents>  {
 
     setupScanner = () => {
         this.scanner = new Html5Qrcode("qrScannerEl", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
-        this.scanModalDiv.addEventListener('hidden.bs.modal', async () => { this.scanner.stop() });
+        this.scanModalDiv.addEventListener('hidden.bs.modal', async () => {
+            if (this.scanner.isScanning) {
+                this.scanner.stop()
+            }
+        });
         this.closeScanModalBtn.addEventListener('click', async () => { this.closeScanner() });
 
         this.scanInput.addEventListener("change", (e: Event) => {
