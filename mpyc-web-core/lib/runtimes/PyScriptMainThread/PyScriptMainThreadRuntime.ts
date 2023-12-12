@@ -2,6 +2,7 @@ import { define } from "polyscript";
 import { MPCRuntimeBase, RunMPCOptions } from '../MPCRuntimeBase';
 
 
+
 type CustomOptions = Parameters<typeof define>[1]
 
 export class PyScriptMainThreadRuntime extends MPCRuntimeBase {

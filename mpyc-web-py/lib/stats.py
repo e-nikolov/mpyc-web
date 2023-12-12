@@ -190,7 +190,7 @@ def format_count(count, unit=""):
 def format_asyncio_stats(stats):
     return (
         f'{format_count(stats["tasks"])} / {format_count(stats["max_tasks"])} tasks | {format_count(stats["call_later_count"])} /'
-        f' {format_count(stats["call_immediate_count"])}'
+        f' {format_count(stats["call_soon_count"])}'
     )
 
 
@@ -358,8 +358,8 @@ class BaseStatsCollector:
         self.loop = asyncio.get_event_loop()
         if hasattr(self.loop, "call_later_count"):
             self.loop.call_later_count = 0
-        if hasattr(self.loop, "call_immediate_count"):
-            self.loop.call_immediate_count = 0
+        if hasattr(self.loop, "call_soon_count"):
+            self.loop.call_soon_count = 0
         # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
     max_tasks = 0
@@ -374,7 +374,7 @@ class BaseStatsCollector:
             "tasks": tasks,
             "max_tasks": self.max_tasks,
             "call_later_count": getattr(self.loop, "call_later_count", 0),
-            "call_immediate_count": getattr(self.loop, "call_immediate_count", 0),
+            "call_soon_count": getattr(self.loop, "call_soon_count", 0),
         }
 
     def gc_stats(self):

@@ -1,5 +1,5 @@
 {
-  "name": "@mpyc-web/demo-basic",
+  "name": "@mpyc-web/starter",
   "version": "0.9.2",
   "type": "module",
   "packageManager": "yarn@4.0.2",

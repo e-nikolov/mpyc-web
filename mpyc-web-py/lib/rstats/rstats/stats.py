@@ -190,7 +190,7 @@ def format_count(count, unit=""):
 def format_asyncio_stats(stats):
     return (
         f'{format_count(stats["tasks"])} / {format_count(stats["max_tasks"])} tasks | {format_count(stats["call_later_count"])} /'
-        f' {format_count(stats["call_immediate_count"])}'
+        f' {format_count(stats["call_soon_count"])}'
     )
 
 
@@ -370,7 +370,7 @@ class BaseStatsCollector:
             "tasks": tasks,
             "max_tasks": self.max_tasks,
             "call_later_count": getattr(loop, "call_later_count", 0),
-            "call_immediate_count": getattr(loop, "call_immediate_count", 0),
+            "call_soon_count": getattr(loop, "call_soon_count", 0),
         }
 
     def gc_stats(self):

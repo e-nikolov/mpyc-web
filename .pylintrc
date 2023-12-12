@@ -1,5 +1,5 @@
 [MESSAGES CONTROL]
-disable=missing-module-docstring,unused-argument,unused-import,logging-fstring-interpolation,single-string-used-for-slots,unnecessary-lambda-assignment,line-too-long,missing-function-docstring,await-outside-async
+disable=abstract-method,missing-module-docstring,missing-class-docstring,unused-argument,unused-import,logging-fstring-interpolation,single-string-used-for-slots,unnecessary-lambda-assignment,line-too-long,missing-function-docstring,await-outside-async
 
 [BASIC]
 argument-naming-style=any
