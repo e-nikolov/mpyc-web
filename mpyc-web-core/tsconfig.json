@@ -16,7 +16,12 @@
     "checkJs": false,
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable",
+      "WebWorker"
+    ],
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -33,5 +38,8 @@
   "include": [
     "lib" // and your source files
   ],
-  "exclude": ["**/*.test.ts", "node_modules"]
+  "exclude": [
+    "**/*.test.ts",
+    "node_modules"
+  ]
 }

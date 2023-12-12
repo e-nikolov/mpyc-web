@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
       chunkSizeWarningLimit: 1500,
       minify: "terser",
-      target: 'esnext',
+      target: 'ESNext',
       rollupOptions: {
         // external: ['@pyscript/core'],
         input: [

@@ -2,14 +2,18 @@
   // "extends": "../tsconfig.json",
   "compilerOptions": {
     // "composite": true,
-
     "paths": {},
     "allowJs": true,
     "experimentalDecorators": true,
     "checkJs": false,
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable",
+      "WebWorker"
+    ],
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",

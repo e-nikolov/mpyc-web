@@ -10,7 +10,6 @@ import { $, $$, debounce, getStorage, isMobile, safe, setStorage } from '../util
 
 // import * as polyscript from "polyscript";
 import { Tooltip } from 'bootstrap';
-import eruda from 'eruda';
 // import erudaFeatures from 'eruda-features';
 import { makeSplitJS } from './split';
 export class Controller {
@@ -194,7 +193,9 @@ export class Controller {
         this.toggleStatsEl.dispatchEvent(new Event('click'));
     }
 
-    setupEruda() {
+    async setupEruda() {
+        let eruda = (await import('eruda')).default;
+
         let el = document.createElement('div');
         document.body.prepend(el);
         eruda.init({
