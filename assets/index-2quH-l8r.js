@@ -1,0 +1,2 @@
+import"./modulepreload-polyfill-xwJNGKPl.js";/* empty css              */import{m as e}from"./index-VegdH4qk.js";import"./index-0GPC8bPp.js";import"./purify.es-jU6xpJvk.js";var i={version:"0.9.2",dirty:!0,timestamp:1702414526605,time:"12/12/2023, 21:55:26",revision:"a07c692"};document.title="MPyC Web - Bench Timeouts"+(i.deployment?` (${i.deployment})`:""),await e();
+//# sourceMappingURL=index-2quH-l8r.js.map

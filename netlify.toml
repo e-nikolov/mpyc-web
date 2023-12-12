@@ -6,9 +6,6 @@ command = """
 [context.production]
 publish = "."
 
-[build.environment]
-PYTHON_VERSION = "3.11"
-
 [[headers]]
 for = "/*"
     [headers.values]
