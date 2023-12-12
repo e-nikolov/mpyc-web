@@ -8,17 +8,21 @@ It uses:
 
 ## Demo deployments
 
-- Stable:
+- Demo (stable):
   - GitHub Pages -  <https://e-nikolov.github.io/mpyc-web>
-  - Netlify      -  <https://mpyc-web.netlify.app/>
-- Test:
+  - Netlify      -  <https://mpyc-web.netlify.app>
+- Demo (test):
   - GitHub Pages -  <https://e-nikolov.github.io/mpyc-test>
-  - Netlify      -  <https://mpyc-test.netlify.app/>
+  - Netlify      -  <https://mpyc-test.netlify.app>
+- Starter:
+  - GitHub Pages - <https://e-nikolov.github.io/mpyc-web-starter>
+  - Netlify - <https://mpyc-web-starter.netlify.app>
 
 ## Examples
 
-- Basic - <https://github.com/e-nikolov/mpyc-web/tree/master/mpyc-web-demo-basic/index.html>
-- Advanced - <https://github.com/e-nikolov/mpyc-web/tree/master/mpyc-web-demo>
+- Starter - <https://github.com/e-nikolov/mpyc-web/tree/master/mpyc-web-starter/index.html>
+- Starter Standalone - <https://github.com/e-nikolov/mpyc-web-starter>
+- Demo - <https://github.com/e-nikolov/mpyc-web/tree/master/mpyc-web-demo>
 
 ### Usage
 

@@ -45,11 +45,11 @@ export class QRComponent extends Emittery<QREvents>  {
         this.scanModalDiv = $<HTMLDivElement>('#qrScannerModal');
         this.scanModal = new Modal(this.scanModalDiv);
 
-        this.setupQRGenerator()
-        this.setupQRScanner()
+        this.setupGenerator()
+        this.setupScanner()
     }
 
-    setupQRGenerator() {
+    setupGenerator() {
         this.showBtnTooltip = new Tooltip(this.showBtn, {
             html: true,
             placement: "bottom",
@@ -104,10 +104,10 @@ export class QRComponent extends Emittery<QREvents>  {
         });
     }
 
-    setupQRScanner = () => {
-        let qrScanner = new Html5Qrcode("qrScannerEl", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
-        this.scanModalDiv.addEventListener('hidden.bs.modal', async () => { qrScanner.stop() });
-        this.closeScanModalBtn.addEventListener('click', async () => { this.closeQRScanner() });
+    setupScanner = () => {
+        this.scanner = new Html5Qrcode("qrScannerEl", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
+        this.scanModalDiv.addEventListener('hidden.bs.modal', async () => { this.scanner.stop() });
+        this.closeScanModalBtn.addEventListener('click', async () => { this.closeScanner() });
 
         this.scanInput.addEventListener("change", (e: Event) => {
             if (e == null || e.target == null) {
@@ -120,7 +120,7 @@ export class QRComponent extends Emittery<QREvents>  {
             let fileList: FileList = target.files!;
             const file: File = fileList[0];
 
-            qrScanner.scanFileV2(file, true)
+            this.scanner.scanFileV2(file, true)
                 .then((html5qrcodeResult: Html5QrcodeResult) => {
                     this.emit('qr:scanned', html5qrcodeResult.decodedText)
                 }).catch((err: Error) => {
@@ -137,7 +137,7 @@ export class QRComponent extends Emittery<QREvents>  {
             const config = { fps: 10, qrbox: { width: 150, height: 150 } };
             const successCallback = (decodedText: string, result: Html5QrcodeResult) => {
                 this.emit('qr:scanned', decodedText)
-                this.closeQRScanner()
+                this.closeScanner()
             };
 
             this.scanner.start({ facingMode: "environment" }, config, successCallback, undefined);
@@ -146,7 +146,7 @@ export class QRComponent extends Emittery<QREvents>  {
 
     }
 
-    closeQRScanner() {
+    closeScanner() {
         this.scanner.stop();
         this.scanModal.hide();
     }
