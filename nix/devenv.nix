@@ -31,6 +31,7 @@
     pkgs.python311Packages.gmpy2
     pkgs.python311Packages.numpy
     pkgs.twine
+    pkgs.netlify-cli
     # pkgs.tailwindcss
 
     (pkgs.terraform.withPlugins (tp: [

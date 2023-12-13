@@ -25,7 +25,7 @@ class WebLooper(webloop.WebLoop):
         self._ready = collections.deque()
         self._callbacks = {}
         self.counter = 0
-        self.call_immediate_count = 0
+        self.call_soon_count = 0
         self.call_later_count = 0
         self.call_callback_count = 0
         self.queue = collections.deque()
@@ -103,12 +103,15 @@ class WebLooper(webloop.WebLoop):
         if delay == 0:
             self.queue.appendleft(run_handle)
             # print("posting message", self.queue)
-            chan.port2.postMessage("")
-            self.call_immediate_count += 1
+            chan.port2.postMessage(None)
+            self.call_soon_count += 1
+            # print("call_soon", delay, callback, args, f"{self.call_soon_count=}")
+
             return h
 
         # self._ready.append(h)
         self.call_later_count += 1
+        # print("call_later", delay, callback, args, f"{self.call_later_count=}")
         setTimeout(create_once_callable(run_handle), delay * 1000)
         return h
 
