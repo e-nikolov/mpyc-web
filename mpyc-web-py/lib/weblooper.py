@@ -63,8 +63,10 @@ class WebLooper(WebLoop):
         for i in range(ntodo):
             self._ready.popleft()()
 
-        # js.setTimeout(self._run_once_proxy, 0)
-        chan.port2.postMessage(None)
+        if ntodo < 10:
+            js.setTimeout(self._run_once_proxy, 0)
+        else:
+            chan.port2.postMessage(None)
 
     # @stats.acc(lambda self, callb)
     def call_soon(
