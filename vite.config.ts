@@ -1,4 +1,4 @@
-import { defineConfig, PluginOption, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import { run } from 'vite-plugin-run'
 
 export default defineConfig(({ mode }) => {
@@ -8,8 +8,10 @@ export default defineConfig(({ mode }) => {
       run([
         {
           name: 'python transform',
-          run: ['bun', 'build:py'],
-          condition: () => true,
+          run: ['yarn', 'build:py'],
+          condition: (file: string) => {
+            return file.endsWith('.py')
+          },
         }
       ]),
     ],
