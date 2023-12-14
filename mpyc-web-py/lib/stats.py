@@ -67,7 +67,7 @@ import math
 def format_asyncio_stats(stats):
     return (
         f'tasks: {format_count(stats["tasks"])} / {format_count(stats["max_tasks"])} / {format_count(stats["total_tasks_count"])}'
-        f' | call_soon: {format_count(stats["call_soon_count"])} / {format_count(stats["loop_iters"])}'
+        f' | call_soon: {format_count(stats["call_soon_count"])} | loop_iters: {format_count(stats["loop_iters"])}'
     )
 
 
