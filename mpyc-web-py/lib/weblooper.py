@@ -43,8 +43,10 @@ class WebLooper(WebLoop):
         self._run_once_proxy = create_proxy(self._run_once)
         # self.call_proxy = create_proxy(self.call_callback)
 
-        # chan.port1.onmessage = self.call_callback
-        js.setTimeout(self._run_once_proxy, 0)
+        # js.setTimeout(self._run_once_proxy, 0)
+        chan.port1.onmessage = create_proxy(self.call_callback)
+
+        chan.port2.postMessage(None)
 
         # self._callbacks[id] = run_handle
 
@@ -61,7 +63,8 @@ class WebLooper(WebLoop):
         for i in range(ntodo):
             self._ready.popleft()()
 
-        js.setTimeout(self._run_once_proxy, 0)
+        # js.setTimeout(self._run_once_proxy, 0)
+        chan.port2.postMessage(None)
 
     # @stats.acc(lambda self, callb)
     def call_soon(
@@ -141,7 +144,8 @@ class WebLooper(WebLoop):
     # @stats.acc(lambda self, *args, **kwargs: {"$func": "calls"})
     def call_callback(self, *args, **kwargs):
         # print("call_callback")
-        self._ready.popleft()()
+        # self._ready.popleft()()
+        self._run_once()
 
     def _decrement_in_progress(self, *args):
         # print("_decrement_in_progress", args)
