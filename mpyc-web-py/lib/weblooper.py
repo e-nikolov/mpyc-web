@@ -1,13 +1,13 @@
 import asyncio
 import collections
 import contextvars
-import logging
+import types
 from typing import Any, Callable, Optional
 
 import js
-from pyodide import webloop
 from pyodide.code import run_js
 from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
+from pyodide.webloop import PyodideFuture, PyodideTask, WebLoop
 
 run_js("""    
     self.webChannel = new MessageChannel()
@@ -18,13 +18,24 @@ setTimeout = js.setTimeout
 chan = js.webChannel
 
 
-class WebLooper(webloop.WebLoop):
+class WebLooper(WebLoop):
     def __init__(self):
         super().__init__()
+
+        loop = self
+        old_add = asyncio.tasks._all_tasks.add
+
+        def add(self, task):
+            loop.total_tasks_count += 1
+            old_add(task)
+
+        asyncio.tasks._all_tasks.add = types.MethodType(add, asyncio.tasks._all_tasks)
 
         self._ready = collections.deque()
         self._callbacks = {}
         self.counter = 0
+        self.total_tasks_count = len(asyncio.tasks._all_tasks)
+        self.total_futures_count = 0
         self.call_soon_count = 0
         self.call_later_count = 0
         self.call_callback_count = 0
@@ -119,6 +130,44 @@ class WebLooper(webloop.WebLoop):
     def call_callback(self, *args, **kwargs):
         # print("call_callback")
         self.queue.pop()()
+
+    def _decrement_in_progress(self, *args):
+        # print("_decrement_in_progress", args)
+        self._in_progress -= 1
+        if self._no_in_progress_handler and self._in_progress == 0:
+            self._no_in_progress_handler()
+
+    def create_future(self) -> asyncio.Future[Any]:
+        self._in_progress += 1
+        self.total_futures_count += 1
+        fut: PyodideFuture[Any] = PyodideFuture(loop=self)
+        fut.add_done_callback(self._decrement_in_progress)
+        """Create a Future object attached to the loop."""
+        return fut
+
+    def create_task(self, coro, *, name=None):
+        """Schedule a coroutine object.
+
+        Return a task object.
+
+        Copied from ``BaseEventLoop.create_task``
+        """
+        self._check_closed()
+        if self._task_factory is None:
+            task = PyodideTask(coro, loop=self, name=name)
+            if task._source_traceback:  # type: ignore[attr-defined]
+                # Added comment:
+                # this only happens if get_debug() returns True.
+                # In that case, remove create_task from _source_traceback.
+                del task._source_traceback[-1]  # type: ignore[attr-defined]
+        else:
+            task = self._task_factory(self, coro)
+            asyncio.tasks._set_task_name(task, name)  # type: ignore[attr-defined]
+
+        self._in_progress += 1
+        # self.total_tasks_count += 1
+        task.add_done_callback(self._decrement_in_progress)
+        return task
 
     # def _do_tasks(
     #     self,

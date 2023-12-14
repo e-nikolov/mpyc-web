@@ -8,7 +8,9 @@ reportUnusedVariable = false
 reportUnusedImport = false
 enableExperimentalFeatures = true
 reportAsyncNotInAsyncFunction = false
+exclude = ["mpyc-web-py/lib/stats.py"]
 
+ignore = ["mpyc-web-py/lib/stats.py"]
 
 [tool.poetry]
 name = "mpyc-web"

@@ -1,5 +1,3 @@
-# pyright: ignore
-
 """
 This module provides a `StatsCollector` class that can be used to collect and print statistics about various events
 in the program. The `StatsCollector` class is a subclass of `BaseStatsCollector`, which provides the core functionality
@@ -15,26 +13,23 @@ It defines the `update` and `set` methods, which can be used to update or set th
 The `BaseStatsCollector` class defines a decorator `dec` that can be used to decorate functions and collect statistics
 about their calls. The `acc` method of `BaseStatsCollector` returns a decorator that can be used to collect statistics
 about the arguments passed to a function.
-
-The `__init__` function at the end of the module initializes a global `stats` object of type `StatsCollector`.
 """
 
 import asyncio
-import gc
 import io
 import json
 import logging
+import math
 import time
 from collections import deque
 from datetime import datetime
 from functools import wraps
-from typing import Callable, ParamSpec, TypeVar
+from typing import Any, Callable, ParamSpec, TypeVar
 
 import humanize
 import rich
 import yaml
 from humanize import naturalsize
-from lib import log_levels
 from rich.align import Align
 from rich.console import Console
 from rich.panel import Panel
@@ -53,9 +48,31 @@ Numeric = int | float
 N = TypeVar("N", int, float)
 
 # pyright: ignore-all
+# pylint: disable=all
+# pyright: ignore=all
+# type: ignore=all
 
 
-class DeepCounter(NestedDict[K, Numeric]):
+class MovingAverage:
+    def __init__(self, maxlen: int = 100):
+        self._maxlen = maxlen
+        self._ring = deque(maxlen=maxlen)
+        self._total = 0
+
+    def append(self, value: N):
+        if len(self._ring) == self._maxlen:
+            self._total -= self._ring.popleft()
+        self._total += value
+        self._ring.append(value)
+
+    def __len__(self):
+        return len(self._ring)
+
+    def __float__(self):
+        return self._total / len(self._ring)
+
+
+class DeepCounter(NestedDict[K, Numeric | Any]):
     """A nested dictionary that stores numeric values and supports recursive updates.
 
     This class extends the `NestedDict` class and adds two methods for updating its values:
@@ -119,7 +136,6 @@ class DeepCounter(NestedDict[K, Numeric]):
 
 P = ParamSpec("P")
 R = TypeVar("R")
-import math
 
 
 def metric(value: float, unit: str = "", precision: int = 3) -> str:
@@ -166,12 +182,9 @@ def time_delta_fmt(time_a, time_b):
     return datetime.utcfromtimestamp((time_a - time_b).total_seconds()).strftime("%X")
 
 
-import datetime as dt
-
-
 def format_time(time):
     # return f'{_format_time(time["min"])} / {_format_time(time["mavg"])} / {_format_time(time["avg"])} / {_format_time(time["max"])}'
-    return f'{_format_time(time["min"])} / {_format_time(time["mavg"])} / {_format_time(time["max"])}'
+    return f'{_format_time(time["min"])} / {_format_time(float(time["avg"]))} / {_format_time(time["max"])}'
 
 
 def _format_time(time: Numeric):
@@ -187,35 +200,6 @@ def format_count(count, unit=""):
     # return humanize.intword(count)
 
 
-def format_asyncio_stats(stats):
-    return (
-        f'{format_count(stats["tasks"])} / {format_count(stats["max_tasks"])} tasks | {format_count(stats["call_later_count"])} /'
-        f' {format_count(stats["call_soon_count"])}'
-    )
-
-
-def format_data(data):
-    sent, received = 0, 0
-    if "sent" in data:
-        sent = data["sent"]
-
-    if "received" in data:
-        received = data["received"]
-
-    return f"{format_file_size(sent)} / {format_file_size(received)}"
-
-
-def format_messages(messages):
-    sent, received = 0, 0
-    if "sent" in messages:
-        sent = messages["sent"]
-
-    if "received" in messages:
-        received = messages["received"]
-
-    return f"{format_count(sent)} / {format_count(received)}"
-
-
 FUNC_ARG: str = "$func"
 
 
@@ -228,18 +212,14 @@ class BaseStatsCollector:
         enabled (bool): A flag indicating whether the statistics collection is enabled.
     """
 
-    stats = DeepCounter[str]({})
-    enabled = False
-    start_time = datetime.now()
-    formatters: dict[str, Callable[[str], str]] = {
-        "total_bytes_received": format_file_size,
-        "total_bytes_sent": format_file_size,
-        "time": format_time,
-        "messages s/r": format_messages,
-        "asyncio": format_asyncio_stats,
-        "data s/r": format_data,
-        "latency": format_time,
-    }
+    def __init__(self, formatters: dict[str, Callable[[str], str]] = {}):
+        self.enabled = False
+        self.start_time = datetime.now()
+        self.stats = DeepCounter[str]({})
+        self.loop = asyncio.get_event_loop()
+        self.formatters = {
+            "time": format_time,
+        } | formatters
 
     def dec(
         self, counter_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[NestedDict[str, Numeric]], None]
@@ -276,47 +256,24 @@ class BaseStatsCollector:
 
                     if "time" not in self.stats[f_name]:  # pyright: ignore
                         self.stats[f_name]["time"] = {  # pyright: ignore
-                            "calls": 0,
-                            "total": 0,
-                            "total_mavg": 0,
-                            "mavg": 0,
-                            "avg": 0,
                             "min": None,
                             "max": None,
-                            "ring": deque(maxlen=200),
+                            "avg": MovingAverage(maxlen=200),
                         }
 
-                    time_stats = self.stats[f_name]["time"]  # pyright: ignore
-                    assert isinstance(time_stats, dict)
-                    assert isinstance(time_stats["calls"], Numeric)
-                    assert isinstance(time_stats["total"], Numeric)
-                    assert isinstance(time_stats["min"], Numeric | None)
-                    assert isinstance(time_stats["max"], Numeric | None)
-
-                    calls = time_stats["calls"] + 1
-                    total_time = time_stats["total"] + elapsed_time
-                    total_mavg = time_stats["total_mavg"]
-                    assert isinstance(total_mavg, Numeric)
-                    ring = time_stats["ring"]
-                    assert isinstance(ring, deque)
-
-                    if len(ring) == ring.maxlen:
-                        total_mavg -= ring.popleft()
-
-                    total_mavg += elapsed_time
-                    ring.append(elapsed_time)
-
-                    time_stats["ring"] = ring
-                    time_stats["calls"] = calls
-                    time_stats["total"] = total_time
-                    time_stats["total_mavg"] = total_mavg
-                    time_stats["avg"] = total_time / calls
-                    time_stats["mavg"] = total_mavg / len(ring)
-                    time_stats["min"] = min(elapsed_time, time_stats["min"]) if time_stats["min"] else elapsed_time
-                    time_stats["max"] = max(elapsed_time, time_stats["max"]) if time_stats["max"] else elapsed_time
+                    self.stats[f_name]["time"]["avg"].append(elapsed_time)  # pyright: ignore
+                    self.stats[f_name]["time"]["min"] = (  # pyright: ignore
+                        min(elapsed_time, self.stats[f_name]["time"]["min"])  # pyright: ignore
+                        if self.stats[f_name]["time"]["min"]  # pyright: ignore
+                        else elapsed_time  # pyright: ignore
+                    )
+                    self.stats[f_name]["time"]["max"] = (  # pyright: ignore
+                        max(elapsed_time, self.stats[f_name]["time"]["max"])  # pyright: ignore
+                        if self.stats[f_name]["time"]["max"]  # pyright: ignore
+                        else elapsed_time  # pyright: ignore
+                    )
 
                 update_func(d)
-
                 return res
 
             return wrapper
@@ -352,55 +309,17 @@ class BaseStatsCollector:
         Resets the statistics counter and enables statistics collection.
         """
         self.stats = DeepCounter[str]({})
-        self.max_tasks = 0
         self.start_time = datetime.now()
-        # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
-
-    max_tasks = 0
-
-    # @set(lambda self: {"asyncio": {"tasks": len(asyncio.all_tasks()), "max_tasks": self.stats.asyncio.max_tasks}})
-    def asyncio_stats(self):
-        loop = asyncio.get_event_loop()
-
-        tasks = len(asyncio.all_tasks())
-        if tasks > self.max_tasks:
-            self.max_tasks = tasks
-
-        return {
-            "tasks": tasks,
-            "max_tasks": self.max_tasks,
-            "call_later_count": getattr(loop, "call_later_count", 0),
-            "call_soon_count": getattr(loop, "call_soon_count", 0),
-        }
-
-    def gc_stats(self):
-        return gc.get_stats()
+        self.loop = asyncio.get_event_loop()
 
     def to_tree(self):
         if not self.enabled:
             return ""
 
-        # tree = Tree("", hide_root=True, highlight=True)
         tree = Tree("", style="gray50", hide_root=True)
-
-        fstats = {}
-
-        if len(self.stats) > 1:  # pyright: ignore
-            fstats |= self.stats
-            # self._to_tree(self.stats, tree.add("mpyc"))
-
-        fstats["asyncio"] = self.asyncio_stats()
-        # self._to_tree(self.asyncio_stats(), tree.add("asyncio"))
-
-        if logger.isEnabledFor(log_levels.TRACE):
-            fstats["gc"] = self.gc_stats()
-            # self._to_tree(self.gc_stats(), tree.add("garbage_collector"))
-
-        self._to_tree(fstats, tree)
+        self._to_tree(self.stats, tree)
 
         return rich_to_ansi(Panel.fit(tree, title="stats", subtitle=time_delta_fmt(datetime.now(), self.start_time), border_style="blue"))
-        # return rich_to_ansi('[bold green]My[/][bold red]awesome[/][bold yellow]text[/]')
-        # return print_to_string(tree)
 
     def _to_tree(self, s: dict | list[dict], tree: Tree):
         if isinstance(s, dict):
@@ -418,21 +337,6 @@ class BaseStatsCollector:
         if isinstance(s, list):
             for index, item in enumerate(s):
                 tree.add(f"{json.dumps(item)}")
-
-    # def to_string(self):
-    #     """
-    #     Returns the collected statistics.
-    #     """
-    #     txt = ""
-    #     if self.enabled:
-    #         txt += f"{self.dumps('mpyc', self.stats)}\n"
-
-    #         if logger.isEnabledFor(log_levels.TRACE):
-    #             txt += f"{self.dumps('mpyc', self.stats)}\n"
-    #             txt += f"{self.dumps('asyncio', {'tasks': len(asyncio.all_tasks())})}\n"
-    #             gc.collect()
-    #             txt += f"{self.dumps('gc', gc.get_stats())}\n"
-    #     return txt
 
     def dumps(self, name, stats_data):
         """
@@ -455,64 +359,6 @@ class BaseStatsCollector:
         """
         logger.log(level, self.dumps(name, stats_data), stacklevel=2)
 
-
-class StatsCollector(BaseStatsCollector):
-    """
-    A class for collecting statistics on messages sent and received by MPC parties.
-
-    Attributes:
-        None
-
-    Methods:
-        stat(s: NestedDict[str, float]) -> NestedDict[str, float]: Returns the input dictionary unchanged.
-        total_calls() -> NestedDict[str, float]: Returns a dictionary with a single key-value pair indicating a function call was made.
-        sent_to(pid: int, msg: bytes) -> NestedDict[str, float]: Returns a dictionary with statistics on a message sent to a specific MPC party.
-        received_from(pid: int, msg: bytes) -> NestedDict[str, float]: Returns a dictionary with statistics on a message received from a specific MPC party.
-    """
-
-    def stat(self, s: NestedDict[str, float]) -> NestedDict[str, float]:
-        """
-        Compute statistics on the input dictionary.
-
-        Args:
-            s (NestedDict[str, float]): A nested dictionary of float values.
-
-        Returns:
-            NestedDict[str, float]: A nested dictionary of statistics computed on the input dictionary.
-        """
-        return s
-
-    def latency(self, ts: int) -> NestedDict[str, float]:  # pyright: ignore
-        l: int = time.time_ns() // 1000 - ts
-        if l < 0:
-            return {}
-
-        if "latency" not in self.stats:
-            self.stats["latency"] = {  # pyright: ignore
-                "min": None,
-                "max": 0,
-                "total_mavg": 0,
-                "ring": deque([], maxlen=200),
-            }
-
-        ring = self.stats["latency"]["ring"]  # pyright: ignore
-        total_mavg = self.stats["latency"]["total_mavg"]  # pyright: ignore
-
-        total_mavg += l  # pyright: ignore
-        if len(ring) == ring.maxlen:  # pyright: ignore
-            total_mavg -= ring.popleft()  # pyright: ignore
-        ring.append(l)  # pyright: ignore
-
-        if l > 0:
-            self.stats["latency"]["min"] = min(l, self.stats["latency"]["min"]) if self.stats["latency"]["min"] else l  # pyright: ignore
-            self.stats["latency"]["max"] = max(l, self.stats["latency"]["max"]) if self.stats["latency"]["max"] else l  # pyright: ignore
-
-        self.stats["latency"]["ring"] = ring  # pyright: ignore
-        self.stats["latency"]["total_mavg"] = total_mavg  # pyright: ignore
-        self.stats["latency"]["mavg"] = total_mavg / len(ring)  # pyright: ignore
-
-        return {}
-
     def time(self) -> NestedDict[str, float]:
         """
         A decorator function for accumulating statistics.
@@ -532,58 +378,3 @@ class StatsCollector(BaseStatsCollector):
         number of calls to a function.
         """
         return {FUNC_ARG: {"calls": +1}}
-
-    def sent_to(self, pid: int, msg: bytes) -> NestedDict[str, float]:
-        """
-        Updates the statistics for a message sent to a specific peer.
-
-        Args:
-            pid (int): The ID of the peer the message was sent to.
-            msg (bytes): The message that was sent.
-
-        Returns:
-            A dictionary containing the updated statistics.
-        """
-        return {
-            "messages s/r": {
-                "sent": +1,
-            },
-            "data s/r": {
-                "sent": +len(msg),
-            },
-            # "messages": +1,
-            # f"messages_sent_to[{pid}]": +1,
-            # "total_bytes_sent": +len(msg),
-            # f"bytes_sent_to[{pid}]": +len(msg),
-        }
-
-    def received_from(self, pid: int, msg: bytes) -> NestedDict[str, float]:
-        """
-        Records statistics for a message received from a given party.
-
-        Args:
-            pid (int): The ID of the party that sent the message.
-            msg (bytes): The message that was received.
-
-        Returns:
-            A dictionary containing the following statistics:
-            - total_messages_received: The total number of messages received.
-            - messages_received_from[pid]: The number of messages received from the given party.
-            - total_bytes_received: The total number of bytes received.
-            - bytes_received_from[pid]: The number of bytes received from the given party.
-        """
-        return {
-            "messages s/r": {
-                "received": +1,
-            },
-            "data s/r": {
-                "received": +len(msg),
-            },
-            # "total_messages_received": +1,
-            # f"messages_received_from[{pid}]": +1,
-            # "total_bytes_received": +len(msg),
-            # f"bytes_received_from[{pid}]": +len(msg),
-        }
-
-
-stats = StatsCollector()

@@ -71,7 +71,7 @@ from .transport import *
 # asyncio.ensure_future(api.async_proxy.notify_runtime_ready())
 
 
-# asyncio.create_task(api.stats_printer())
+asyncio.create_task(api.stats_printer())
 
 
 logger.debug(f"Python version={sys.version}")
