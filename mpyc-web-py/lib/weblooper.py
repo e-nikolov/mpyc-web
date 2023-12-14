@@ -31,6 +31,7 @@ class WebLooper(WebLoop):
 
         asyncio.tasks._all_tasks.add = types.MethodType(add, asyncio.tasks._all_tasks)
 
+        self.loop_iters = 0
         self._ready = collections.deque()
         self._callbacks = {}
         self.counter = 0
@@ -39,14 +40,28 @@ class WebLooper(WebLoop):
         self.call_soon_count = 0
         self.call_later_count = 0
         self.call_callback_count = 0
-        self.queue = collections.deque()
+        self._run_once_proxy = create_proxy(self._run_once)
         # self.call_proxy = create_proxy(self.call_callback)
 
-        chan.port1.onmessage = self.call_callback
+        # chan.port1.onmessage = self.call_callback
+        js.setTimeout(self._run_once_proxy, 0)
 
         # self._callbacks[id] = run_handle
 
         # chan.port1.onmessage =
+
+    def _run_forever(self):
+        while True:
+            self._run_once()
+
+    def _run_once(self):
+        self.loop_iters += 1
+
+        ntodo = len(self._ready)
+        for i in range(ntodo):
+            self._ready.popleft()()
+
+        js.setTimeout(self._run_once_proxy, 0)
 
     # @stats.acc(lambda self, callb)
     def call_soon(
@@ -112,11 +127,8 @@ class WebLooper(WebLoop):
                     raise
 
         if delay == 0:
-            self.queue.appendleft(run_handle)
-            # print("posting message", self.queue)
-            chan.port2.postMessage(None)
+            self._ready.append(run_handle)
             self.call_soon_count += 1
-            # print("call_soon", delay, callback, args, f"{self.call_soon_count=}")
 
             return h
 
@@ -129,7 +141,7 @@ class WebLooper(WebLoop):
     # @stats.acc(lambda self, *args, **kwargs: {"$func": "calls"})
     def call_callback(self, *args, **kwargs):
         # print("call_callback")
-        self.queue.pop()()
+        self._ready.popleft()()
 
     def _decrement_in_progress(self, *args):
         # print("_decrement_in_progress", args)
