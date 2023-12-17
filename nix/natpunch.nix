@@ -11,7 +11,7 @@ pkgs.buildGoModule rec {
     sha256 = "sha256-JC8L6cYpYRArtGNa0kLgFsExib8zD14lvScni/6YZGk=";
   };
 
-  vendorSha256 = "sha256-bkSZhXz3JlGP6/DhpmvcLClQz8n9xlDHtjGLcieRX7s=";
+  vendorHash = "sha256-bkSZhXz3JlGP6/DhpmvcLClQz8n9xlDHtjGLcieRX7s=";
 
   subPackages = [ "client" "server" ];
 
@@ -20,10 +20,7 @@ pkgs.buildGoModule rec {
     mv $out/bin/server $out/bin/natpunch-server
   '';
 
-  ldflags = [
-    "-s"
-    "-w"
-  ];
+  ldflags = [ "-s" "-w" ];
 
   nativeBuildInputs = [ pkgs.installShellFiles ];
 
@@ -31,8 +28,5 @@ pkgs.buildGoModule rec {
     description = "NAT puncher for Wireguard mesh networking. ";
     homepage = "https://github.com/malcolmseyd/natpunch-go";
     downloadPage = "https://github.com/malcolmseyd/natpunch-go";
-    license = licenses.mit;
-    maintainers = with maintainers; [ ];
-    # mainProgram = "ent";
   };
 }

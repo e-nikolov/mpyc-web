@@ -13,6 +13,10 @@
     .split {
         height: calc(100vh - 100px);
     }
+
+    option:checked:not(:focus) {
+        color: black;
+    }
 }
 
 @media (max-width: 1199px) {
@@ -25,7 +29,6 @@
     .split {
         height: 120vh;
     }
-
 }
 
 .editor,

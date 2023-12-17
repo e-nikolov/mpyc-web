@@ -10,8 +10,8 @@
     document.title = "MPyC Web" + (__BUILD_INFO__.deployment ? ` (${__BUILD_INFO__.deployment})` : "");
   </script>
   <link async rel="icon" href="/favicon.ico" />
-  <link async rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <!-- <link async rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" /> -->
   <link async rel="preconnect" href="https://fonts.googleapis.com">
   <link async rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link async href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
@@ -61,19 +61,21 @@
                 <!-- * My Party ID - Buttons -->
                 <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copy to clipboard"
                   class="btn btn-primary">
-                  <span class="material-symbols-sharp">content_paste</span>
+                  <!-- <span class="material-symbols-sharp content-paste"></span> -->
+                  <span class="symbols icon-content-paste"></span>
                 </button>
                 <button id="copyPeerID" data-bs-toggle="tooltip" data-bs-title="Copied!" class="btn btn-success"
                   style="display: none;">
 
-                  <span class="material-symbols-sharp">inventory</span>
+                  <!-- <span class="material-symbols-sharp">inventory</span> -->
+                  <span class="symbols icon-inventory"></span>
                 </button>
                 <button id="show-qr" class="btn btn-primary">
-                  <span class="material-symbols-sharp">qr_code</span>
+                  <span class="symbols icon-qr-code"></span>
                 </button>
                 <button id="resetPeerID" data-bs-toggle="tooltip" data-bs-title="Reset party ID"
                   class="btn btn-primary">
-                  <span class="material-symbols-sharp">refresh</span>
+                  <span class="symbols icon-refresh"></span>
                 </button>
               </div>
               <!-- * Host Party ID -->
@@ -93,10 +95,11 @@
                 <!-- * Host Party ID - Buttons -->
                 <button id="scanQRCodeButton" data-bs-title="Scan QR code" data-bs-toggle="tooltip"
                   class="btn btn-primary">
-                  <span class="material-symbols-sharp">qr_code_scanner</span>
+                  <!-- <img class="material-symbolss2" src="/src/images/qr_code_scanner.svg" /> -->
+                  <span class="symbols icon-qr-code-scanner"> </span>
                 </button>
                 <button id="connect" data-bs-toggle="tooltip" data-bs-title="Connect to party" class="btn btn-primary">
-                  <span class="material-symbols-sharp">person_add</span>
+                  <span class="symbols icon-person-add"></span>
                 </button>
               </div>
             </div>
@@ -164,7 +167,9 @@
           <div class="input-group mb-1" id="chatInputGroup">
             <textarea id="chatInput" type="text" class="form-control" placeholder="Message parties..."></textarea>
             <button id="sendMessageButton" data-bs-toggle="tooltip" data-bs-title="Send" class="btn btn-primary">
-              <span class="material-symbols-sharp material-symbols-filled">send</span>
+              <!-- <span class="material-symbols-sharp material-symbols-filled">send</span> -->
+              <i class="symbols icon-send"> </i>
+
             </button>
           </div>
         </div>
@@ -176,20 +181,22 @@
         <div class="btn-group w-100" style="padding-left: 1px;" role="group" id="editor-buttons">
           <button id="startButton" data-bs-toggle="tooltip" data-bs-title="Run MPyC"
             style="padding-left: 5px !important; " class="btn btn-primary">
-            <span class="material-symbols-sharp material-symbols-filled">play_arrow</span>
+            <span class="symbols icon-play"></span>
           </button>
           <button id="stopButton" data-bs-toggle="tooltip" data-bs-title="Reset python runtime" class="btn btn-primary">
-            <span class="material-symbols-sharp">refresh</span>
+            <span class="symbols icon-refresh"></span>
           </button>
           <button id="clearTerminal" data-bs-toggle="tooltip" data-bs-title="Clear terminal" class="btn btn-primary">
-            <span class="material-symbols-sharp">backspace</span>
+
+            <span class="symbols icon-backspace"></span>
             <!-- <span class="material-symbols-sharp">cleaning_services</span> -->
             <!-- <span class="material-symbols-sharp">mop</span> -->
           </button>
           <input type="checkbox" class="btn-check" id="toggleStatsEl" autocomplete="off">
           <label id="toggleStatsLabel" data-bs-toggle="tooltip" data-bs-title="Enable runtime stats"
             class="btn btn-outline-primary" for="toggleStatsEl">
-            <span class="material-symbols-sharp material-symbols-filled">monitoring</span>
+
+            <span class="symbols icon-stats"></span>
           </label>
           <div style="width: 100% !important; padding-right: 1px; padding-left: 5px;" class=" "
             id="demoSelectorLocation2">

@@ -10,12 +10,9 @@ pkgs.buildGoModule rec {
     sha256 = "sha256-9BWquqYXoAQ+RBLKEacjlneg9fF/BbZMeRAG3/EhZ1w=";
   };
 
-  vendorSha256 = "sha256-QDDoiDBBoKGI8t1nmxK6+7tuvqZHmdLC8dGfDERy4og=";
+  vendorHash = "sha256-QDDoiDBBoKGI8t1nmxK6+7tuvqZHmdLC8dGfDERy4og=";
 
-  ldflags = [
-    "-s"
-    "-w"
-  ];
+  ldflags = [ "-s" "-w" ];
 
   nativeBuildInputs = [ pkgs.installShellFiles ];
 
@@ -23,7 +20,5 @@ pkgs.buildGoModule rec {
     description = "A Go implementation of STUN ";
     homepage = "https://github.com/pion/stun";
     downloadPage = "https://github.com/pion/stun";
-    license = licenses.bsd2;
-    maintainers = with maintainers; [ ];
   };
 }

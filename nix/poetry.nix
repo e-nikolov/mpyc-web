@@ -1,43 +1,10 @@
-{ lib
-, stdenv
-, buildPythonPackage
-, pythonOlder
-, fetchFromGitHub
-, installShellFiles
-, pythonRelaxDepsHook
-, build
-, cachecontrol
-, cleo
-, crashtest
-, dulwich
-, installer
-, jsonschema
-, keyring
-, packaging
-, pexpect
-, pkginfo
-, platformdirs
-, poetry-core
-, poetry-plugin-export
-, pyproject-hooks
-, requests
-, requests-toolbelt
-, shellingham
-, tomlkit
-, trove-classifiers
-, virtualenv
-, xattr
-, tomli
-, importlib-metadata
-, cachy
-, deepdiff
-, flatdict
-, pytestCheckHook
-, httpretty
-, pytest-mock
-, pytest-xdist
-, pythonAtLeast
-}:
+{ lib, stdenv, buildPythonPackage, pythonOlder, fetchFromGitHub
+, installShellFiles, pythonRelaxDepsHook, build, cachecontrol, cleo, crashtest
+, dulwich, installer, jsonschema, keyring, packaging, pexpect, pkginfo
+, platformdirs, poetry-core, poetry-plugin-export, pyproject-hooks, requests
+, requests-toolbelt, shellingham, tomlkit, trove-classifiers, virtualenv, xattr
+, tomli, importlib-metadata, cachy, deepdiff, flatdict, pytestCheckHook
+, httpretty, pytest-mock, pytest-xdist, pythonAtLeast }:
 
 buildPythonPackage rec {
   pname = "poetry";
@@ -53,10 +20,7 @@ buildPythonPackage rec {
     hash = "sha256-au+4TOh/sA1+XZqXvWkKxfSdurusBR4l8jsPg6acUM8=";
   };
 
-  nativeBuildInputs = [
-    installShellFiles
-    pythonRelaxDepsHook
-  ];
+  nativeBuildInputs = [ installShellFiles pythonRelaxDepsHook ];
 
   pythonRelaxDeps = [
     # only pinned to avoid dependency on Rust
@@ -85,13 +49,10 @@ buildPythonPackage rec {
     tomlkit
     trove-classifiers
     virtualenv
-  ] ++ lib.optionals (stdenv.isDarwin) [
-    xattr
-  ] ++ lib.optionals (pythonOlder "3.11") [
-    tomli
-  ] ++ lib.optionals (pythonOlder "3.10") [
-    importlib-metadata
-  ] ++ cachecontrol.optional-dependencies.filecache;
+  ] ++ lib.optionals (stdenv.isDarwin) [ xattr ]
+    ++ lib.optionals (pythonOlder "3.11") [ tomli ]
+    ++ lib.optionals (pythonOlder "3.10") [ importlib-metadata ]
+    ++ cachecontrol.optional-dependencies.filecache;
 
   postInstall = ''
     installShellCompletion --cmd poetry \
@@ -151,9 +112,7 @@ buildPythonPackage rec {
   ];
 
   # Allow for package to use pep420's native namespaces
-  pythonNamespaces = [
-    "poetry"
-  ];
+  pythonNamespaces = [ "poetry" ];
 
   # Unset ambient PYTHONPATH in the wrapper, so Poetry only ever runs with its own,
   # isolated set of dependencies. This works because the correct PYTHONPATH is set
@@ -161,10 +120,9 @@ buildPythonPackage rec {
   makeWrapperArgs = [ "--unset PYTHONPATH" ];
 
   meta = with lib; {
-    changelog = "https://github.com/python-poetry/poetry/blob/${src.rev}/CHANGELOG.md";
+    changelog =
+      "https://github.com/python-poetry/poetry/blob/${src.rev}/CHANGELOG.md";
     homepage = "https://python-poetry.org/";
     description = "Python dependency management and packaging made easy";
-    license = licenses.mit;
-    maintainers = with maintainers; [ jakewaksbaum dotlambda ];
   };
 }

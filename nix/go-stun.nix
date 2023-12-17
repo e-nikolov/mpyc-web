@@ -10,20 +10,16 @@ pkgs.buildGoModule rec {
     sha256 = "sha256-/A6kUP+ynmwcniPYE+rRYHpGULTvSCgtAXcK8vxkUHI=";
   };
 
-  vendorSha256 = null;
+  vendorHash = null;
 
-  ldflags = [
-    "-s"
-    "-w"
-  ];
+  ldflags = [ "-s" "-w" ];
 
   nativeBuildInputs = [ pkgs.installShellFiles ];
 
   meta = with pkgs.lib; {
-    description = "A go implementation of the STUN client (RFC 3489 and RFC 5389) ";
+    description =
+      "A go implementation of the STUN client (RFC 3489 and RFC 5389) ";
     homepage = "https://github.com/ccding/go-stun";
     downloadPage = "https://github.com/ccding/go-stun";
-    license = licenses.bsd2;
-    maintainers = with maintainers; [ ];
   };
 }
