@@ -11,7 +11,7 @@ pkgs.buildGoModule rec {
     sha256 = "sha256-AZAOzkXxvl6F9ZtfEg8d4AaoOH7NuvLx2sF7UqUgFqM=";
   };
 
-  vendorSha256 = "sha256-ANc0uAmVbkMkIJtlMaLvZiNq6faJfRmo0u6/k5i1rBQ=";
+  vendorHash = "sha256-ANc0uAmVbkMkIJtlMaLvZiNq6faJfRmo0u6/k5i1rBQ=";
 
   # subPackages = [ "client" "server" ];
 
@@ -20,10 +20,7 @@ pkgs.buildGoModule rec {
   #   mv $out/bin/server $out/bin/natpunch-server
   # '';
 
-  ldflags = [
-    "-s"
-    "-w"
-  ];
+  ldflags = [ "-s" "-w" ];
 
   nativeBuildInputs = [ pkgs.installShellFiles ];
 
@@ -31,8 +28,6 @@ pkgs.buildGoModule rec {
     description = "A p2p hole punching/tunneling tool written in Go.";
     homepage = "https://github.com/shawwwn/Gole";
     downloadPage = "https://github.com/shawwwn/Gole";
-    license = licenses.bsd2;
-    maintainers = with maintainers; [ ];
     # mainProgram = "ent";
   };
 }

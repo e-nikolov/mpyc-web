@@ -1,4 +1,5 @@
-pkgs: pkgs.stdenv.mkDerivation rec {
+pkgs:
+pkgs.stdenv.mkDerivation rec {
   name = "${pname}-${version}";
   pname = "pwnat";
   version = "v0.3.0";
@@ -19,8 +20,6 @@ pkgs: pkgs.stdenv.mkDerivation rec {
   meta = with pkgs.lib; {
     homepage = "http://samy.pl/pwnat/";
     description = "ICMP NAT to NAT client-server communication";
-    license = pkgs.lib.licenses.gpl3Plus;
-    maintainers = with maintainers; [ viric ];
     platforms = with platforms; linux;
   };
 }
