@@ -11,7 +11,6 @@ export interface ControllerOptions {
     resetPeerIDButtonSelector: string,
     copyPeerIDButtonSelector: string,
     runMPyCButtonSelector: string,
-    runMPyCAsyncButtonSelector: string,
     stopMPyCButtonSelector: string,
     connectToPeerButtonSelector: string,
     sendMessageButtonSelector: string,

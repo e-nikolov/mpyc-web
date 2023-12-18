@@ -512,3 +512,4 @@ vite.config.ts.timestamp-*.mjs
 
 # Local Netlify folder
 .netlify
+.scratch

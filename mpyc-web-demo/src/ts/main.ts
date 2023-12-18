@@ -82,7 +82,6 @@ function main() {
         copyPeerIDButtonSelector: 'button#copyPeerID',
         resetPeerIDButtonSelector: 'button#resetPeerID',
         runMPyCButtonSelector: 'button#startButton',
-        runMPyCAsyncButtonSelector: 'button#startAsyncButton',
         stopMPyCButtonSelector: 'button#stopButton',
         connectToPeerButtonSelector: 'button#connect',
         sendMessageButtonSelector: '#sendMessageButton',
@@ -90,7 +89,7 @@ function main() {
         qrGenBtnSelector: '#show-qr',
         qrScanInputSelector: '#qrCodeFileInput',
         qrScanBtnSelector: '#scanQRCodeButton',
-        splitPanelSelectors: ['.split-panel-editor', '.split-panel-terminal'],
+        splitPanelSelectors: ['.split-panel-editor', '.terminal-split-pane'],
         toggleStatsSelector: "#toggleStatsEl",
         versionSelector: "#version",
     });

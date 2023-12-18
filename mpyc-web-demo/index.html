@@ -40,7 +40,7 @@
 </head>
 
 <body>
-  <div class="main-container container-fluid" style="overflow: hidden;  ">
+  <div class="main-container container-fluid">
     <div class="row">
       <h3 class="d-flex align-items-center justify-content-center">MPyC Web</h3>
     </div>
@@ -208,22 +208,39 @@
             <!-- * Editor -->
             <div id="editor" class="editor"></div>
           </div>
-          <div id="terminal-container" class="split-panel-terminal">
+          <div class="terminal-split-pane">
             <!-- * Terminal -->
-            <div id="terminal" class="terminal-wrapper term"></div>
+            <div id="terminal"></div>
             <div class="xterm-scroll-area-clone xterm-scroll-area"></div>
-            <div id="terminal-container-scroll">
-            </div>
+            <div id="terminal-container-scroll"></div>
 
           </div>
         </div>
-        <div id="chatFooter"></div>
-
       </div>
-    </div>
-    <input type="file" id="qrCodeFileInput" accept="image/*" ; style="display: none;" />
 
-    <div id="version" style="font-size: 9px" class="float-sm-start"></div>
+
+      <!-- this.terminal.element.style.position = 'relative';
+
+        this.element = document.createElement('div');
+        this.element.innerHTML =
+            '<span aria-hidden="true" class="symbols icon-arrow-downward" focusable="false"></span>';
+        this.element.style.position = 'absolute';
+        this.element.style.right = '1.5rem';
+        this.element.style.bottom = '.5rem';
+        this.element.style.padding = '.5rem';
+        this.element.style.fontSize = '1.25em';
+        this.element.style.boxShadow = '0 2px 8px #000';
+        this.element.style.backgroundColor = '#252526';
+        this.element.style.zIndex = '999';
+        this.element.style.cursor = 'pointer'; -->
+
+      <div id="chatFooter"></div>
+
+    </div>
+  </div>
+  <input type="file" id="qrCodeFileInput" accept="image/*" ; style="display: none;" />
+
+  <div id="version" style="font-size: 9px" class="float-sm-start"></div>
   </div>
 </body>
 
