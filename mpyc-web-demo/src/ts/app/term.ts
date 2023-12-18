@@ -1,13 +1,14 @@
 
-import { Terminal } from 'xterm';
+import { Terminal, } from 'xterm';
 import { CanvasAddon } from 'xterm-addon-canvas';
-import { FitAddon } from 'xterm-addon-fit';
 import { LigaturesAddon } from 'xterm-addon-ligatures';
 import { SearchAddon } from 'xterm-addon-search';
 import { Unicode11Addon } from 'xterm-addon-unicode11';
 import { WebLinksAddon } from 'xterm-addon-web-links';
 import { WebglAddon } from 'xterm-addon-webgl';
 import { Readline } from 'xterm-readline';
+// import { FitAddon } from './xterm-addon-fit';
+import { FitAddon } from 'xterm-addon-fit';
 import { SearchBarAddon } from './xterm-addon-search-bar';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
 import { safe } from '../utils';
@@ -20,10 +21,12 @@ import { $, debounce, isMobile } from '../utils';
 
 import { MPCManager } from '@mpyc-web/core/lib';
 import { format } from './format';
+import { ScrollDownHelperAddon } from './xterm-addon-scroll-down';
 import { loadWebFont } from './xterm-webfont';
 
 export class Term extends Terminal {
     fitAddon: FitAddon;
+    scrollDownAddon: ScrollDownHelperAddon;
     searchAddon: SearchAddon;
     webglAddon: WebglAddon;
     canvasAddon: CanvasAddon;
@@ -32,18 +35,19 @@ export class Term extends Terminal {
     ligaturesAddon: LigaturesAddon;
     readlineAddon: Readline;
     mpyc: MPCManager;
-
+    // core: ICoreTerminal;
+    core: any;
     isLivePanelVisible = true
     livePanel: string = "";
     livePanelLines = 0;
     currentLivePanelMessage = '';
-    terminalContainer: HTMLDivElement;
+    terminalPanel: HTMLDivElement;
     scrollAreaClone: HTMLDivElement;
     scrollArea: HTMLDivElement;
-    viewportDiv: HTMLDivElement;
+    viewportElement: HTMLDivElement;
 
-    constructor(sel: string, mpyc: MPCManager) {
-        let el = $(sel);
+    constructor(selector: string, mpyc: MPCManager) {
+        let parent = $(selector);
         super({
             screenReaderMode: false,
             cols: 80,
@@ -87,19 +91,18 @@ export class Term extends Terminal {
             }
         });
         this.mpyc = mpyc;
+        this.core = (this as any)._core;
 
-        this.terminalContainer = $<HTMLDivElement>('#terminal-container');
+        this.terminalPanel = $<HTMLDivElement>('.terminal-split-pane');
         this.scrollAreaClone = $<HTMLDivElement>('div.xterm-scroll-area-clone');
 
-        this.onResize((_) => {
-            this.updateTermSizeEnv();
-        });
         this.fitAddon = new FitAddon();
         this.searchAddon = new SearchAddon();
         this.searchBarAddon = new SearchBarAddon({ searchAddon: this.searchAddon });
         this.webLinksAddon = new WebLinksAddon()
         this.readlineAddon = new Readline()
         this.readlineAddon.setCheckHandler(text => !text.trimEnd().endsWith("&&"));
+        this.scrollDownAddon = new ScrollDownHelperAddon();
 
         this.loadAddon(this.fitAddon);
         this.loadAddon(this.searchAddon);
@@ -114,26 +117,38 @@ export class Term extends Terminal {
             this.loadAddon(this.canvasAddon);
         }
 
+
         this.loadAddon(this.webLinksAddon);
         this.loadAddon(this.readlineAddon);
         // this.loadAddon(new UnicodeGraphemesAddon());
         this.loadAddon(new Unicode11Addon());
         this.unicode.activeVersion = '11';
+        let ro = new ResizeObserver(() => { this.fit() });
 
         loadWebFont(this).then(() => {
             // this.ligaturesAddon = new LigaturesAddon();
-            this.open(el);
+            this.open(parent);
+            this.loadAddon(this.scrollDownAddon);
+
             // this.loadAddon(this.ligaturesAddon);
-            this.viewportDiv = $<HTMLDivElement>('#terminal-container .xterm-viewport');
-            this.scrollArea = this.viewportDiv.querySelector('div.xterm-scroll-area');
-            $<HTMLTextAreaElement>(`${sel} textarea`).readOnly = true;
+            this.viewportElement = this.core.viewport._viewportElement;
+            this.scrollArea = this.core.viewport._scrollArea;
+
+            $<HTMLTextAreaElement>(`${selector} textarea`).readOnly = true;
             new ResizeObserver(() => {
                 this.scrollAreaClone.style.height = this.scrollArea.clientHeight + "px";
                 this.scrollAreaClone.style.width = this.scrollArea.clientWidth + "px";
+                this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
             }).observe(this.scrollArea)
 
             this.fit();
-            scrollSync(this.terminalContainer, this.viewportDiv)
+            this.scrollSync()
+
+            this.onResize((_) => {
+                this.updateTermSizeEnv();
+            });
+            ro.observe(this.terminalPanel)
+            // ro.observe(parent)
         });
 
 
@@ -187,9 +202,6 @@ export class Term extends Terminal {
                 this.searchBarAddon.hidden();
             }
         });
-
-        let ro = new ResizeObserver(() => { this.fit() });
-        ro.observe(document.querySelector(".split-panel-terminal")!)
     }
 
     time() {
@@ -308,8 +320,13 @@ export class Term extends Terminal {
 
         console.log("resizing terminal to ", dims.cols, dims.rows);
         core._renderService.clear();
+        const wasScrolledDown = this.scrollDownAddon.isScrolledDown()
+
         this.resize(dims.cols, dims.rows);
         this.refresh(0, this.rows - 1)
+        if (wasScrolledDown) {
+            this.scrollToBottom();
+        }
         this.updateTermSizeEnv();
     }
 
@@ -318,27 +335,39 @@ export class Term extends Terminal {
         console.log("updating terminal size env: ", this.cols, this.rows);
         this.mpyc.runtime.updateEnv({ COLUMNS: this.cols.toString(), LINES: this.rows.toString() })
     })
+
+    scrollSync = () => {
+        let isSyncingDivA = false;
+        let isSyncingDivB = false;
+
+        this.terminalPanel.addEventListener('scroll', (ev) => {
+            console.log("scroll", ev)
+            if (!isSyncingDivA && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
+                isSyncingDivB = true;
+                this.viewportElement.scrollTop = this.terminalPanel.scrollTop;
+                this.core._bufferService._onScroll.fire(this.core._bufferService.buffer.ydisp);
+                // divB.dispatchEvent(new Event('scroll'));
+            }
+            isSyncingDivA = false;
+        });
+
+        this.viewportElement.addEventListener('scroll', (ev) => {
+            console.log("scroll2", ev, isSyncingDivB)
+            if (!isSyncingDivB && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
+                isSyncingDivA = true;
+
+                this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+                this.core._bufferService._onScroll.fire(this.core._bufferService.buffer.ydisp);
+                // divA.dispatchEvent(new Event('scroll'));
+            }
+            isSyncingDivB = false;
+        });
+        this.onScroll((...e) => {
+            console.log("onScroll", e, this.terminalPanel.scrollTop, this.viewportElement.scrollTop)
+            this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+            console.log("onScroll", this.terminalPanel.scrollTop, this.viewportElement.scrollTop)
+        })
+    }
+
 }
 
-export const scrollSync = (divA: HTMLDivElement, divB: HTMLDivElement) => {
-    let isSyncingDivA = false;
-    let isSyncingDivB = false;
-
-    divA.addEventListener('scroll', function (ev) {
-        if (!isSyncingDivA) {
-            isSyncingDivB = true;
-
-            divB.scrollTop = divA.scrollTop;
-        }
-        isSyncingDivA = false;
-    });
-
-    divB.addEventListener('scroll', function (ev) {
-        if (!isSyncingDivB) {
-            isSyncingDivA = true;
-
-            divA.scrollTop = divB.scrollTop;
-        }
-        isSyncingDivB = false;
-    });
-}

@@ -11,6 +11,12 @@ export class Editor extends EditorView {
     constructor(selector: string, demoSelect: HTMLSelectElement, mpyc: MPCManager) {
         let extensions = [
             indentUnit.of('    '),
+            EditorView.contentAttributes.of({
+                spellcheck: 'false',
+                autocapitalize: 'none',
+                autocorrect: 'off',
+                "data-gramm": "false",
+            }),
             basicSetup,
             python(),
             keymap.of([

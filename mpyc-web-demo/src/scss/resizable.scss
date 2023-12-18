@@ -13,10 +13,6 @@
     .split {
         height: calc(100vh - 100px);
     }
-
-    option:checked:not(:focus) {
-        color: black;
-    }
 }
 
 @media (max-width: 1199px) {
@@ -29,6 +25,7 @@
     .split {
         height: 120vh;
     }
+
 }
 
 .editor,
@@ -43,7 +40,7 @@
     border: 1px solid $gray-900;
 }
 
-#terminal-container {
+.terminal-split-pane {
     position: relative;
     width: 100%;
     overflow: scroll;
@@ -57,7 +54,7 @@
     z-index: -1;
 }
 
-.terminal-wrapper {
+#terminal {
     top: 0;
     position: sticky !important;
     height: 100%;

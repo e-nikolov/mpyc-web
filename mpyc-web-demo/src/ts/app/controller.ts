@@ -24,7 +24,6 @@ export class Controller {
     knownPeersEl: HTMLElement;
     resetPeerIDButton: HTMLButtonElement;
     runMPyCButton: HTMLButtonElement;
-    runMPyCAsyncButton: HTMLButtonElement;
     stopMPyCButton: HTMLButtonElement;
     connectToPeerButton: HTMLButtonElement;
     sendMessageButton: HTMLButtonElement;
@@ -43,7 +42,6 @@ export class Controller {
         this.knownPeersEl = $(opts.peersDivSelector);
         this.resetPeerIDButton = $<HTMLButtonElement>(opts.resetPeerIDButtonSelector);
         this.runMPyCButton = $<HTMLButtonElement>(opts.runMPyCButtonSelector);
-        this.runMPyCAsyncButton = $<HTMLButtonElement>(opts.runMPyCAsyncButtonSelector);
         this.stopMPyCButton = $<HTMLButtonElement>(opts.stopMPyCButtonSelector);
         this.connectToPeerButton = $<HTMLButtonElement>(opts.connectToPeerButtonSelector);
         this.sendMessageButton = $<HTMLButtonElement>(opts.sendMessageButtonSelector);
@@ -155,7 +153,7 @@ export class Controller {
 
         this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
-        this.runMPyCButton.addEventListener('click', async (ev) => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); });
+        this.runMPyCButton.addEventListener('click', async (ev) => { this.term.scrollToBottom(); mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); });
         this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
         this.sendMessageButton.addEventListener('click', async () => { this.sendChatMessage(); });
         this.clearTerminalButton.addEventListener('click', async () => { this.term.clear(); });
