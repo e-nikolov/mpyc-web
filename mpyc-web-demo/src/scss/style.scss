@@ -54,6 +54,11 @@ body {
 
 }
 
+div,
+select {
+  scrollbar-color: #959595 #2c2c2c !important;
+}
+
 option:checked {
   background: linear-gradient(#c3c3c3, #c3c3c3);
 }
