@@ -11,7 +11,7 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
         this.core = (terminal as any)._core;
         this.viewport = this.core.viewport._viewportElement;
 
-        this.terminal.onScroll(() => {
+        this.viewport.addEventListener('scroll', () => {
             if (this.isScrolledDown()) {
                 this.hide();
             } else {
@@ -42,8 +42,6 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
             this.element.style.visibility = 'visible';
             return;
         }
-
-        this.element = document.createElement('i');
 
         this.terminal.element.style.position = 'relative';
 
