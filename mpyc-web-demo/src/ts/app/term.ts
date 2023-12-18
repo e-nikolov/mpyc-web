@@ -341,32 +341,32 @@ export class Term extends Terminal {
         let isSyncingDivB = false;
 
         this.terminalPanel.addEventListener('scroll', (ev) => {
-            console.log("scroll", ev)
             if (!isSyncingDivA && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
+                // console.log("scroll", ev)
                 isSyncingDivB = true;
                 this.viewportElement.scrollTop = this.terminalPanel.scrollTop;
-                this.core._bufferService._onScroll.fire(this.core._bufferService.buffer.ydisp);
+                // this.core._bufferService._onScroll.fire(this.core._bufferService.buffer.ydisp);
                 // divB.dispatchEvent(new Event('scroll'));
             }
             isSyncingDivA = false;
         });
 
         this.viewportElement.addEventListener('scroll', (ev) => {
-            console.log("scroll2", ev, isSyncingDivB)
             if (!isSyncingDivB && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
+                // console.log("scroll2", ev, isSyncingDivB)
                 isSyncingDivA = true;
 
                 this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
-                this.core._bufferService._onScroll.fire(this.core._bufferService.buffer.ydisp);
+                // this.core._bufferService._onScroll.fire(this.core._bufferService.buffer.ydisp);
                 // divA.dispatchEvent(new Event('scroll'));
             }
             isSyncingDivB = false;
         });
-        this.onScroll((...e) => {
-            console.log("onScroll", e, this.terminalPanel.scrollTop, this.viewportElement.scrollTop)
-            this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
-            console.log("onScroll", this.terminalPanel.scrollTop, this.viewportElement.scrollTop)
-        })
+        // this.onScroll((...e) => {
+        //     console.log("onScroll", e, this.terminalPanel.scrollTop, this.viewportElement.scrollTop)
+        //     this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+        //     console.log("onScroll", this.terminalPanel.scrollTop, this.viewportElement.scrollTop)
+        // })
     }
 
 }
