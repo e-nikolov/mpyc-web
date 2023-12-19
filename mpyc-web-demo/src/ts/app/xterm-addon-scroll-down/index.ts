@@ -26,8 +26,6 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
                 this.show();
             }
         });
-
-        this.show();
     }
 
     dispose(): void {
@@ -57,23 +55,6 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
         this.element.style.backgroundColor = '#252526';
         this.element.style.zIndex = '999';
         this.element.style.cursor = 'pointer';
-
-
-        // this.element = document.createElement('i');
-        // this.terminal.element.style.position = 'relative';
-        // this.element.classList.add('symbols', 'icon-arrow-downward');
-        // this.element.style.width = '30px';
-        // this.element.style.height = '30px';
-        // this.element.style.cursor = 'pointer';
-        // this.element.style.display = 'block';
-        // this.element.style.right = '120px';
-        // this.element.style.bottom = '120px';
-        // this.element.style.boxShadow = 'rgb(0, 0, 0) 0px 2px 8px';
-        // this.element.style.backgroundColor = 'rgb(37, 37, 38)';
-        // this.element.style.zIndex = '99999';
-        // this.element.style.textAlign = 'center';
-        // this.element.style.padding = '10px';
-        // this.element.style.visibility = 'visible';
 
         this.element.addEventListener('click', () => {
             this.terminal.scrollToBottom();

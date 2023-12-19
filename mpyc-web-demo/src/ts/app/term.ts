@@ -128,7 +128,6 @@ export class Term extends Terminal {
         loadWebFont(this).then(() => {
             // this.ligaturesAddon = new LigaturesAddon();
             this.open(parent);
-            this.loadAddon(this.scrollDownAddon);
 
             // this.loadAddon(this.ligaturesAddon);
             this.viewportElement = this.core.viewport._viewportElement;
@@ -149,6 +148,8 @@ export class Term extends Terminal {
             });
             ro.observe(this.terminalPanel)
             // ro.observe(parent)
+
+            this.loadAddon(this.scrollDownAddon);
         });
 
 
