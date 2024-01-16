@@ -4,7 +4,7 @@ import os
 from enum import StrEnum, auto
 from typing import Any, Awaitable, Callable, Coroutine, Dict, List, Literal, Tuple, TypeVarTuple
 
-import js
+import js  # type: ignore
 import rich
 from lib.stats import stats
 from pyodide.ffi import JsProxy, to_js
@@ -74,19 +74,30 @@ from datetime import datetime
 
 
 class AsyncRuntimeProxy:
-    postMessage: Callable[[Any], Awaitable[None]]
+    _postMessage: Callable[[Any], Awaitable[None]]
     on_ready_message: Callable[[int, str], None]
     on_runtime_message: Callable[[int, JsProxy], None]
     on_run_mpc: Callable[[Any], None]
     chan: Any
+    latest_stats_update = 0
 
     def __init__(self, chan: Any):
         self.chan = chan
         chan.onmessage = self.onmessage
-        self.postMessage = chan.postMessage
+        self._postMessage = chan.postMessage
 
     async def fetch(self, filename: str, **opts):
         return pyfetch(filename, **opts)
+
+    def maybe_send_stats(self):
+        if stats.enabled and time.time() - self.latest_stats_update > 3:
+            js.console.warn("sending stats")
+            self.send_stats()
+        return {}
+
+    def postMessage(self, *args, **kwargs):
+        self._postMessage(*args, **kwargs)
+        self.maybe_send_stats()
 
     # async def send(self, _type: str, pid: int, message: Any):
     def send(self, _type: str, pid: int, message: Any):
@@ -96,6 +107,10 @@ class AsyncRuntimeProxy:
     def notify_runtime_ready(self):
         js.console.log("runtime ready")
         self.postMessage(to_js(["proxy:js:runtime:ready"]))
+
+    def send_stats(self):
+        self._postMessage(to_js(["proxy:js:display:stats", str(stats.to_tree())]))
+        self.latest_stats_update = time.time()
 
     def onmessage(self, event: ProxyEvent):
         try:
@@ -150,24 +165,6 @@ class AsyncRuntimeProxy:
             case _:
                 logger.warning(f"Received unknown message type {message_type}")
 
-    async def display(self, msg):
-        """
-        Displays a message.
-
-        Args:
-            msg (str): The message to display.
-        """
-        self.chan.postMessage(to_js(["proxy:js:display", msg]))
-
-    async def display_error(self, msg):
-        """
-        Displays a message.
-
-        Args:
-            msg (str): The message to display.
-        """
-        self.chan.postMessage(to_js(["proxy:js:display:error", msg]))
-
 
 async_proxy = None
 sync_proxy = None
@@ -186,7 +183,7 @@ else:
 
 async def stats_printer():
     while True:
-        async_proxy.postMessage(to_js(["proxy:js:display:stats", str(stats.to_tree())]))
+        async_proxy.send_stats()
         await asyncio.sleep(2)
 
 

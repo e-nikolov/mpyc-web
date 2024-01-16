@@ -31,9 +31,11 @@ export class Controller {
     versionDiv: HTMLDivElement;
     toggleStatsEl: HTMLInputElement;
     qr: app.QRComponent
+    opts: ControllerOptions;
 
     constructor(mpyc: MPCManager, opts: ControllerOptions) {
         this.mpyc = mpyc;
+        this.opts = opts;
 
         this.demoSelect = $<HTMLSelectElement>(opts.demoSelectSelector);
         this.hostPeerIDInput = $<HTMLInputElement>(opts.hostPeerIDInputSelector);
@@ -70,7 +72,7 @@ export class Controller {
         this.term.info(`Initializing ${format.green('PeerJS')}...`);
         this.term.info(`Initializing ${format.green(mpyc.runtime.type())} runtime...`);
 
-        this.updateHostPeerIDInput();
+        this.initHostPeerIDInput();
         this.hostPeerIDInput.addEventListener('input', debounce(() => {
             try {
                 const peerURL = new URL(this.hostPeerIDInput.value);
@@ -99,7 +101,13 @@ export class Controller {
             this.term.error(e.message);
         });
         mpyc.on('transport:ready', async (peerID: string) => {
-            this.myPeerIDEl.value = safe(peerID);
+            peerID = safe(peerID);
+            this.myPeerIDEl.value = peerID;
+            if (this.hostPeerIDInput.value == "") {
+                this.hostPeerIDInput.value = peerID;
+                localStorage.hostPeerID = peerID;
+            }
+
             app.setTabState('myPeerID', peerID);
 
             console.log('Peer ID: ' + peerID);
@@ -151,7 +159,7 @@ export class Controller {
             }
         }
 
-        this.resetPeerIDButton.addEventListener('click', async () => { delete sessionStorage.myPeerID; this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
+        this.resetPeerIDButton.addEventListener('click', async () => { app.deleteTabState("myPeerID"); this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
         this.runMPyCButton.addEventListener('click', async (ev) => { this.term.scrollToBottom(); mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); });
         this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
@@ -212,7 +220,6 @@ export class Controller {
         window.mpyc = this.mpyc;
         window.editor = this.editor;
         window.term = this.term;
-        window.clearTabCount = () => { delete localStorage.tabCount }
         window.r = () => { this.mpyc.reset() };
         window.run = async () => this.mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, false);
         window.runa = async () => this.mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, true);
@@ -220,14 +227,6 @@ export class Controller {
         window.app = this;
     }
 
-    // public setupDemoSelector = app.setupDemoSelector.bind(this);
-    // public onPeerConnectedHook = app.onPeerConnectedHook.bind(this);
-    // public onPeerDisconnectedHook = app.onPeerDisconnectedHook.bind(this);
-    // public onPeerConnectionErrorHook = app.onPeerConnectionErrorHook.bind(this);
-    // public processChatMessage = app.processChatMessage.bind(this);
-    // public updatePeersDiv = app.updatePeersDiv.bind(this);
-    // public updateHostPeerIDInput = app.updateHostPeerIDInput.bind(this);
-    // public sendChatMessage = app.sendChatMessage.bind(this);
     onPeerConnectedHook = async (newPeerID: string) => {
         this.term.success(`Connected to: ${format.peerID(newPeerID)}`);
         this.updatePeersDiv();
@@ -290,15 +289,19 @@ export class Controller {
         this.demoSelect.addEventListener('change', async () => {
             localStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
             sessionStorage.demoSelectorSelectedIndex = this.demoSelect.selectedIndex;
-            let demoCode = await app.fetchSelectedDemo(this.demoSelect);
-            this.editor.updateCode(demoCode);
+            this.updateDemoCode();
         });
 
         this.demoSelect.selectedIndex = parseInt(sessionStorage.demoSelectorSelectedIndex || localStorage.demoSelectorSelectedIndex || 1);
-        this.demoSelect.dispatchEvent(new Event('change'));
+        this.updateDemoCode();
     }
 
-    updateHostPeerIDInput(): string {
+    async updateDemoCode() {
+        let demoCode = await app.fetchSelectedDemo(this.demoSelect);
+        this.editor.updateCode(demoCode);
+    }
+
+    initHostPeerIDInput(): string {
         const urlParams = new URLSearchParams(window.location.search);
         const peer = urlParams.get('peer');
         var hostPeerID = peer || localStorage.hostPeerID;
@@ -331,7 +334,6 @@ export class Controller {
 declare global {
     interface Window {
         mpyc: MPCManager;
-        clearTabCount: any;
         r: any;
         app: Controller
         run: any;

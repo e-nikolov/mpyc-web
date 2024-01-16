@@ -60,6 +60,7 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
             worker: {
                 onReady: (wrap: any, xworker: ReturnType<typeof XXWorker>) => {
                     console.log("worker onReady/init")
+
                     wrap.io.stderr = (message: any) => {
                         if (typeof message != "string") {
                             message = message.toString()

@@ -36,10 +36,10 @@ let blobURL = (code: string) => {
 
 function main() {
     app.ensureStorageSchema(18);
-    let peerID = app.loadPeerID();
+    let peerID = app.getTabState("myPeerID", app.tabID);
 
-    document.title += ` - (${sessionStorage.tabID})`
 
+    document.title += ` - (${app.tabID})`
 
     // ww.onmessage = (e) => {
     //     console.log("onmessage", e)
@@ -57,6 +57,7 @@ function main() {
             return new PeerJSTransport();
         }
     }
+
 
     // const runtimeFactory = () => new PyScriptWorkerRuntime();
     const runtimeFactory = () => new PyScriptWorkerRuntime({
@@ -94,6 +95,8 @@ function main() {
         versionSelector: "#version",
     });
 }
-
-main()
+document.addEventListener('DOMContentLoaded', function () {
+    // setTimeout(main, 1000);
+    main();
+}, false);
 

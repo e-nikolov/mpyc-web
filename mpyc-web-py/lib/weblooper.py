@@ -33,7 +33,13 @@ class WebLooper(WebLoop):
         self.call_soon_count = 0
         self.call_later_count = 0
         self.call_callback_count = 0
+        self.promise = js.Promise.resolve()
         self._run_once_proxy = create_proxy(self._run_once)
+        self.test_proxy = create_proxy(self._test)
+
+    def _test(self, *args):
+        js.console.warn("test????????????????????????????????????")
+        print("test????????????????????????????????????")
 
     def call_soon(
         self,
@@ -43,7 +49,7 @@ class WebLooper(WebLoop):
     ) -> asyncio.Handle:
         delay = 0
         return self.call_later(delay, callback, *args, context=context)
-
+    
     def call_later(  # type: ignore[override]
         self,
         delay: float,
@@ -77,7 +83,14 @@ class WebLooper(WebLoop):
             self._ready.append(run_handle)
             if not self.running:
                 self.running = True
-                js.queueMicrotask(self._run_once_proxy)
+                # js.console.warn("call_later")
+                # js.console.warn("call_later")
+                # self.promise.then(self.test_proxy)
+                # self.promise.then(self.test_proxy)
+                # js.console.warn("call_later")
+                # self.promise.then(self._run_once_proxy)
+                self._run_once_proxy()
+                # js.queueMicrotask(self._run_once_proxy)
 
             return h
 
@@ -87,7 +100,8 @@ class WebLooper(WebLoop):
         js.setTimeout(create_once_callable(run_handle), delay * 1000)
         return h
 
-    def _run_once(self):
+    def _run_once(self, *args, **kwargs):
+        js.console.warn("_run_once")
         self.loop_iters += 1
 
         while len(self._ready) > 0:

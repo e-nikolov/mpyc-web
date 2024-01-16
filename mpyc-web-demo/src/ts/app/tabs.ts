@@ -14,45 +14,41 @@ const __isTabDuplicate = () => {
     addEventListener('beforeunload', function () {
         delete sessionStorage.__lock;
     });
+
     let dup = false;
     if (sessionStorage.__lock) {
         dup = true;
     }
     sessionStorage.__lock = 1;
+
+    setTimeout(() => {
+        sessionStorage.setItem("__lock", "1");
+    }, 2000)
     return dup
 }
 export const isTabDuplicate = __isTabDuplicate()
-
-
 // TODO: not thread safe, breaks if tabs open too quickly
-export function loadPeerID(): string {
-    localStorage.tabCount ||= 0;
-    let tabCount = parseInt(localStorage.tabCount) + 1;
-    localStorage.tabCount = tabCount;
-
-    addEventListener('beforeunload', function () {
-        setTabState("lock", "");
-        let tabCount = parseInt(localStorage.tabCount);
-        if (tabCount > 0) {
-            localStorage.tabCount = tabCount - 1;
-        }
-    });
-
-    if (isTabDuplicate) {
-        console.warn("tab is duplicate")
-    }
-
+export function __loadTabID(): number {
+    let _tabID: number = -1;
     // Duplicated Tabs will have the same tabID and peerID as their parent Tab; we must force reset those values
     if (!sessionStorage.tabID || isTabDuplicate || getTabState("lock", sessionStorage.tabID) != "") {
-        sessionStorage.tabID = selectTabID();
-        sessionStorage.myPeerID = getTabState("myPeerID");
+        console.warn("tab is duplicate", !sessionStorage.tabID, isTabDuplicate, sessionStorage.tabID ? getTabState("lock", sessionStorage.tabID) : "")
+        _tabID = selectTabID();
+    } else {
+        _tabID = parseInt(sessionStorage.tabID);
     }
+    setTabState("lock", "locked", _tabID);
 
-    setTabState("lock", "locked");
-
-    console.log("tab id: " + sessionStorage.tabID);
-    return sessionStorage.myPeerID;
+    return _tabID;
 }
+
+
+export const tabID = __loadTabID()
+console.warn("tabID", tabID)
+addEventListener('beforeunload', function () {
+    sessionStorage.tabID = tabID; // bug with preloading
+    deleteTabState("lock", tabID);
+});
 
 function selectTabID() {
     for (let i = 1; i <= 1000; i++) {
@@ -62,11 +58,14 @@ function selectTabID() {
     }
 }
 
-export function getTabState(key: string, tabID = sessionStorage.tabID) {
-    return localStorage[`tabState:${tabID}:` + key] || "";
+export function getTabState(key: string, _tabID: number = tabID): string {
+    return localStorage[`tabState:${_tabID}:${key}`] || "";
 }
 
-export function setTabState(key: string, value: any, tabID = sessionStorage.tabID) {
-    sessionStorage[key] = value;
-    localStorage[`tabState:${tabID}:` + key] = value;
+export function deleteTabState(key: string, _tabID: number = tabID) {
+    delete localStorage[`tabState:${_tabID}:${key}`];
+}
+
+export function setTabState(key: string, value: string, _tabID: number = tabID) {
+    localStorage[`tabState:${_tabID}:${key}`] = value;
 }

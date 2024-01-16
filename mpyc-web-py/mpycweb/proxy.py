@@ -9,13 +9,11 @@ from typing import Any, Awaitable, Callable
 import js
 import rich
 import rich.text
+from lib import api
 from lib.stats import stats
-from mpycweb.api.run import run_code
+from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
 from pyodide.ffi import JsProxy, to_js
 
-from mpyc import asyncoro  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=import-error,disable=no-name-in-module
-
-from . import api
 from .run_mpc import run_mpc
 from .transport import AbstractClient, PeerJSTransport
 
