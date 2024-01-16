@@ -65,6 +65,7 @@ def aexit(delay=0, num=1):
 from lib.log_levels import *
 
 stats = None
+_print_hook = None
 
 console = Console(
     color_system="truecolor",
@@ -77,17 +78,32 @@ console = Console(
 )
 
 
+def new_print(*args, **kwargs):
+    rich.print(*args, **kwargs)
+    js.console.warn("new_print: _print_hook", *args)
+    js.console.warn(_print_hook)
+    if _print_hook is not None:
+        _print_hook()
+
+
+def new_pprint(*args, **kwargs):
+    pretty.pprint(*args, **kwargs)
+    js.console.warn("new_pprint: _print_hook", *args)
+    js.console.warn(_print_hook)
+    if _print_hook is not None:
+        _print_hook()
+
+
 def install(level, verbosity=0):
     """
     Sets up the logger class for the application.
     """
     rich._console = console  # pylint: disable=protected-access
-
-    builtins.print = rich.print
+    builtins.print = new_print
 
     import pprint
 
-    pprint.pprint = pretty.pprint
+    pprint.pprint = new_pprint
     sys.argv = ["main.py", "--log-level", f"{logging.getLevelName(level)}"]
     logging.setLoggerClass(Logger)
     set_log_level(level, verbosity=verbosity)
@@ -284,22 +300,6 @@ class Handler(RichHandler):
 
 
 loop = asyncio.get_event_loop()
-
-
-class TermWriter(io.StringIO):
-    """
-    A custom class that extends io.StringIO and overrides the write and writelines methods to display text in the notebook.
-    """
-
-    def __init__(self, print_fn) -> None:
-        self.print_fn = print_fn
-
-    def write(self, text):
-        self.print_fn(text)
-
-    def writelines(self, __lines: Iterable[str]) -> None:
-        for line in __lines:
-            self.print_fn(f"{line}\n")
 
 
 def print_tree2(path_str=".", prefix="", text=""):

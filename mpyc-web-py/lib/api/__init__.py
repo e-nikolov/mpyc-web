@@ -20,7 +20,5 @@ import pyodide
 
 from .proxy import RUNNING_IN_WORKER, AsyncRuntimeProxy, SyncRuntimeProxy, async_proxy, stats_printer, sync_proxy
 
-zasync_proxy = async_proxy
-
 loop = asyncio.get_event_loop()
 from .run import *

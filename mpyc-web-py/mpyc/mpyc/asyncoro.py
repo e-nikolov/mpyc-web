@@ -2,13 +2,14 @@
 and computation of secret-shared values.
 """
 
+import functools
+import itertools
+import struct
 import sys
 import traceback
-import struct
-import itertools
-import functools
 import typing
-from asyncio import Protocol, Future, Task
+from asyncio import Future, Protocol, Task
+
 from mpyc.sectypes import SecureObject
 
 runtime = None
@@ -20,7 +21,7 @@ class MessageExchanger(Protocol):
     Bidirectional connection with one of the other parties (peers).
     """
 
-    __slots__ = 'runtime', 'peer_pid', 'bytes', 'buffers', 'transport', 'nbytes_sent'
+    __slots__ = "runtime", "peer_pid", "bytes", "buffers", "transport", "nbytes_sent"
 
     def __init__(self, rt, peer_pid=None):
         """Initialize protocol for runtime rt between this party and a peer.
@@ -55,7 +56,7 @@ class MessageExchanger(Protocol):
             rt = self.runtime
             m = len(rt.parties)
             t = rt.threshold
-            pid_keys = [rt.pid.to_bytes(2, 'little')]  # send pid
+            pid_keys = [rt.pid.to_bytes(2, "little")]  # send pid
             if not rt.options.no_prss:
                 for subset in itertools.combinations(range(m), m - t):
                     if subset[0] == rt.pid and self.peer_pid in subset:
@@ -72,7 +73,7 @@ class MessageExchanger(Protocol):
          3. payload (byte string of length payload_size).
         """
         payload_size = len(payload)
-        fmt = f'<Iq{payload_size}s'
+        fmt = f"<Iq{payload_size}s"
         self.transport.write(struct.pack(fmt, payload_size, pc, payload))
         self.nbytes_sent += 12 + payload_size
 
@@ -89,7 +90,7 @@ class MessageExchanger(Protocol):
             if len(self.bytes) < 2:
                 return
 
-            peer_pid = int.from_bytes(self.bytes[:2], 'little')
+            peer_pid = int.from_bytes(self.bytes[:2], "little")
             len_packet = 2
             rt = self.runtime
             if not rt.options.no_prss:
@@ -108,7 +109,7 @@ class MessageExchanger(Protocol):
                 len_packet = 2
                 for subset in itertools.combinations(range(m), m - t):
                     if subset[0] == peer_pid and rt.pid in subset:
-                        rt._prss_keys[subset] = self.bytes[len_packet:len_packet + 16]
+                        rt._prss_keys[subset] = self.bytes[len_packet : len_packet + 16]
                         len_packet += 16
             del self.bytes[:len_packet]
             self._key_transport_done()
@@ -117,12 +118,12 @@ class MessageExchanger(Protocol):
             if len(self.bytes) < 4:
                 return
 
-            payload_size = struct.unpack_from('<I', self.bytes)[0]
+            payload_size = struct.unpack_from("<I", self.bytes)[0]
             len_packet = payload_size + 12
             if len(self.bytes) < len_packet:
                 return
 
-            pc, payload = struct.unpack_from(f'<q{payload_size}s', self.bytes, 4)
+            pc, payload = struct.unpack_from(f"<q{payload_size}s", self.bytes, 4)
             del self.bytes[:len_packet]
             if pc in self.buffers:
                 self.buffers.pop(pc).set_result(payload)
@@ -159,7 +160,7 @@ class MessageExchanger(Protocol):
 class _AwaitableFuture:
     """Cheap replacement of a Future."""
 
-    __slots__ = 'value'
+    __slots__ = "value"
 
     def __init__(self, value):
         self.value = value
@@ -172,7 +173,7 @@ class _AwaitableFuture:
 class _SharesTallier(Future):
     """Tally and gather all futures (shares) recursively for a given object."""
 
-    __slots__ = 'tally', 'obj'
+    __slots__ = "tally", "obj"
 
     def __init__(self, loop, obj):
         super().__init__(loop=loop)
@@ -254,14 +255,13 @@ def _hop(a):  # NB: redefined in MPyC setup if mix of 32-bit/64-bit platforms en
 
 
 class _ProgramCounterWrapper:
-
-    __slots__ = 'runtime', 'coro', 'pc'
+    __slots__ = "runtime", "coro", "pc"
 
     def __init__(self, rt, coro):
         self.runtime = rt
         self.coro = coro
         rt._program_counter[0] += 1
-        self.pc = [_hop(rt._program_counter), rt._program_counter[1]+1]  # fork
+        self.pc = [_hop(rt._program_counter), rt._program_counter[1] + 1]  # fork
 
     def __await__(self):
         while True:
@@ -284,8 +284,7 @@ async def _wrap_in_coro(awaitable):
 
 
 class _Awaitable:
-
-    __slots__ = 'value'
+    __slots__ = "value"
 
     def __init__(self, value):
         self.value = value
@@ -360,6 +359,11 @@ def _reconcile(decl, task):
     __reconcile(decl, givn)
 
 
+from lib.api import async_proxy
+from lib.stats import stats
+
+
+@stats.acc(lambda decl, givn: stats.time() | async_proxy.maybe_send_stats())
 def __reconcile(decl, givn):
     if isinstance(decl, SecureObject):
         if isinstance(givn, SecureObject):
@@ -391,7 +395,7 @@ def mpc_coro(func, pc=True):
     of the form "-> expression" or by the first await expression in func.
     Return annotations can only be used for static types.
     """
-    rettype = typing.get_type_hints(func).get('return')
+    rettype = typing.get_type_hints(func).get("return")
 
     @functools.wraps(func)
     def typed_asyncoro(*args, **kwargs):
@@ -436,21 +440,21 @@ def mpc_coro(func, pc=True):
 
 def exception_handler(loop, context):
     """Handle some MPyC coroutine related exceptions."""
-    if 'handle' in context:
-        if 'mpc_coro' in context['message']:
-            task = context['handle']._args[0]
-            del context['message']  # suppress detailed message
-            del context['handle']  # suppress details of handle
+    if "handle" in context:
+        if "mpc_coro" in context["message"]:
+            task = context["handle"]._args[0]
+            del context["message"]  # suppress detailed message
+            del context["handle"]  # suppress details of handle
             loop.default_exception_handler(context)
-            print('Traceback (enclosing MPyC coroutine call):')
+            print("Traceback (enclosing MPyC coroutine call):")
             traceback.print_stack(task.f_back)  # TODO: extend call chain
             return
 
-    elif 'task' in context:
-        cb = context['task']._callbacks[0]
+    elif "task" in context:
+        cb = context["task"]._callbacks[0]
         if isinstance(cb, tuple):
             cb = cb[0]  # NB: drop context parameter
-        if 'mpc_coro' in cb.__qualname__:
+        if "mpc_coro" in cb.__qualname__:
             if not loop.get_debug():  # Unless asyncio debug mode is enabled,
                 return  # suppress 'Task was destroyed but it is pending!' message.
 

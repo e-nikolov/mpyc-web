@@ -48,11 +48,11 @@ from lib.stats import stats
 log.stats = stats
 
 
+from lib import api
 from pyodide import webloop
 
-from . import api
-
 stats.enabled = False
+log._print_hook = api.async_proxy.maybe_send_stats
 
 api.sync_proxy.load_env()
 

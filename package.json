@@ -16,7 +16,7 @@
     "build": "yarn build:py && yarn workspace @mpyc-web/core build && yarn workspace @mpyc-web/demo build",
     "build:py:rstats": "cd ./mpyc-web-py/lib/rstats && poetry build -f wheel",
     "build:py": "yarn build:py:rstats && poetry build -f wheel && cp ./dist/*.whl ./mpyc-web-demo/public/py && mkdir -p ./mpyc-web-demo/dist/py/ && cp dist/*.whl ./mpyc-web-demo/dist/py/",
-    "preview": "vite preview",
+    "preview": "yarn workspace @mpyc-web/demo vite preview",
     "starter": "yarn workspace @mpyc-web/starter static",
     "demo": "yarn workspace @mpyc-web/demo static",
     "deploy": "yarn netlify deploy --filter @mpyc-web/demo --alias=${0:-$(git rev-parse --abbrev-ref HEAD)}",

@@ -7,10 +7,10 @@ import typing
 
 import micropip
 import pyodide
+from lib.api.run import run_code
 from lib.exception_handler import exception_handler
 from lib.stats import stats
 from mpyc.runtime import Party, mpc
-from mpycweb.api.run import run_code
 
 logger = logging.getLogger(__name__)
 
