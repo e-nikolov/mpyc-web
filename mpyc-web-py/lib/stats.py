@@ -40,7 +40,6 @@ from rich.text import Text
 from rich.tree import Tree
 
 from .rstats.rstats import BaseStatsCollector, MovingAverage, format_count, format_file_size, format_time
-from .weblooper import WebLooper
 
 # type: ignore-all
 logger = logging.getLogger(__name__)
@@ -66,8 +65,13 @@ import math
 
 def format_asyncio_stats(stats):
     return (
-        f'tasks: {format_count(stats["tasks"])} / {format_count(stats["max_tasks"])} / {format_count(stats["total_tasks_count"])}'
-        f' | call_soon: {format_count(stats["call_soon_count"])} | loop_iters: {format_count(stats["loop_iters"])}'
+        f't: {format_count(stats["tasks"])} / {format_count(stats["max_tasks"])} / {format_count(stats["total_tasks_count"])} \n'
+        f' | l: {format_count(stats["call_soon_count"])}'
+        f' / {format_count(stats["loop_inner_iters"])}'
+        f' / {format_count(stats["loop_iters"])}'
+        f' / {format_count(stats["loop_reiters"])} \n'
+        f' | q: {format_count(stats["ready"])} / {format_count(stats["ntodo"])}'
+        # f' | r: {format_count(stats["run_once_triggers"])} / {format_count(stats["skip_run_once_triggers"])}'
     )
 
 
@@ -145,7 +149,7 @@ class StatsCollector(BaseStatsCollector):
         )
 
     def to_tree(self):
-        self.stats["asyncio"] = self.asyncio_stats()
+        self.asyncio_stats()
 
         # if logger.isEnabledFor(log_levels.TRACE):
         if logger.isEnabledFor(5):
@@ -154,27 +158,40 @@ class StatsCollector(BaseStatsCollector):
 
     def asyncio_stats(self):
         tasks = len(asyncio.tasks._all_tasks)
-        if tasks > self.max_tasks:
-            self.max_tasks = tasks
+        if tasks > self.stats["asyncio"]["max_tasks"]:
+            self.stats["asyncio"]["max_tasks"] = tasks
 
-        return {
-            "tasks": tasks,
-            "max_tasks": self.max_tasks,
-            "total_tasks_count": getattr(self.loop, "total_tasks_count", 0),
-            "call_soon_count": getattr(self.loop, "call_soon_count", 0),
-            "loop_iters": getattr(self.loop, "loop_iters", 0),
-        }
+        self.stats["asyncio"]["tasks"] = tasks
+
+        # return {
+        #     "total_tasks_count": getattr(self.loop, "total_tasks_count", 0),
+        #     "call_soon_count": getattr(self.loop, "call_soon_count", 0),
+        #     "loop_iters": getattr(self.loop, "loop_iters", 0),
+        #     "loop_inner_iters": getattr(self.loop, "loop_inner_iters", 0),
+        #     "loop_queue": {
+        #         "min": None,
+        #         "max": 0,
+        #         "avg": MovingAverage(maxlen=200),
+        #     },
+        # }
 
     def gc_stats(self):
         return gc.get_stats()
 
     def reset(self):
         super().reset()
+        self.stats["asyncio"] = {
+            "max_tasks": 0,
+            "loop_iters": 0,
+            "loop_reiters": 0,
+            "loop_inner_iters": 0,
+            "ready": 0,
+            "total_tasks_count": 0,
+            "call_soon_count": 0,
+            "call_later_count": 0,
+            "ntodo": 0,
+        }
 
-        self.max_tasks = 0
-        if isinstance(self.loop, WebLooper):
-            self.loop.call_soon_count = 0
-            self.loop.total_tasks_count = 0
         # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
     def stat(self, s: NestedDict[str, float]) -> NestedDict[str, float]:
@@ -218,6 +235,7 @@ class StatsCollector(BaseStatsCollector):
         Returns:
             A dictionary containing the updated statistics.
         """
+
         return {
             "messages s/r": {
                 "sent": +1,

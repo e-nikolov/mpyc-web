@@ -17,8 +17,8 @@ export class PeerJSTransport extends Emittery<TransportEvents> implements Transp
             // debug: 3,
             // secure: true,
             secure: true,
-            host: "mpyc-demo--headscale-ams3-c99f82e5.demo.mpyc.tech",
-            port: 443,
+            // host: "mpyc-demo--headscale-ams3-c99f82e5.demo.mpyc.tech",
+            // port: 443,
             config: {
                 iceServers: [
                     { urls: "stun:stun.l.google.com:19302" },

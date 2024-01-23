@@ -145,7 +145,7 @@ async def shutdown(self):
     logger.debug("monkey patched shutdown()")
     try:
         while self._pc_level > self._program_counter[1]:  # pylint: disable=protected-access
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.1)
         elapsed = time.time() - self.start_time
         logger.info(f"Stop MPyC runtime -- elapsed time: {datetime.timedelta(seconds=elapsed)}")
         m = len(self.parties)

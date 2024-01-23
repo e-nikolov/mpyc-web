@@ -6,7 +6,6 @@ __all__ = [
     "NestedDict",
     "bench",
     "MovingAverage",
-    "MovingAverage",
     "DeepCounter",
     "format_time",
     "format_file_size",

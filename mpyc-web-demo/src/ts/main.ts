@@ -5,7 +5,7 @@ import '../scss/style.scss';
 import { MPCManager, PeerJSTransport, PyScriptWorkerRuntime } from '@mpyc-web/core/lib';
 import * as app from './app';
 
-const MPYC_WEB_PY_VERSION = "0.6.1"
+const MPYC_WEB_PY_VERSION = "0.6.2"
 
 let blobURL = (code: string) => {
     return URL.createObjectURL(

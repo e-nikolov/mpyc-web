@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
           name: 'python transform',
           run: ['yarn', 'build:py'],
           condition: (file: string) => {
-            return file.endsWith('.py')
+            return file.endsWith('.py') || file.endsWith('pyproject.toml')
           },
         }
       ]),

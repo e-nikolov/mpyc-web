@@ -7,6 +7,7 @@ import typing
 
 import micropip
 import pyodide
+from lib.api import async_proxy
 from lib.api.run import run_code
 from lib.exception_handler import exception_handler
 from lib.stats import stats
@@ -48,6 +49,9 @@ def run_mpc(options) -> None:
     mpc.options.threshold = (m - 1) // 2
     mpc.options.no_async = m == 1 and options.no_async
     stats.reset()
+    if stats.enabled:
+        async_proxy.send_stats()
+
     assert 2 * mpc.options.threshold < m, f"threshold {mpc.options.threshold} too large for {m} parties"
 
     parties = []

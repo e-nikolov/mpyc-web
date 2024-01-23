@@ -77,11 +77,11 @@ class Client(AbstractClient):
         self.transports[pid] = t
         return t, p
 
-    @stats.acc(lambda self, pid, message: stats.sent_to(pid, message))
+    # @stats.acc(lambda self, pid, message: stats.sent_to(pid, message))
     def send_ready_message(self, pid: int, message: str):
         self.async_proxy.send("proxy:js:mpc:msg:ready", pid, message)
 
-    @stats.acc(lambda self, pid, message: stats.received_from(pid, message))
+    # @stats.acc(lambda self, pid, message: stats.received_from(pid, message))
     def on_ready_message(self, pid: int, message: str):
         """
         Handle a 'ready' message from a peer.
@@ -98,12 +98,12 @@ class Client(AbstractClient):
             return
         self.transports[pid].on_ready_message(message)
 
-    @stats.acc(lambda self, pid, message: stats.sent_to(pid, message) | stats.time())
+    # @stats.acc(lambda self, pid, message: stats.sent_to(pid, message) | stats.time())
     def send_runtime_message(self, pid: int, message: bytes):
         # add timestamp
         self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message)
 
-    @stats.acc(lambda self, pid, message, ts: stats.received_from(pid, message) | stats.time() | stats.latency(ts))
+    # @stats.acc(lambda self, pid, message, ts: stats.received_from(pid, message) | stats.time() | stats.latency(ts))
     def on_runtime_message(self, pid: int, message: JsProxy, ts) -> None:
         """
         Handle a runtime message from a peer.
