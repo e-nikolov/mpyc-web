@@ -65,13 +65,9 @@ import math
 
 def format_asyncio_stats(stats):
     return (
-        f't: {format_count(stats["tasks"])} / {format_count(stats["max_tasks"])} / {format_count(stats["total_tasks_count"])} \n'
-        f' | l: {format_count(stats["call_soon_count"])}'
-        f' / {format_count(stats["loop_inner_iters"])}'
-        f' / {format_count(stats["loop_iters"])}'
-        f' / {format_count(stats["loop_reiters"])} \n'
-        f' | q: {format_count(stats["ready"])} / {format_count(stats["ntodo"])}'
-        # f' | r: {format_count(stats["run_once_triggers"])} / {format_count(stats["skip_run_once_triggers"])}'
+        f"tasks: {format_count(stats['ntodo'])} / {format_count(stats['tasks'])} / {format_count(stats['max_tasks'])} /"
+        f" {format_count(stats['total_tasks_count'])} | loop: {format_count(stats['loop_iters'])} /"
+        f" {format_count(stats['loop_inner_iters'])} / {format_count(stats['call_soon_count'])}"
     )
 
 
