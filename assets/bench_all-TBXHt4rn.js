@@ -1,1 +1,0 @@
-import"./purify.es-qJ_kTSwo.js";import{m as a}from"./index-Qi_Ngyxk.js";import{m as i}from"./index-yjVKgdVf.js";import"./index-IqbplxEJ.js";document.title="MPyC Web - Bench All";async function m(){await i(),await a()}await m();

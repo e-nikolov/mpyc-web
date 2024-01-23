@@ -1,0 +1,1 @@
+{"version":3,"file":"index-l3c7Xces.js","sources":["../../bench/timeouts/index.html?html-proxy&index=1.js"],"sourcesContent":["\n    import * as bench from \"./index.ts\"\n    await bench.main()\n  "],"names":["bench.main"],"mappings":"8NAEUA"}

@@ -1,6 +1,0 @@
-packages = ["emfs:./mpyc_web-0.4.0-py3-none-any.whl"]
-
-[[fetch]]
-from = "./py/"
-to_folder = "./"
-files = ["mpyc_web-0.4.0-py3-none-any.whl", "demo.py"]
