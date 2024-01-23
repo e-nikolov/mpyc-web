@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{pkgs, ...}: {
   # https://devenv.sh/basics/
   env.GREET = "devenv";
   env.PYTHON_KEYRING_BACKEND = "keyring.backends.null.Keyring";
@@ -6,6 +6,7 @@
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
+    pkgs.nodePackages_latest.dotenv-cli
     pkgs.poetry
     pkgs.python311Packages.pip
     pkgs.just
@@ -25,9 +26,8 @@
     pkgs.gole
     pkgs.go-stun
     pkgs.pion-stun
-    # pkgs.bun
-    pkgs.nodePackages.lerna
-    pkgs.yarn2nix
+    # pkgs.nodePackages.lerna
+    # pkgs.yarn2nix
     pkgs.python311Packages.gmpy2
     pkgs.python311Packages.numpy
     pkgs.twine
@@ -50,8 +50,7 @@
         repo = "terraform-provider-digitalocean";
         rev = "a88a19be189e01aec9a9152dc3543f9a6493cc81";
         version = "2.28.1";
-        homepage =
-          "https://registry.terraform.io/providers/digitalocean/digitalocean";
+        homepage = "https://registry.terraform.io/providers/digitalocean/digitalocean";
         vendorHash = null;
       })
       (tp.mkProvider {
@@ -67,8 +66,7 @@
 
   # https://devenv.sh/scripts/
   scripts.hello.exec = "echo hello from $GREET";
-  scripts.yi.exec =
-    "yarn; yarn workspace @mpyc-web/core install; yarn workspace @mpyc-web/demo install";
+  scripts.yi.exec = "yarn; yarn workspace @mpyc-web/core install; yarn workspace @mpyc-web/demo install";
   scripts.yb.exec = "yarn workspace @mpyc-web/$1 build";
   scripts.yd.exec = "yarn workspace @mpyc-web/$1 dev";
   scripts.yw.exec = ''

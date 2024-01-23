@@ -1,0 +1,45 @@
+Python 3.11
+
+
+############################# bnnmnist/3 ##########################
+
+mswsl1/native												00:27
+
+mswin1/web/v0.6.0-c8b8d89/edge/debug     					02:25
+mswin1/web/v0.5.0-c8b8d89/edge/debug     					01:32
+mswin1/web/v0.4.0-76ca881/edge/debug  						01:32
+mswin1/web/v0.2.1-a51a93f/edge					   		    02:10
+
+mswin1/web/v0.6.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.5.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.4.0-76ca881/ffox/debug						??:??
+mswin1/web/v0.2.1-a51a93f/ffox								??:??
+
+
+############################# bnnmnist/1 #############################
+
+mswsl1/native												00:21
+
+mswin1/web/v0.6.0-c8b8d89/edge/debug     					00:55
+mswin1/web/v0.5.0-76ca881/edge/debug  						00:58
+mswin1/web/v0.4.0-76ca881/edge/debug  						00:58
+mswin1/web/v0.2.1-a51a93f/edge					   		    01:57 / 02:00
+
+mswin1/web/v0.6.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.5.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.4.0-76ca881/ffox/debug						??:??
+mswin1/web/v0.2.1-a51a93f/ffox								??:??
+
+############################# bnnmnist/0 #############################
+
+mswsl1/native												00:13
+
+mswin1/web/v0.6.0-c8b8d89/edge/debug     					00:37
+mswin1/web/v0.5.0-c8b8d89/edge/debug     					00:39
+mswin1/web/v0.4.0-76ca881/edge/debug  						00:39
+mswin1/web/v0.2.1-a51a93f/edge					   		    00:39
+
+mswin1/web/v0.6.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.5.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.4.0-76ca881/ffox/debug						??:??
+mswin1/web/v0.2.1-a51a93f/ffox								??:??

@@ -14,18 +14,17 @@ ignore = ["mpyc-web-py/lib/stats.py"]
 
 [tool.poetry]
 name = "mpyc-web"
-version = "0.6.1"
+version = "0.6.2"
 description = "MPyC for Multiparty Computation in Python for the Web"
 authors = ["Emil Nikolov <eenikolov@proton.me>"]
 packages = [
     { include = "./mpycweb", from = "./mpyc-web-py" },
     { include = "./lib", from = "./mpyc-web-py" },
-    { include = "./bench.py", from = "./mpyc-web-py/lib" },
+    { include = "./rstats", from = "./mpyc-web-py/lib/rstats" },
     { include = "./startup", from = "./mpyc-web-py" },
     { include = "./mpyc", from = "./mpyc-web-py/mpyc" },
     { include = "./*.py", from = "./mpyc-web-py/mpyc/demos" }
 ]
-
     [tool.poetry.dependencies]
     python = "^3.11,<3.13"
     rich = "^13.5.3"
@@ -50,6 +49,7 @@ packages = [
     rich = "^13.5.3"
 
     mpyc = { path = "./mpyc-web-py/mpyc/", develop = true }
+    rstats = { path = "./mpyc-web-py/lib/rstats", develop = true }
     matplotlib = "^3.5.2"
     pandas = "1.5.3"
     scipy = "1.11.2"

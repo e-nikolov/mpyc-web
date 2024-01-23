@@ -112,3 +112,13 @@ patch dep version='':
 
 build:
 	yarn build
+	
+devs2:
+	WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT op.exe run --env-file="./.env" -- wsl env | grep VITE
+
+devs:
+	WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT:PATH/p op.exe run --no-masking --env-file="./.env" -- wsl.exe -- VITE_HTTPS=true yarn dev
+	
+watch:
+	# wsl.exe -- nix develop --impure -c -- yarn vite --debug
+	WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT:PATH wsl.exe -- yarn vite --debug

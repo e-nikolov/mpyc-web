@@ -81,6 +81,7 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                     console.log(self.pyodide)
                     // wrap.interpreter.setStdin(true)
                     // wrap.interpreter.setStdout(true)
+                    wrap.interpreter.setDebug(true)
 
                     self.runAsync = async (code: string, filename: string) => {
                         try {
@@ -91,34 +92,6 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                         }
                     };
 
-                    // const oldSetTimeout = self.setTimeout
-
-                    // const setTimeoutFromSetImmediate = (setImmediate: (cb: () => void) => void) => (callback: () => never, delay: number = 0) => {
-                    //     if (delay < 1) {
-                    //         return setImmediate(callback)
-                    //     } else {
-                    //         return oldSetTimeout(callback, delay);
-                    //     }
-                    // }
-
-                    // self.counter = 0;
-                    // var queue = {};
-
-                    // var channel = new MessageChannel();
-
-                    // channel.port1.onmessage = function (event) {
-                    //     var callback = queue[event.data];
-                    //     delete queue[event.data];
-                    //     callback();
-                    // };
-
-                    // const setImmediate = (callback: () => void) => {
-                    //     queue[++self.counter] = callback;
-                    //     channel.port2.postMessage(self.counter);
-                    // }
-
-                    // self.fastSetTimeout = setTimeoutFromSetImmediate(setImmediate)
-                    // self.setTimeout = self.fastSetTimeout;
                     // self.runAsync(wrap, startup, { filename: "startup.py" })
                     self.runAsync(`
                         import asyncio
@@ -157,7 +130,5 @@ declare global {
     interface Window {
         runAsync: (code: string, filename: string) => Promise<any>;
         counter: number;
-        fastSetTimeout: (callback: () => never, delay: number) => void;
-        setTimeout: any
     }
 }

@@ -1,0 +1,147 @@
+Python 3.11
+
+
+############################# cnnmnist/3 ##########################
+
+mswsl1/native												02:25
+mswin1/native												02:19
+linux2/native												02:02
+
+mswin1/web/v0.9.2-312c118(wl7)/chrm/debug	    			09:30
+mswin1/web/v0.9.2-312c118(wl6)/chrm	            			08:40 
+
+mswin1/web/v0.9.2-312c118(wl6)/chrm/debug	    			09:46
+mswin1/web/v0.9.2-312c118(wl6)/chrm	            			08:40 
+
+mswin1/web/v0.9.2-312c118(wl5)/chrm/debug	    			09:48
+mswin1/web/v0.9.2-312c118(wl5)/chrm	            			08:13 
+
+mswin1/web/v0.9.2-312c118(wl4)/chrm/debug	    			09:54
+mswin1/web/v0.9.2-312c118(wl4)/chrm	            			08:21
+
+mswin1/web/v0.9.2-312c118(wl3)/chrm/debug	    			10:01
+mswin1/web/v0.9.2-312c118(wl3)/chrm	            			08:40
+
+mswin1/web/v0.9.2-e110e8c(owl3)/chrm/debug	    			09:50
+mswin1/web/v0.9.2-e110e8c(owl3)/chrm    	    			09:17
+
+mswin1/web/v0.9.2-e110e8c(owl2)/chrm/debug	    			10:29 / 10:24 / 10:14
+mswin1/web/v0.9.2-e110e8c(owl2)/chrm    	    			08:46 / 12:00 / 09:06 / 09:18
+
+mswin1/web/v0.9.2-03f1a8a(owl)/chrm/debug	    			xx:xx - queueMicrotask deadlock after Barrier 1 0
+mswin1/web/v0.9.2-03f1a8a(owl)/chrm      	    			xx:xx - queueMicrotask deadlock after Barrier 1 0, 
+
+mswin1/web/v0.7.0-d09e338/edge/full_async					30:00
+mswin1/web/v0.7.0-d09e338/edge/full_call_soon				24:19
+mswin1/web/v0.7.0-d09e338/edge								11:37
+mswin1/web/v0.7.0-d09e338/edge/debug						11:59
+mswin1/web/v0.5.0-d09e338/edge/debug						11:32 / 11:55
+mswin1/web/v0.5.0-c8b8d89/edge/debug/console				25:51
+mswin1/web/v0.4.0-76ca881/edge/debug						12:40 / 12:45
+mswin1/web/v0.2.1-a51a93f/edge/debug		    			19:53 / 20:08
+
+mswin1/web/v0.7.0-d09e338/ffox								12:17
+mswin1/web/v0.7.0-d09e338/ffox/debug						13:16
+mswin1/web/v0.5.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.4.0-76ca881/ffox/debug						??:??
+mswin1/web/v0.2.1-a51a93f/ffox/debug						??:??
+
+linux2/web/v0.7.0-d09e338/edge	 							13:15 
+linux2/web/v0.7.0-d09e338/edge/debug						13:51 / 14:12 / 13:54
+linux2/web/v0.5.0-c8b8d89/edge/debug	 					14
+linux2/web/v0.4.0-76ca881/edge/debug						??:??
+linux2/web/v0.2.1-a51a93f/edge/debug						??:??
+
+linux2/web/v0.7.0-d09e338/ffox/debug/full_async				36:00
+linux2/web/v0.7.0-d09e338/ffox/debug						16:00 / 16:59
+linux2/web/v0.5.0-c8b8d89/ffox/debug						19:44 / 20:42 / 20:49
+linux2/web/v0.5.0-c8b8d89/ffox/debug/10/100					36:00
+linux2/web/v0.4.0-76ca881/ffox/debug						23:38
+linux2/web/v0.2.1-a51a93f/ffox/debug						??:??
+
+
+mswin1/web/v0.5.0-c8b8d89/edge/dev							10:22
+mswin1/web/v0.5.0-c8b8d89/edge								??:??
+
+############################# cnnmnist/1 #############################
+
+mswsl1/native												01:21
+mswin1/native												01:20
+linux2/native												01:06
+
+
+mswin1/web/v0.9.2-312c118(wl3)/chrm/debug	    			04:08
+mswin1/web/v0.9.2-312c118(wl3)/chrm	            			03:56
+
+mswin1/web/v0.9.2-e110e8c(owl3)/chrm/debug	    			03:36
+mswin1/web/v0.9.2-e110e8c(owl3)/chrm    	    			03:38
+
+mswin1/web/v0.9.2-e110e8c(owl2)/chrm/debug	    			03:40
+mswin1/web/v0.9.2-e110e8c(owl2)/chrm    	    			03:47
+
+mswin1/web/v0.9.2-03f1a8a(owl)/chrm/debug	    			03:38
+mswin1/web/v0.9.2-03f1a8a(owl)/chrm      	    			03:43
+
+mswin1/web/v0.5.0-c8b8d89/edge/debug						05:17
+mswin1/web/v0.4.0-76ca881/edge/debug						05:18
+mswin1/web/v0.2.1-a51a93f/edge					    		05:57
+
+mswin1/web/v0.5.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.4.0-76ca881/ffox/debug						??:??
+mswin1/web/v0.2.1-a51a93f/ffox/debug						??:??
+
+linux2/web/v0.5.0-c8b8d89/edge/debug						05:20
+linux2/web/v0.4.0-76ca881/edge/debug						05:34
+linux2/web/v0.2.1-a51a93f/edge				    			06:13
+
+linux2/web/v0.5.0-c8b8d89/ffox/debug		   		    	06:02 / 05:52 / 05:46 
+linux2/web/v0.4.0-76ca881/ffox/debug			    		06:24 / 06:17
+linux2/web/v0.2.1-a51a93f/ffox				    			06:04
+
+
+
+
+
+
+mswin1/web/v0.5.0-c8b8d89/edge/desktop-win					05:15
+mswin1/web/v0.5.0-c8b8d89/edge/desktop-win/dev				05:11
+
+
+############################# cnnmnist/1/no async #############################
+
+mswsl1/native												00:26
+mswin1/native												00:27
+linux2/native												00:24
+
+mswin1/web/v0.9.2-312c118(wl3)/chrm/debug	    			01:38
+mswin1/web/v0.9.2-312c118(wl3)/chrm   				        01:39
+
+mswin1/web/v0.9.2-e110e8c(owl3)/chrm/debug 	    			01:38
+mswin1/web/v0.9.2-e110e8c(owl3)/chrm    	    			01:36
+
+mswin1/web/v0.9.2-e110e8c(owl2)/chrm/debug 	    			01:36
+mswin1/web/v0.9.2-e110e8c(owl2)/chrm    	    			01:36
+
+mswin1/web/v0.9.2-03f1a8a(owl)/chrm/debug	    			01:43
+mswin1/web/v0.9.2-03f1a8a(owl)/chrm      	    			01:45
+
+mswin1/web/v0.5.0-c8b8d89/edge/debug     					01:35
+mswin1/web/v0.4.0-76ca881/edge/debug  						01:38
+mswin1/web/v0.2.1-a51a93f/edge					   		    01:33
+
+mswin1/web/v0.5.0-c8b8d89/ffox/debug						??:??
+mswin1/web/v0.4.0-76ca881/ffox/debug						??:??
+mswin1/web/v0.2.1-a51a93f/ffox/debug						??:??
+
+linux2/web/v0.5.0-c8b8d89/edge/debug						?????
+linux2/web/v0.4.0-76ca881/edge/debug						01:43
+linux2/web/v0.2.1-a51a93f/edge								?????
+
+linux2/web/v0.5.0-c8b8d89/ffox/debug			    		01:34 / 01:20
+linux2/web/v0.4.0-76ca881/ffox/debug		   		    	01:41 / 01:21
+linux2/web/v0.2.1-a51a93f/ffox				   		    	01:21 / 01:21
+
+
+
+mswin1/web/v0.5.0-c8b8d89/edge/dev							01:34
+mswin1/web/v0.5.0-c8b8d89/edge								01:36

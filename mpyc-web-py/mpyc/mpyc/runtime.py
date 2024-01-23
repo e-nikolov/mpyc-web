@@ -7,29 +7,26 @@ from numeric types to more advanced types, for which the corresponding operation
 are made available through Python's mechanism for operator overloading.
 """
 
-import os
-import sys
-import time
+import asyncio
+import configparser
 import datetime
+import functools
+import itertools
 import logging
 import math
-import secrets
-import itertools
-import functools
-import configparser
-from dataclasses import dataclass
+import os
 import pickle
-import asyncio
-from mpyc.numpy import np
-from mpyc import finfields
-from mpyc import thresha
-from mpyc import sectypes
-from mpyc import asyncoro
-from mpyc import mpctools
-import mpyc.secgroups
+import secrets
+import sys
+import time
+from dataclasses import dataclass
+
 import mpyc.random
-import mpyc.statistics
+import mpyc.secgroups
 import mpyc.seclists
+import mpyc.statistics
+from mpyc import asyncoro, finfields, mpctools, sectypes, thresha
+from mpyc.numpy import np
 
 Future = asyncio.Future
 
@@ -147,7 +144,7 @@ class Runtime:
         logging.info(f'Barrier{name} {self._pc_level} {self._program_counter[1]}')
         if not self.options.no_async:
             while self._pc_level > self._program_counter[1]:
-                await asyncio.sleep(0)
+                await asyncio.sleep(0.1)
 
     async def throttler(self, load_percentage=1.0, name=None):
         """Throttle runtime by given percentage (default 1.0), using optional name for barrier."""
@@ -258,7 +255,7 @@ class Runtime:
         """
         # Wait for all parties behind a barrier.
         while self._pc_level > self._program_counter[1]:
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.1)
         elapsed = time.time() - self.start_time
         elapsed = str(datetime.timedelta(seconds=elapsed))  # format: YYYY-MM-DDTHH:MM:SS[.ffffff]
         elapsed = elapsed[:-3] if elapsed[-7] == '.' else elapsed + '.000'  # keep milliseconds .fff
@@ -4262,6 +4259,7 @@ def setup():
         m = options.M or 1
         if m > 1 and options.index is None:
             import subprocess
+
             # convert sys.flags into command line arguments
             flgmap = {'debug': 'd', 'inspect': 'i', 'interactive': 'i', 'optimize': 'O',
                       'dont_write_bytecode': 'B', 'no_user_site': 's', 'no_site': 'S',

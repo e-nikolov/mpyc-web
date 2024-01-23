@@ -8,6 +8,5 @@ export declare class PyScriptWorkerRuntime extends MPCRuntimeBase {
 declare global {
     interface Window {
         runAsync: any;
-        fastSetTimeout: (callback: () => never, delay: number) => void;
     }
 }

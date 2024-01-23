@@ -21,10 +21,11 @@ import json
 import logging
 import math
 import time
+from ast import Num
 from collections import deque
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, ParamSpec, TypeVar
+from typing import Any, Callable, Generic, ParamSpec, TypeVar
 
 import humanize
 import rich
@@ -46,6 +47,7 @@ NestedDict = dict[K, V | "NestedDict[K, V]"]
 Numeric = int | float
 
 N = TypeVar("N", int, float)
+T = TypeVar("T")
 
 # pyright: ignore-all
 # pylint: disable=all
@@ -95,8 +97,22 @@ class DeepCounter(NestedDict[K, Numeric | Any]):
     ```
     """
 
-    def update(self, iterable: NestedDict[K, Numeric]):
-        self._update_recursive(self, iterable)
+    def set_path(self, path: str, value: Numeric):
+        keys = path.split(".")
+        d = self
+        for key in keys[:-1]:
+            # Create a nested dictionary if key does not exist
+            d = d.setdefault(key, {})
+        d[keys[-1]] = value
+
+    def acc_path(self, path: str, value: Numeric):
+        keys = path.split(".")
+        d = self
+        for key in keys[:-1]:
+            # Create a nested dictionary if key does not exist
+            d = d.setdefault(key, {})
+        d.setdefault(keys[-1], 0)
+        d[keys[-1]] += value
 
     def set(self, iterable: NestedDict[K, Numeric]):
         """
@@ -119,6 +135,9 @@ class DeepCounter(NestedDict[K, Numeric | Any]):
                     raise TypeError(f"Cannot set {type(value)} to {type(target[key])} for key {key}")
             else:
                 target[key] = value
+
+    def update(self, iterable: NestedDict[K, Numeric]):
+        self._update_recursive(self, iterable)
 
     def _update_recursive(self, target: NestedDict[K, Numeric], source: NestedDict[K, Numeric]):
         for key, value in source.items():
@@ -201,6 +220,7 @@ def format_count(count, unit=""):
 
 
 FUNC_ARG: str = "$func"
+TIME_ARG: str = "$time"
 
 
 class BaseStatsCollector:
@@ -221,8 +241,16 @@ class BaseStatsCollector:
             "time": format_time,
         } | formatters
 
+    def set_path(self, path: str, value: Any):
+        if self.enabled:
+            self.stats.set_path(path, value)
+
+    def acc_path(self, path: str, value: Any):
+        if self.enabled:
+            self.stats.acc_path(path, value)
+
     def dec(
-        self, counter_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[NestedDict[str, Numeric]], None]
+        self, counter_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
     ) -> Callable[[Callable[P, R]], Callable[P, R]]:
         """
         A decorator function for collecting statistics.
@@ -245,7 +273,7 @@ class BaseStatsCollector:
                 res = func(*args, **kwargs)
                 elapsed_time = (time.perf_counter_ns() - start_time) // 1000
 
-                d = counter_func(*args, **kwargs)
+                d: NestedDict[str, Numeric] = counter_func(*args, **kwargs)
                 if FUNC_ARG in d:
                     f_name = func.__name__
                     func_stats = d.pop(FUNC_ARG)
@@ -272,8 +300,7 @@ class BaseStatsCollector:
                         if self.stats[f_name]["time"]["max"]  # pyright: ignore
                         else elapsed_time  # pyright: ignore
                     )
-
-                update_func(d)
+                update_func()(d)
                 return res
 
             return wrapper
@@ -302,7 +329,7 @@ class BaseStatsCollector:
         Returns:
             Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
         """
-        return self.dec(counter_func, self.stats.update)
+        return self.dec(counter_func, lambda: self.stats.update)
 
     def reset(self):
         """
@@ -315,7 +342,6 @@ class BaseStatsCollector:
     def to_tree(self):
         if not self.enabled:
             return ""
-
         tree = Tree("", style="gray50", hide_root=True)
         self._to_tree(self.stats, tree)
 
@@ -370,6 +396,21 @@ class BaseStatsCollector:
             Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
         """
         return {FUNC_ARG: {}}
+
+    # def avg(self, name: str, value: Numeric = 1):
+    #     """
+    #     A decorator function for accumulating statistics.
+
+    #     Args:
+    #         counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
+
+    #     Returns:
+    #         Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
+    #     """
+    #     if name not in self.stats:
+    #         self.stats[name] = MovingAverage(maxlen=200)
+
+    #     return self.stats[name].append(value)
 
     def total_calls(self) -> NestedDict[str, float]:
         """

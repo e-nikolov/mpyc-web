@@ -29,6 +29,8 @@ import sys
 
 from lib.weblooper import WebLooper
 
+# from lib.weblooperV2 import WebLooper
+
 asyncio.set_event_loop(WebLooper())
 
 import js
@@ -63,16 +65,11 @@ import mpyc
 
 logger.debug(f"MPyC version={mpyc.__version__}")  # pyright: ignore[reportGeneralTypeIssues] pylint: disable=no-member,c-extension-no-member
 
-from lib.bench import *
 
 from .patches import *
 from .transport import *
 
 # asyncio.ensure_future(api.async_proxy.notify_runtime_ready())
-
-
-asyncio.create_task(api.stats_printer())
-
 
 logger.debug(f"Python version={sys.version}")
 (a, b, c) = sys._emscripten_info.emscripten_version  # pyright: ignore

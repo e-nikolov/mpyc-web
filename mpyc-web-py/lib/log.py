@@ -80,18 +80,18 @@ console = Console(
 
 def new_print(*args, **kwargs):
     rich.print(*args, **kwargs)
-    js.console.warn("new_print: _print_hook", *args)
-    js.console.warn(_print_hook)
-    if _print_hook is not None:
-        _print_hook()
+    # js.console.warn("new_print: _print_hook", *args)
+    # js.console.warn(_print_hook)
+    # if _print_hook is not None:
+    #     _print_hook()
 
 
 def new_pprint(*args, **kwargs):
     pretty.pprint(*args, **kwargs)
-    js.console.warn("new_pprint: _print_hook", *args)
-    js.console.warn(_print_hook)
-    if _print_hook is not None:
-        _print_hook()
+    # js.console.warn("new_pprint: _print_hook", *args)
+    # js.console.warn(_print_hook)
+    # if _print_hook is not None:
+    #     _print_hook()
 
 
 def install(level, verbosity=0):

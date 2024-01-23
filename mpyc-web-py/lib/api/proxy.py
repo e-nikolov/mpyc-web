@@ -89,16 +89,6 @@ class AsyncRuntimeProxy:
     async def fetch(self, filename: str, **opts):
         return pyfetch(filename, **opts)
 
-    def maybe_send_stats(self):
-        if stats.enabled and time.time() - self.latest_stats_update > 3:
-            js.console.warn("sending stats")
-            self.send_stats()
-        return {}
-
-    def postMessage(self, *args, **kwargs):
-        self._postMessage(*args, **kwargs)
-        self.maybe_send_stats()
-
     # async def send(self, _type: str, pid: int, message: Any):
     def send(self, _type: str, pid: int, message: Any):
         self.postMessage(to_js([_type, pid, [message, time.time_ns() // 1000]]))
@@ -108,9 +98,22 @@ class AsyncRuntimeProxy:
         js.console.log("runtime ready")
         self.postMessage(to_js(["proxy:js:runtime:ready"]))
 
-    def send_stats(self):
+    def _send_stats(self):
         self._postMessage(to_js(["proxy:js:display:stats", str(stats.to_tree())]))
         self.latest_stats_update = time.time()
+
+    def send_stats(self):
+        if stats.enabled:
+            self._send_stats()
+
+    def maybe_send_stats(self, duration=1):
+        if stats.enabled and time.time() - self.latest_stats_update >= duration:
+            self._send_stats()
+        return {}
+
+    def postMessage(self, *args, **kwargs):
+        self._postMessage(*args, **kwargs)
+        # self.maybe_send_stats()
 
     def onmessage(self, event: ProxyEvent):
         try:
@@ -127,10 +130,19 @@ class AsyncRuntimeProxy:
         match message_type:
             case ProxyEventType.STATS_TOGGLE:
                 stats.enabled = not stats.enabled
+                self._send_stats()
+                stats_printer.set(stats.enabled)
+
             case ProxyEventType.STATS_SHOW:
                 stats.enabled = True
+                self._send_stats()
+                stats_printer.start()
+
             case ProxyEventType.STATS_HIDE:
                 stats.enabled = False
+                self._send_stats()
+                stats_printer.stop()
+
             case ProxyEventType.STATS_RESET:
                 stats.reset()
             case ProxyEventType.MPC_READY:
@@ -166,25 +178,49 @@ class AsyncRuntimeProxy:
                 logger.warning(f"Received unknown message type {message_type}")
 
 
-async_proxy = None
-sync_proxy = None
+def get_proxies() -> tuple[AsyncRuntimeProxy, SyncRuntimeProxy]:
+    if RUNNING_IN_WORKER:
+        from polyscript import xworker  # pylint: disable-all
+
+        async_proxy = AsyncRuntimeProxy(xworker)
+        sync_proxy = SyncRuntimeProxy(xworker.sync)
+
+    else:
+        sync_proxy = SyncRuntimeProxy(js.MPCRuntimeSyncChannel)
+        async_proxy = AsyncRuntimeProxy(js.MPCRuntimeAsyncChannel)
+    return async_proxy, sync_proxy
 
 
-if RUNNING_IN_WORKER:
-    from polyscript import xworker
-
-    async_proxy = AsyncRuntimeProxy(xworker)
-    sync_proxy = SyncRuntimeProxy(xworker.sync)
-
-else:
-    sync_proxy = SyncRuntimeProxy(js.MPCRuntimeSyncChannel)
-    async_proxy = AsyncRuntimeProxy(js.MPCRuntimeAsyncChannel)
+async_proxy, sync_proxy = get_proxies()
 
 
-async def stats_printer():
-    while True:
-        async_proxy.send_stats()
-        await asyncio.sleep(2)
+class StatsPrinter:
+    def __init__(self, interval=1):
+        self._task: asyncio.Task | None = None
+        self.interval = interval
+
+    def set(self, flag: bool):
+        if flag:
+            self.start()
+        else:
+            self.stop()
+
+    def start(self):
+        if not self._task:
+            self._task = asyncio.create_task(self._do_task())
+
+    def stop(self):
+        if self._task:
+            self._task.cancel()
+            self._task = None
+
+    async def _do_task(self):
+        while True:
+            async_proxy.maybe_send_stats()
+            await asyncio.sleep(self.interval)
+
+
+stats_printer = StatsPrinter()
 
 
 def on_update_env(env):
