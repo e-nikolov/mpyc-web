@@ -86,14 +86,13 @@ class WebLooper(WebLoop):
     def _run_once(self, *args, **kwargs):
         ntodo = len(self._ready)
         stats_set("ntodo", ntodo)
-        async_proxy.maybe_send_stats()
 
         for _ in range(ntodo):
             stats_add("loop_inner_iters")
             self._ready.popleft()()
 
         nleft = len(self._ready)
-        stats_set("ready", nleft)
+        async_proxy.maybe_send_stats()
         if nleft == 0:
             self.running = False
         else:

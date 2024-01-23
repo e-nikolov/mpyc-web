@@ -8,7 +8,7 @@ import { MPCRuntimeBase } from '../MPCRuntimeBase';
 
 function XXWorker(startupURL: string, configFilePath: string | any, hooks: any) {
     let opts: unknown = {
-        async: true, type: "pyodide", version: "0.24.1", config: configFilePath
+        async: true, type: "pyodide", version: "0.25.0", config: configFilePath
     }
 
     console.log("creating a new worker")
