@@ -153,6 +153,9 @@ class StatsCollector(BaseStatsCollector):
         return super().to_tree()
 
     def asyncio_stats(self):
+        if "asyncio" not in self.stats:
+            return
+
         tasks = len(asyncio.tasks._all_tasks)
         if tasks > self.stats["asyncio"]["max_tasks"]:
             self.stats["asyncio"]["max_tasks"] = tasks
@@ -202,21 +205,21 @@ class StatsCollector(BaseStatsCollector):
         """
         return s
 
-    def latency(self, ts: int) -> NestedDict[str, float]:  # pyright: ignore
+    def latency(self, ts: int, key="latency") -> NestedDict[str, float]:  # pyright: ignore
         l: int = time.time_ns() // 1000 - ts
         if l <= 0:
             return {}
 
-        if "latency" not in self.stats:
-            self.stats["latency"] = {  # pyright: ignore
+        if key not in self.stats:
+            self.stats[key] = {  # pyright: ignore
                 "min": None,
                 "max": 0,
                 "avg": MovingAverage(maxlen=200),
             }
 
-        self.stats["latency"]["avg"].append(l)
-        self.stats["latency"]["min"] = min(l, self.stats["latency"]["min"]) if self.stats["latency"]["min"] else l  # pyright: ignore
-        self.stats["latency"]["max"] = max(l, self.stats["latency"]["max"]) if self.stats["latency"]["max"] else l  # pyright: ignore
+        self.stats[key]["avg"].append(l)
+        self.stats[key]["min"] = min(l, self.stats[key]["min"]) if self.stats[key]["min"] else l  # pyright: ignore
+        self.stats[key]["max"] = max(l, self.stats[key]["max"]) if self.stats[key]["max"] else l  # pyright: ignore
 
         return {}
 

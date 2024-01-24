@@ -2,12 +2,13 @@ import asyncio
 import collections
 import contextvars
 import types
+from random import sample, shuffle
 from typing import Any, Callable, Optional
 
 import js
 import rich
 from lib.api import async_proxy
-from lib.stats import stats
+from lib.stats import MovingAverage, stats
 from pyodide.code import run_js
 from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
 from pyodide.webloop import PyodideFuture, PyodideTask, WebLoop
@@ -83,20 +84,46 @@ class WebLooper(WebLoop):
         stats_add("loop_iters")
         self.chan.port2.postMessage(None)
 
+    @stats.acc(lambda *args, **kwargs: stats.time())
     def _run_once(self, *args, **kwargs):
         ntodo = len(self._ready)
         stats_set("ntodo", ntodo)
+        ntodoz(ntodo)
+        async_proxy.maybe_send_stats()
 
-        for _ in range(ntodo):
+        # sample_indices = set(sample(range(ntodo), ntodo))
+
+        # ready_shuff = [self._ready[i] for i in sample_indices]
+        # self._ready.clear()
+
+        # for h in ready_shuff:
+        #     stats_add("loop_inner_iters")
+        #     h()
+
+        while self._ready:
             stats_add("loop_inner_iters")
             self._ready.popleft()()
 
         nleft = len(self._ready)
-        async_proxy.maybe_send_stats()
+        ntodoz(nleft, "left")
         if nleft == 0:
             self.running = False
         else:
             self.trigger_run_once()
+
+
+def ntodoz(ntodo, key="ready"):
+    if key not in stats.stats:
+        stats.stats[key] = {  # pyright: ignore
+            "min_cnt": 0,
+            "max": 0,
+            "avg": MovingAverage(maxlen=200),
+        }
+    stats.stats[key]["avg"].append(ntodo)
+    if ntodo <= 0:
+        stats.stats[key]["min_cnt"] += 1
+
+    stats.stats[key]["max"] = max(ntodo, stats.stats[key]["max"]) if stats.stats[key]["max"] else ntodo  # pyright: ignore
 
 
 def stats_add(path: str, value=1, prefix="asyncio."):

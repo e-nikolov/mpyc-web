@@ -20,17 +20,17 @@ Version History:
         * fix run_until_complete
 """
 
-import heapq
 import asyncio
+import contextvars
+import heapq
 import time
 import traceback
-import contextvars
+from typing import Awaitable, Callable, Dict, Optional, Tuple
 
 import js
-from typing import Dict, Tuple, Optional, Awaitable, Callable
 
 
-class WebLoop(asyncio.AbstractEventLoop):
+class WebLooper(asyncio.AbstractEventLoop):
     """A custom event loop for running asyncio in Pyodide
 
     It works by utilizing the browser event loop via the setTimeout function
@@ -380,14 +380,14 @@ class WebLoopPolicy(asyncio.DefaultEventLoopPolicy):
         Get the current event loop
         """
         if self._default_loop is None:
-            self._default_loop = WebLoop()
+            self._default_loop = WebLooper()
         return self._default_loop
 
     def new_event_loop(self):
         """
         Create a new event loop
         """
-        self._default_loop = WebLoop()
+        self._default_loop = WebLooper()
         return self._default_loop
 
     def set_event_loop(self, loop: asyncio.AbstractEventLoop):
