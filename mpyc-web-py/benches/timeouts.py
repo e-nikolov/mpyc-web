@@ -93,10 +93,10 @@ def loopz(a: Any, b: Any, c: Any = 4):
 async def main():
     await async_sleep_0()
 
-    sync_sleep_0()
+    # sync_sleep_0()
 
-    await async_nothing()
-    sync_nothing()
+    # await async_nothing()
+    # sync_nothing()
     logging.info("---done---")
 
 

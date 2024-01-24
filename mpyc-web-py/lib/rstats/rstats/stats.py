@@ -73,6 +73,9 @@ class MovingAverage:
     def __float__(self):
         return self._total / len(self._ring)
 
+    def __str__(self):
+        return str(float(self))
+
 
 class DeepCounter(NestedDict[K, Numeric | Any]):
     """A nested dictionary that stores numeric values and supports recursive updates.
