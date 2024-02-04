@@ -45,7 +45,7 @@ packages = [
     # pyodide-pack = "^2.1.2"
     # pyodide-pack = "^0.2.0"
     # pyodide-pack = "^0.2.0"
-    pyodide-py = "^0.25.0"
+    pyodide-py = "^0.24.1"
     rich = "^13.5.3"
 
     mpyc = { path = "./mpyc-web-py/mpyc/", develop = true }

@@ -13,6 +13,9 @@ from pyodide.ffi import to_js
 logger = logging.getLogger(__name__)
 
 from lib.log import *  # # add imports here to make them available by default to the demos run inside the pyodide runtime
+from lib.rstats.rstats.prof import prof
+
+__all__ = ["run_code", "prof"]
 
 
 async def run_file(file: str):

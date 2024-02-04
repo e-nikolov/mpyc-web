@@ -19,20 +19,20 @@ export class PeerJSTransport extends Emittery<TransportEvents> implements Transp
             secure: true,
             // host: "mpyc-demo--headscale-ams3-c99f82e5.demo.mpyc.tech",
             // port: 443,
-            config: {
-                iceServers: [
-                    { urls: "stun:stun.l.google.com:19302" },
-                    {
-                        urls: [
-                            "turn:eu-0.turn.peerjs.com:3478",
-                            // "turn:us-0.turn.peerjs.com:3478",
-                        ],
-                        username: "peerjs",
-                        credential: "peerjsp",
-                    },
-                ],
-                sdpSemantics: "unified-plan",
-            }
+            // config: {
+            //     iceServers: [
+            //         { urls: "stun:stun.l.google.com:19302" },
+            //         {
+            //             urls: [
+            //                 "turn:eu-0.turn.peerjs.com:3478",
+            //                 // "turn:us-0.turn.peerjs.com:3478",
+            //             ],
+            //             username: "peerjs",
+            //             credential: "peerjsp",
+            //         },
+            //     ],
+            //     sdpSemantics: "unified-plan",
+            // }
 
             // pingInterval: 2345,
         };

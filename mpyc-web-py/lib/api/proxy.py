@@ -74,7 +74,6 @@ from datetime import datetime
 
 
 class AsyncRuntimeProxy:
-    _postMessage: Callable[[Any], Awaitable[None]]
     on_ready_message: Callable[[int, str], None]
     on_runtime_message: Callable[[int, JsProxy], None]
     on_run_mpc: Callable[[Any], None]
@@ -83,8 +82,8 @@ class AsyncRuntimeProxy:
 
     def __init__(self, chan: Any):
         self.chan = chan
+        self.postMessage = chan.postMessage
         chan.onmessage = self.onmessage
-        self._postMessage = chan.postMessage
 
     async def fetch(self, filename: str, **opts):
         return pyfetch(filename, **opts)
@@ -99,7 +98,7 @@ class AsyncRuntimeProxy:
         self.postMessage(to_js(["proxy:js:runtime:ready"]))
 
     def _send_stats(self):
-        self._postMessage(to_js(["proxy:js:display:stats", str(stats.to_tree())]))
+        self.postMessage(to_js(["proxy:js:display:stats", str(stats.to_tree())]))
         self.latest_stats_update = time.time()
 
     def send_stats(self):
@@ -111,17 +110,17 @@ class AsyncRuntimeProxy:
             self._send_stats()
         return {}
 
-    def postMessage(self, *args, **kwargs):
-        self._postMessage(*args, **kwargs)
-        # self.maybe_send_stats()
+    # def postMessage(self, *args, **kwargs):
+    #     self._postMessage(*args, **kwargs)
+    #     # self.maybe_send_stats()
+
+    # def onmessage(self, event: ProxyEvent):
+    #     try:
+    #         self._onmessage(event)
+    #     except Exception as e:
+    #         logger.error(e, exc_info=True, stack_info=True)
 
     def onmessage(self, event: ProxyEvent):
-        try:
-            self._onmessage(event)
-        except Exception as e:
-            logger.error(e, exc_info=True, stack_info=True)
-
-    def _onmessage(self, event: ProxyEvent):
 
         # js.console.error("onmessage")
         # [message_type, *rest] = event.data.to_py()
@@ -155,7 +154,8 @@ class AsyncRuntimeProxy:
             case ProxyEventType.MPC_RUNTIME:
                 pid, message = rest
 
-                message, ts = message.to_py()
+                message, ts = message
+                message = message.to_py()
 
                 self.on_runtime_message(pid, message, ts)
                 # loop.create_task(self.on_runtime_message(pid, message))
