@@ -29,11 +29,8 @@ class WebLooper(WebLoop):
 
         self.running = False
         self._ready = collections.deque()
-        self._run_once_proxy = create_proxy(self._run_once)
-        self.chan = js.MessageChannel.new()
-        self.chan.port1.onmessage = self._run_once_proxy
 
-    # @stats.acc(lambda self, callback, *args, context: stats.time())
+    @stats.acc(lambda self, callback, *args, context: stats.time())
     def call_soon(
         self,
         callback: Callable[..., Any],
@@ -74,49 +71,16 @@ class WebLooper(WebLoop):
             self._ready.append(run_handle)
             if not self.running:
                 self.running = True
-                self.trigger_run_once()
-                # self._run_once()
+                stats_add("loop_iters")
+                while self._ready:
+                    stats_add("loop_inner_iters")
+                    stats_set("ntodo", len(self._ready))
+                    self._ready.popleft()()
+                self.running = False
 
             return h
         js.setTimeout(create_once_callable(run_handle), delay * 1000)
         return h
-
-    def trigger_run_once(self):
-        self.chan.port2.postMessage(None)
-
-    # @stats.acc(lambda *args, **kwargs: stats.time())
-    def _run_once(self, *args, **kwargs):
-        stats_add("loop_iters")
-        ntodo = len(self._ready)
-        stats_set("ntodo", ntodo)
-
-        for _ in range(ntodo):
-            stats_add("loop_inner_iters")
-            self._ready.popleft()()
-
-        nleft = len(self._ready)
-        # ntodoz(nleft, "left")
-        if nleft == 0:
-            self.running = False
-        else:
-            self.trigger_run_once()
-
-
-def ntodoz(ntodo, key="ready"):
-    if not stats.enabled:
-        return
-
-    if key not in stats.stats:
-        stats.stats[key] = {  # pyright: ignore
-            "min_cnt": 0,
-            "max": 0,
-            "avg": MovingAverage(maxlen=200),
-        }
-    stats.stats[key]["avg"].append(ntodo)
-    if ntodo <= 0:
-        stats.stats[key]["min_cnt"] += 1
-
-    stats.stats[key]["max"] = max(ntodo, stats.stats[key]["max"]) if stats.stats[key]["max"] else ntodo  # pyright: ignore
 
 
 def stats_add(path: str, value=1, prefix="asyncio."):

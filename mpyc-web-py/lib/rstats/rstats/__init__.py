@@ -1,7 +1,10 @@
 from .bench import bench
-from .stats import BaseStatsCollector, DeepCounter, MovingAverage, NestedDict, format_count, format_file_size, format_time
+from .prof import prof
+from .stats import BaseStatsCollector, DeepCounter, MovingAverage, NestedDict, TimeStats, format_count, format_file_size, format_time
 
 __all__ = [
+    "prof",
+    "TimeStats",
     "BaseStatsCollector",
     "NestedDict",
     "bench",

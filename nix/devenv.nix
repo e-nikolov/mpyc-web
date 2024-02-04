@@ -77,7 +77,6 @@
   # devenv.debug = true;
   dotenv.enable = true;
   enterShell = ''
-    hello
     git --version
   '';
 

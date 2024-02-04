@@ -16,13 +16,16 @@ about the arguments passed to a function.
 """
 
 import asyncio
+import inspect
 import io
 import json
 import logging
 import math
+import sys
 import time
 from ast import Num
 from collections import deque
+from contextlib import ContextDecorator
 from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, Generic, ParamSpec, TypeVar
@@ -54,6 +57,8 @@ T = TypeVar("T")
 # pyright: ignore=all
 # type: ignore=all
 
+from enum import StrEnum, auto
+
 
 class MovingAverage:
     def __init__(self, maxlen: int = 100):
@@ -75,6 +80,31 @@ class MovingAverage:
 
     def __str__(self):
         return str(float(self))
+
+
+class TimeStats:
+    def __init__(self):
+        self.min = None
+        self.max = 0
+        self.avg = MovingAverage(maxlen=200)
+        self.total: float = 0
+
+    def update(self, t: float):
+        self.total += t
+
+        self.avg.append(t)
+
+        if self.min is None or self.min > t:
+            self.min = t
+
+        if self.max is None or self.max < t:
+            self.max = t
+
+    def __str__(self):
+        return f"∧ {_format_time(self.min)} / μ {_format_time(float(self.avg))} / ∨ {_format_time(self.max)} / ∑ {_format_time(self.total)}"
+
+    def __repr__(self):
+        return str(self)
 
 
 class DeepCounter(NestedDict[K, Numeric | Any]):
@@ -175,7 +205,7 @@ def metric(value: float, unit: str = "", precision: int = 3) -> str:
         ordinal_ = "mμnpfazyrq"[(-exponent - 1) // 3]
     else:
         ordinal_ = ""
-    value_ = format(value, ".%if" % max(0, precision - (exponent % 3) - 1))
+    value_ = format(value, ".%if" % max(0, precision - (exponent % 3) - 1)).rstrip("0").rstrip(".")
     if not (unit or ordinal_) or unit in ("°", "′", "″"):
         space = ""
     else:
@@ -204,12 +234,21 @@ def time_delta_fmt(time_a, time_b):
     return datetime.utcfromtimestamp((time_a - time_b).total_seconds()).strftime("%X")
 
 
-def format_time(time):
-    # return f'{_format_time(time["min"])} / {_format_time(time["mavg"])} / {_format_time(time["avg"])} / {_format_time(time["max"])}'
-    return f'{_format_time(time["min"])} / {_format_time(float(time["avg"]))} / {_format_time(time["max"])}'
+def format_time(time: TimeStats):
+    return str(time)
 
 
-def _format_time(time: Numeric):
+def format_times(times):
+    txt = ""
+    for k, time in sorted(times.items()):
+        txt += f"\n\t{k}: {format_time(time)}"
+    return txt
+
+
+def _format_time(time: Numeric | None):
+    if time is None:
+        return "-"
+
     return metric(time / 1_000_000, "s")
 
 
@@ -218,7 +257,7 @@ def format_file_size(size):
 
 
 def format_count(count, unit=""):
-    return metric(count, unit=unit, precision=0)
+    return metric(count, unit=unit, precision=3)
     # return humanize.intword(count)
 
 
@@ -241,7 +280,7 @@ class BaseStatsCollector:
         self.stats = DeepCounter[str]({})
         self.loop = asyncio.get_event_loop()
         self.formatters = {
-            "time": format_time,
+            TIME_ARG: format_times,
         } | formatters
 
     def set_path(self, path: str, value: Any):
@@ -253,7 +292,7 @@ class BaseStatsCollector:
             self.stats.acc_path(path, value)
 
     def dec(
-        self, counter_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
+        self, make_stats_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
     ) -> Callable[[Callable[P, R]], Callable[P, R]]:
         """
         A decorator function for collecting statistics.
@@ -271,39 +310,17 @@ class BaseStatsCollector:
             def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
                 if not self.enabled:
                     return func(*args, **kwargs)
-
-                start_time = time.perf_counter_ns()
+                new_stats: NestedDict[str, Numeric] = make_stats_func(*args, **kwargs)
                 res = func(*args, **kwargs)
-                elapsed_time = (time.perf_counter_ns() - start_time) // 1000
-
-                d: NestedDict[str, Numeric] = counter_func(*args, **kwargs)
-                if FUNC_ARG in d:
+                if FUNC_ARG in new_stats:
                     f_name = func.__name__
-                    func_stats = d.pop(FUNC_ARG)
-                    d |= {f_name: func_stats}
+                    func_stats = new_stats.pop(FUNC_ARG)
+                    new_stats |= {f_name: func_stats}
 
                     if f_name not in self.stats:  # pyright: ignore
                         self.stats[f_name] = {}  # pyright: ignore
 
-                    if "time" not in self.stats[f_name]:  # pyright: ignore
-                        self.stats[f_name]["time"] = {  # pyright: ignore
-                            "min": None,
-                            "max": None,
-                            "avg": MovingAverage(maxlen=200),
-                        }
-
-                    self.stats[f_name]["time"]["avg"].append(elapsed_time)  # pyright: ignore
-                    self.stats[f_name]["time"]["min"] = (  # pyright: ignore
-                        min(elapsed_time, self.stats[f_name]["time"]["min"])  # pyright: ignore
-                        if self.stats[f_name]["time"]["min"]  # pyright: ignore
-                        else elapsed_time  # pyright: ignore
-                    )
-                    self.stats[f_name]["time"]["max"] = (  # pyright: ignore
-                        max(elapsed_time, self.stats[f_name]["time"]["max"])  # pyright: ignore
-                        if self.stats[f_name]["time"]["max"]  # pyright: ignore
-                        else elapsed_time  # pyright: ignore
-                    )
-                update_func()(d)
+                update_func()(new_stats)
                 return res
 
             return wrapper
@@ -333,6 +350,98 @@ class BaseStatsCollector:
             Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
         """
         return self.dec(counter_func, lambda: self.stats.update)
+
+    def time(self, label=None, test=1):
+        return self._timer(self, label, test)
+
+    class _timer(ContextDecorator):
+        def __init__(self, stats: "BaseStatsCollector", label=None, test=1):
+            self.stats = stats
+            self.label = label
+
+        def __call__(self, func, *args, **kwargs):  # only called when used as a decorator
+            self.func = func
+            if self.label is None:  # Label was not provided
+                self.label = func.__name__
+            return super().__call__(func)
+
+        def __enter__(self):
+            if not self.stats.enabled:
+                return
+
+            if self.label is None:  # Label was not provided
+                f = sys._getframe().f_back
+                f_name = f.f_code.co_name
+                line = f.f_lineno
+                self.label = f"{f_name}:{line}" or "default"
+
+            if TIME_ARG not in self.stats.stats:  # pyright: ignore
+                self.stats.stats[TIME_ARG] = {}  # pyright: ignore
+
+            if self.label not in self.stats.stats[TIME_ARG]:  # pyright: ignore
+                self.stats.stats[TIME_ARG][self.label] = TimeStats()  # pyright: ignore
+
+            self.start_time = time.perf_counter_ns()
+
+        def __exit__(self, *args):
+            if not self.stats.enabled:
+                return
+
+            elapsed_time = (time.perf_counter_ns() - self.start_time) // 1000  # pyright: ignore
+
+            time_stats: TimeStats = self.stats.stats[TIME_ARG][self.label]  # pyright: ignore
+            time_stats.update(elapsed_time)
+
+    def time2(self) -> Callable[[Callable[P, R]], Callable[P, R]]:
+        """
+        A decorator function for collecting statistics.
+
+        Args:
+            counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
+            ff (Callable[[], Callable[[NestedDict[str, Numeric]], None]]): A function that returns a function for updating the statistics.
+
+        Returns:
+            Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that collects statistics.
+        """
+
+        def decorator(func: Callable[P, R]) -> Callable[P, R]:
+            f_name = func.__name__
+
+            @wraps(func)
+            def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+                if not self.enabled:
+                    return func(*args, **kwargs)
+
+                if TIME_ARG not in self.stats:  # pyright: ignore
+                    self.stats[TIME_ARG] = {}  # pyright: ignore
+
+                if f_name not in self.stats[TIME_ARG]:  # pyright: ignore
+                    self.stats[TIME_ARG][f_name] = {  # pyright: ignore
+                        "min": None,
+                        "max": None,
+                        "avg": MovingAverage(maxlen=200),
+                    }
+
+                time_stats = self.stats[TIME_ARG][f_name]  # pyright: ignore
+
+                start_time = time.perf_counter_ns()
+                res = func(*args, **kwargs)
+                elapsed_time = (time.perf_counter_ns() - start_time) // 1000  # pyright: ignore
+
+                time_stats["avg"].append(elapsed_time)  # pyright: ignore
+
+                if time_stats["min"] is None or time_stats["min"] > elapsed_time:  # pyright: ignore
+                    time_stats["min"] = elapsed_time  # pyright: ignore
+
+                if time_stats["max"] is None or time_stats["max"] < elapsed_time:  # pyright: ignore
+                    time_stats["max"] = elapsed_time  # pyright: ignore
+                # self.stats[TIME_ARG][f_name] = time_stats  # pyright: ignore
+
+                return res
+
+            return wrapper
+
+        return decorator
 
     def reset(self):
         """
@@ -387,18 +496,6 @@ class BaseStatsCollector:
             stats_data (dict): A dictionary containing the stats data to be logged.
         """
         logger.log(level, self.dumps(name, stats_data), stacklevel=2)
-
-    def time(self) -> NestedDict[str, float]:
-        """
-        A decorator function for accumulating statistics.
-
-        Args:
-            counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
-
-        Returns:
-            Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
-        """
-        return {FUNC_ARG: {}}
 
     # def avg(self, name: str, value: Numeric = 1):
     #     """

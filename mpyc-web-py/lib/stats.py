@@ -39,7 +39,7 @@ from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
-from .rstats.rstats import BaseStatsCollector, MovingAverage, format_count, format_file_size, format_time
+from .rstats.rstats import BaseStatsCollector, MovingAverage, TimeStats, format_count, format_file_size, format_time
 
 # type: ignore-all
 logger = logging.getLogger(__name__)
@@ -65,9 +65,9 @@ import math
 
 def format_asyncio_stats(stats):
     return (
-        f"tasks: {format_count(stats['ntodo'])} / {format_count(stats['tasks'])} / {format_count(stats['max_tasks'])} /"
-        f" {format_count(stats['total_tasks_count'])} | loop: {format_count(stats['loop_iters'])} /"
-        f" {format_count(stats['loop_inner_iters'])} / {format_count(stats['call_soon_count'])}"
+        f"tasks: {format_count(stats['tasks'])} / ∨ {format_count(stats['max_tasks'])} / ∑"
+        f" {format_count(stats['total_tasks_count'])} | loop: o {format_count(stats['loop_iters'])} / i"
+        f" {format_count(stats['loop_inner_iters'])} / {format_count(stats['ntodo'])}"
     )
 
 
@@ -79,7 +79,7 @@ def format_data(data):
     if "received" in data:
         received = data["received"]
 
-    return f"{format_file_size(sent)} / {format_file_size(received)}"
+    return f"⬆{format_file_size(sent)} / ⬇{format_file_size(received)}"
 
 
 def format_messages(messages):
@@ -90,7 +90,7 @@ def format_messages(messages):
     if "received" in messages:
         received = messages["received"]
 
-    return f"{format_count(sent)} / {format_count(received)}"
+    return f"⬆{format_count(sent)} / ⬇{format_count(received)}"
 
 
 def metric(value: float, unit: str = "", precision: int = 3) -> str:
@@ -137,9 +137,9 @@ class StatsCollector(BaseStatsCollector):
             formatters={
                 "total_bytes_received": format_file_size,
                 "total_bytes_sent": format_file_size,
-                "messages s/r": format_messages,
+                "messages": format_messages,
                 "asyncio": format_asyncio_stats,
-                "data s/r": format_data,
+                "data": format_data,
                 "latency": format_time,
             }
         )
@@ -152,15 +152,15 @@ class StatsCollector(BaseStatsCollector):
             self.stats["gc"] = self.gc_stats()
         return super().to_tree()
 
-    def asyncio_stats(self):
-        if "asyncio" not in self.stats:
+    def asyncio_stats(self, key="asyncio"):
+        if key not in self.stats:
             return
 
         tasks = len(asyncio.tasks._all_tasks)
-        if tasks > self.stats["asyncio"]["max_tasks"]:
-            self.stats["asyncio"]["max_tasks"] = tasks
+        if tasks > self.stats[key]["max_tasks"]:
+            self.stats[key]["max_tasks"] = tasks
 
-        self.stats["asyncio"]["tasks"] = tasks
+        self.stats[key]["tasks"] = tasks
 
         # return {
         #     "total_tasks_count": getattr(self.loop, "total_tasks_count", 0),
@@ -194,15 +194,6 @@ class StatsCollector(BaseStatsCollector):
         # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
 
     def stat(self, s: NestedDict[str, float]) -> NestedDict[str, float]:
-        """
-        Compute statistics on the input dictionary.
-
-        Args:
-            s (NestedDict[str, float]): A nested dictionary of float values.
-
-        Returns:
-            NestedDict[str, float]: A nested dictionary of statistics computed on the input dictionary.
-        """
         return s
 
     def latency(self, ts: int, key="latency") -> NestedDict[str, float]:  # pyright: ignore
@@ -211,15 +202,9 @@ class StatsCollector(BaseStatsCollector):
             return {}
 
         if key not in self.stats:
-            self.stats[key] = {  # pyright: ignore
-                "min": None,
-                "max": 0,
-                "avg": MovingAverage(maxlen=200),
-            }
+            self.stats[key] = TimeStats()  # pyright: ignore
 
-        self.stats[key]["avg"].append(l)
-        self.stats[key]["min"] = min(l, self.stats[key]["min"]) if self.stats[key]["min"] else l  # pyright: ignore
-        self.stats[key]["max"] = max(l, self.stats[key]["max"]) if self.stats[key]["max"] else l  # pyright: ignore
+        self.stats[key].update(l)
 
         return {}
 
@@ -236,10 +221,10 @@ class StatsCollector(BaseStatsCollector):
         """
 
         return {
-            "messages s/r": {
+            "messages": {
                 "sent": +1,
             },
-            "data s/r": {
+            "data": {
                 "sent": +len(msg),
             },
             # "messages": +1,
@@ -264,10 +249,10 @@ class StatsCollector(BaseStatsCollector):
             - bytes_received_from[pid]: The number of bytes received from the given party.
         """
         return {
-            "messages s/r": {
+            "messages": {
                 "received": +1,
             },
-            "data s/r": {
+            "data": {
                 "received": +len(msg),
             },
             # "total_messages_received": +1,

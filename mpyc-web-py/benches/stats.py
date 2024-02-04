@@ -20,7 +20,8 @@ def stats_add(path: str, value=1, prefix="asyncio."):
 
 
 @bench
-@stats.acc(lambda path, value=1, prefix="asyncio.": stats.time() | {"test2": 1})
+@stats.time()
+@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time(path: str, value=1, prefix="asyncio."):
     pass
 
@@ -32,13 +33,15 @@ def stats_acc(path: str, value=1, prefix="asyncio."):
 
 
 @bench
-@stats.acc(lambda path, value=1, prefix="asyncio.": stats.time() | {"test2": 1})
+@stats.time()
+@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time_maybe_send(path: str, value=1, prefix="asyncio."):
     async_proxy.maybe_send_stats()
 
 
 @bench
-@stats.acc(lambda path, value=1, prefix="asyncio.": stats.time() | {"test2": 1})
+@stats.time()
+@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time_send(path: str, value=1, prefix="asyncio."):
     async_proxy.send_stats()
 
@@ -50,21 +53,24 @@ def loop(path: str, value=1, prefix="asyncio."):
 
 
 @bench
-@stats.acc(lambda path, value=1, prefix="asyncio.": stats.time() | {"test2": 1})
+@stats.time()
+@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_loop(path: str, value=1, prefix="asyncio."):
     for i in range(1000):
         pass
 
 
 @bench
-@stats.acc(lambda path, value=1, prefix="asyncio.": stats.time() | {"test2": 1})
+@stats.time()
+@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time_maybe_send_loop(path: str, value=1, prefix="asyncio."):
     for i in range(1000):
         async_proxy.maybe_send_stats()
 
 
 @bench
-@stats.acc(lambda path, value=1, prefix="asyncio.": stats.time() | {"test2": 1})
+@stats.time()
+@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time_send_loop(path: str, value=1, prefix="asyncio."):
     for i in range(1000):
         async_proxy.send_stats()
