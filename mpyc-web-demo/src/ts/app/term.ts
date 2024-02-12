@@ -7,8 +7,8 @@ import { Unicode11Addon } from 'xterm-addon-unicode11';
 import { WebLinksAddon } from 'xterm-addon-web-links';
 import { WebglAddon } from 'xterm-addon-webgl';
 import { Readline } from 'xterm-readline';
-// import { FitAddon } from './xterm-addon-fit';
-import { FitAddon } from 'xterm-addon-fit';
+import { FitAddon } from './xterm-addon-fit';
+// import { FitAddon } from 'xterm-addon-fit';
 import { SearchBarAddon } from './xterm-addon-search-bar';
 // import { UnicodeGraphemesAddon } from 'xterm-addon-unicode-graphemes';
 import { safe } from '../utils';
@@ -16,6 +16,7 @@ import { safe } from '../utils';
 const CARRIAGE_RETURN = "\r"
 const CURSOR_UP = "\x1b[1A"
 const ERASE_IN_LINE = "\x1b[2K"
+const SET_SCROLL_REGION = "\x1b[1000r"
 
 import { $, debounce, isMobile } from '../utils';
 
@@ -50,7 +51,7 @@ export class Term extends Terminal {
         let parent = $(selector);
         super({
             screenReaderMode: false,
-            cols: 80,
+            cols: 100,
             allowProposedApi: true,
             customGlyphs: true,
             // windowsMode: true, // breaks the split panel
@@ -67,6 +68,8 @@ export class Term extends Terminal {
             allowTransparency: true,
             disableStdin: true,
             altClickMovesCursor: true,
+            scrollback: 1000000000000,
+            scrollOnUserInput: false,
             theme: {
                 "black": "#000000",
                 "red": "#c13900",
@@ -137,7 +140,9 @@ export class Term extends Terminal {
             new ResizeObserver(() => {
                 this.scrollAreaClone.style.height = this.scrollArea.clientHeight + "px";
                 this.scrollAreaClone.style.width = this.scrollArea.clientWidth + "px";
-                this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+                this.syncPanelScroll()
+                // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+
             }).observe(this.scrollArea)
 
             this.fit();
@@ -147,8 +152,6 @@ export class Term extends Terminal {
                 this.updateTermSizeEnv();
             });
             ro.observe(this.terminalPanel)
-            // ro.observe(parent)
-
             this.loadAddon(this.scrollDownAddon);
         });
 
@@ -224,17 +227,13 @@ export class Term extends Terminal {
 
         this._write_liveln(message)
     }
-    _write_liveln(message: string) {
-        if (this.isLivePanelVisible) {
-            this.writeln(this._control(this.livePanel) + message)
-            if (this.livePanel != "") {
-                this.writeln(this.livePanel)
-            }
-        }
+    _write_liveln(message: string, ending: string = "\n") {
+        this._write_live(message, ending)
     }
-    _write_live(message: string) {
+
+    _write_live(message: string, ending: string = "") {
         if (this.isLivePanelVisible) {
-            this.write(this._control(this.livePanel) + message)
+            this.write(this._control(this.livePanel) + message + ending)
             if (this.livePanel != "") {
                 this.writeln(this.livePanel)
             }
@@ -249,7 +248,50 @@ export class Term extends Terminal {
         if (message == "") {
             return ""
         }
-        return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(this._height(message) - 1)}`
+
+        return this._controlLines(this._height(message) - 1)
+    }
+
+    _controlLines(n: number) {
+        return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(n)}`
+    }
+
+    clearLines3(n: number) {
+        this.writeln(this._controlLines(n))
+    }
+
+    public clearLines(n: number): boolean {
+        let rows = n;
+        const inputHandler = this._core._inputHandler;
+        const bufferService = inputHandler._bufferService;
+        const activeBuffer = inputHandler._activeBuffer
+
+        const row: number = activeBuffer.y + activeBuffer.ybase;
+        let j: number;
+        j = bufferService.rows - 1 - activeBuffer.scrollBottom;
+        j = bufferService.rows - 1 + activeBuffer.ybase - j;
+        while (n--) {
+            // test: echo -e '\e[44m\e[1M\e[0m'
+            // blankLine(true) - xterm/linux behavior
+            console.log("clearing line", row, j, activeBuffer.y, activeBuffer.ybase, activeBuffer.scrollBottom, activeBuffer.ydisp, activeBuffer.ybase, activeBuffer.ybase + activeBuffer.ydisp, activeBuffer.ybase + activeBuffer.ydisp - activeBuffer.scrollBottom, activeBuffer.ybase + activeBuffer.ydisp - activeBuffer.scrollBottom - activeBuffer.y)
+            activeBuffer.lines.splice(row, 1);
+            activeBuffer.lines.splice(j, 0, activeBuffer.getBlankLine(inputHandler._eraseAttrData()));
+        }
+
+        inputHandler._dirtyRowTracker.markRangeDirty(inputHandler._activeBuffer.y, inputHandler._activeBuffer.scrollBottom);
+        inputHandler._activeBuffer.x = 0; // see https://vt100.net/docs/vt220-rm/chapter4.html - vt220 only?
+        this.refresh(rows, 0)
+        this.refresh(0, rows)
+        this.forceRedraw()
+        this.forceRefresh()
+
+        return true;
+    }
+
+    clearLines2(n: number) {
+        this.buffer.active._buffer.lines.splice(n, 0, this.buffer.active._buffer.getBlankLine(this._core._inputHandler._eraseAttrData()))
+        this._core._inputHandler._dirtyRowTracker.markRangeDirty(n, 0)
+        this.refresh(n, 0)
     }
 
     live(message: string) {
@@ -299,11 +341,11 @@ export class Term extends Terminal {
         this.clearTextureAtlas();
     }
 
-    public __fit = () => {
-        console.log("fitting terminal");
+    @debounce()
+    public fit() {
+        const wasScrolledDown = this.scrollDownAddon.isScrolledDown
         const dims = this.fitAddon.proposeDimensions();
         if (!dims || !this || isNaN(dims.cols) || isNaN(dims.rows)) {
-            // console.log("no dims, returning")
             return;
         }
 
@@ -319,56 +361,58 @@ export class Term extends Terminal {
 
         const core = (this as any)._core;
 
-        console.log("resizing terminal to ", dims.cols, dims.rows);
         core._renderService.clear();
-        const wasScrolledDown = this.scrollDownAddon.isScrolledDown()
 
+        console.log("resizing terminal to ", dims.cols, dims.rows, wasScrolledDown);
         this.resize(dims.cols, dims.rows);
         this.refresh(0, this.rows - 1)
+        // this.syncPanelScroll()
+
+
+
         if (wasScrolledDown) {
             this.scrollToBottom();
         }
-        this.updateTermSizeEnv();
+        // this.updateTermSizeEnv();
     }
 
-    public fit = debounce(this.__fit)
-    updateTermSizeEnv = debounce(() => {
+    @debounce()
+    updateTermSizeEnv() {
         console.log("updating terminal size env: ", this.cols, this.rows);
         this.mpyc.runtime.updateEnv({ COLUMNS: this.cols.toString(), LINES: this.rows.toString() })
-    })
-
-    scrollSync = () => {
-        let isSyncingDivA = false;
-        let isSyncingDivB = false;
-
-        this.terminalPanel.addEventListener('scroll', (ev) => {
-            if (!isSyncingDivA && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
-                // console.log("scroll", ev)
-                isSyncingDivB = true;
-                this.viewportElement.scrollTop = this.terminalPanel.scrollTop;
-                // this.core._bufferService._onScroll.fire(this.core._bufferService.buffer.ydisp);
-                // divB.dispatchEvent(new Event('scroll'));
-            }
-            isSyncingDivA = false;
-        });
-
-        this.viewportElement.addEventListener('scroll', (ev) => {
-            if (!isSyncingDivB && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
-                // console.log("scroll2", ev, isSyncingDivB)
-                isSyncingDivA = true;
-
-                this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
-                // this.core._bufferService._onScroll.fire(this.core._bufferService.buffer.ydisp);
-                // divA.dispatchEvent(new Event('scroll'));
-            }
-            isSyncingDivB = false;
-        });
-        // this.onScroll((...e) => {
-        //     console.log("onScroll", e, this.terminalPanel.scrollTop, this.viewportElement.scrollTop)
-        //     this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
-        //     console.log("onScroll", this.terminalPanel.scrollTop, this.viewportElement.scrollTop)
-        // })
     }
 
+    ignoreNextPanelScrollEvent = false;
+    ignoreNextViewportScrollEvent = false;
+
+    syncViewportScroll = () => {
+        if (!this.ignoreNextPanelScrollEvent && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
+            console.warn("syncViewportScroll", this.viewportElement.scrollTop, this.terminalPanel.scrollTop)
+            this.ignoreNextViewportScrollEvent = true;
+            this.viewportElement.scrollTop = this.terminalPanel.scrollTop;
+        }
+        this.ignoreNextPanelScrollEvent = false;
+    }
+
+    syncPanelScroll = () => {
+        if (!this.ignoreNextViewportScrollEvent && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
+            console.warn("syncPanelScroll", this.viewportElement.scrollTop, this.terminalPanel.scrollTop)
+            this.ignoreNextPanelScrollEvent = true;
+            this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+        }
+        this.ignoreNextViewportScrollEvent = false;
+    }
+
+    scrollSync = () => {
+        // * Used for manually scrolling via the vertical scrollbar
+        this.terminalPanel.addEventListener('scroll', (ev) => {
+            this.syncViewportScroll()
+        });
+
+        // * Used for updating the visible vertical scrollbar from the state of the xterm viewport
+        this.viewportElement.addEventListener('scroll', (ev) => {
+            this.syncPanelScroll()
+        });
+    }
 }
 

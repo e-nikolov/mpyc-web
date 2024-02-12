@@ -1,6 +1,5 @@
 {pkgs, ...}: {
   # https://devenv.sh/basics/
-  env.GREET = "devenv";
   env.PYTHON_KEYRING_BACKEND = "keyring.backends.null.Keyring";
 
   # https://devenv.sh/packages/
@@ -8,28 +7,28 @@
     pkgs.git
     pkgs.nodePackages_latest.dotenv-cli
     pkgs.poetry
-    pkgs.python311Packages.pip
+    # pkgs.python312Packages.pip
     pkgs.just
     pkgs.yarn
     pkgs.bun
-    pkgs.nodePackages_latest.pnpm
+    # pkgs.nodePackages_latest.pnpm
     # pkgs.mpyc-demo
-    pkgs.pwnat
+    # pkgs.pwnat
     pkgs.curl
     pkgs.jq
     pkgs.tailscale
 
     pkgs.colmena
-    pkgs.pssh
-    pkgs.natpunch
-    pkgs.wireguard-tools
-    pkgs.gole
-    pkgs.go-stun
-    pkgs.pion-stun
+    # pkgs.pssh
+    # pkgs.natpunch
+    # pkgs.wireguard-tools
+    # pkgs.gole
+    # pkgs.go-stun
+    # pkgs.pion-stun
     # pkgs.nodePackages.lerna
     # pkgs.yarn2nix
-    pkgs.python311Packages.gmpy2
-    pkgs.python311Packages.numpy
+    pkgs.python312Packages.gmpy2
+    pkgs.python312Packages.numpy
     pkgs.twine
     pkgs.netlify-cli
     # pkgs.tailwindcss
@@ -44,28 +43,19 @@
       tp.external
       tp.tailscale
       tp.random
+      tp.digitalocean
       (tp.mkProvider {
-        hash = "sha256-ZRMVmaNXQhJmo+pHjnkL0hk6pqYIblNrPfQe7mFg1f0=";
-        owner = "digitalocean";
-        repo = "terraform-provider-digitalocean";
-        rev = "a88a19be189e01aec9a9152dc3543f9a6493cc81";
-        version = "2.28.1";
-        homepage = "https://registry.terraform.io/providers/digitalocean/digitalocean";
-        vendorHash = null;
-      })
-      (tp.mkProvider {
-        hash = "sha256-8wnmdIRAnUgJx3uGpopyk3Ayi6NVJ5f8vB+DvHXfBBI=";
+        hash = "sha256-WCHs4riA0jRG77LcgkLDo1zyiYRNdlilrubSL2bPg9k=";
         owner = "loafoe";
         repo = "terraform-provider-ssh";
-        rev = "v2.4.0";
+        rev = "v2.6.0";
         homepage = "https://registry.terraform.io/providers/loafoe/ssh/";
         vendorHash = "sha256-MFp6KD9xXB6+B9XenGxxlR9Tueu4gDNeF1sMRvpIxGc=";
       })
     ]))
   ];
 
-  # https://devenv.sh/scripts/
-  scripts.hello.exec = "echo hello from $GREET";
+  # # https://devenv.sh/scripts/
   scripts.yi.exec = "yarn; yarn workspace @mpyc-web/core install; yarn workspace @mpyc-web/demo install";
   scripts.yb.exec = "yarn workspace @mpyc-web/$1 build";
   scripts.yd.exec = "yarn workspace @mpyc-web/$1 dev";
@@ -77,7 +67,6 @@
   # devenv.debug = true;
   dotenv.enable = true;
   enterShell = ''
-    git --version
   '';
 
   # https://devenv.sh/languages/
@@ -88,15 +77,15 @@
   # languages.javascript.npm.install.enable = true;
   languages.typescript.enable = true;
   languages.python.enable = true;
-  languages.python.package = pkgs.python311;
+  languages.python.package = pkgs.python312;
   languages.python.poetry.enable = true;
   languages.python.poetry.activate.enable = true;
   languages.python.poetry.install.enable = true;
-  languages.deno.enable = true;
+  # languages.deno.enable = true;
   # languages.python.venv.enable = false;
   # languages.python.version = "3.11.5";
 
-  devenv.flakesIntegration = true;
+  # devenv.flakesIntegration = true;
 
   # https://devenv.sh/pre-commit-hooks/
   # pre-commit.hooks.shellcheck.enable = true;

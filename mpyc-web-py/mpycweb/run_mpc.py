@@ -5,7 +5,7 @@ import logging
 import types
 import typing
 
-import micropip
+# import micropip
 import pyodide
 from lib.api import async_proxy
 from lib.api.run import run_code

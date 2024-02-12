@@ -23,12 +23,12 @@ import logging
 import math
 import sys
 import time
-from ast import Num
 from collections import deque
 from contextlib import ContextDecorator
 from datetime import datetime
+from enum import StrEnum, auto
 from functools import wraps
-from typing import Any, Callable, Generic, ParamSpec, TypeVar
+from typing import Any, Callable, Generic, Mapping, MutableMapping, ParamSpec, TypeAlias, TypeAliasType, TypedDict, TypeVar
 
 import humanize
 import rich
@@ -40,422 +40,104 @@ from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
+from .avg import MovingAverage
+from .counter import DeepCounter
+from .format import format_count, format_file_size, rich_to_ansi, time_delta_fmt
+from .time import TimeStats
+from .types import NestedDict, Numeric
+
 # type: ignore-all
 logger = logging.getLogger(__name__)
 
-K = TypeVar("K")
-V = TypeVar("V")
-NestedDict = dict[K, V | "NestedDict[K, V]"]
-
-Numeric = int | float
-
-N = TypeVar("N", int, float)
-T = TypeVar("T")
-
+__all__ = [
+    "MovingAverage",
+]
 # pyright: ignore-all
 # pylint: disable=all
 # pyright: ignore=all
 # type: ignore=all
 
-from enum import StrEnum, auto
-
-
-class MovingAverage:
-    def __init__(self, maxlen: int = 100):
-        self._maxlen = maxlen
-        self._ring = deque(maxlen=maxlen)
-        self._total = 0
-
-    def append(self, value: N):
-        if len(self._ring) == self._maxlen:
-            self._total -= self._ring.popleft()
-        self._total += value
-        self._ring.append(value)
-
-    def __len__(self):
-        return len(self._ring)
-
-    def __float__(self):
-        return self._total / len(self._ring)
-
-    def __str__(self):
-        return str(float(self))
-
-
-class TimeStats:
-    def __init__(self):
-        self.min = None
-        self.max = 0
-        self.avg = MovingAverage(maxlen=200)
-        self.total: float = 0
-
-    def update(self, t: float):
-        self.total += t
-
-        self.avg.append(t)
-
-        if self.min is None or self.min > t:
-            self.min = t
-
-        if self.max is None or self.max < t:
-            self.max = t
-
-    def __str__(self):
-        return f"∧ {_format_time(self.min)} / μ {_format_time(float(self.avg))} / ∨ {_format_time(self.max)} / ∑ {_format_time(self.total)}"
-
-    def __repr__(self):
-        return str(self)
-
-
-class DeepCounter(NestedDict[K, Numeric | Any]):
-    """A nested dictionary that stores numeric values and supports recursive updates.
-
-    This class extends the `NestedDict` class and adds two methods for updating its values:
-    `set` and `update`. Both methods take a nested dictionary as input and update the values
-    in the `DeepCounter` instance recursively, i.e., for each key in the input dictionary,
-    the corresponding value is either added to the current value (for `update`) or replaced
-    by the input value (for `set`).
-
-    The `DeepCounter` class is parameterized by two type variables: `K` and `Numeric`.
-    `K` represents the type of the keys in the nested dictionary, while `Numeric` represents
-    the type of the numeric values that can be stored in the dictionary.
-
-    Example usage:
-    ```
-    >>> counter = DeepCounter[int, float]()
-    >>> counter.set({1: {2: 3.0}})
-    >>> counter.update({1: {2: 1.5}})
-    >>> counter
-    {1: {2: 4.5}}
-    ```
-    """
-
-    def set_path(self, path: str, value: Numeric):
-        keys = path.split(".")
-        d = self
-        for key in keys[:-1]:
-            # Create a nested dictionary if key does not exist
-            d = d.setdefault(key, {})
-        d[keys[-1]] = value
-
-    def acc_path(self, path: str, value: Numeric):
-        keys = path.split(".")
-        d = self
-        for key in keys[:-1]:
-            # Create a nested dictionary if key does not exist
-            d = d.setdefault(key, {})
-        d.setdefault(keys[-1], 0)
-        d[keys[-1]] += value
-
-    def set(self, iterable: NestedDict[K, Numeric]):
-        """
-        Recursively sets the values of the nested dictionary to the values of the given iterable.
-
-        Args:
-            iterable (NestedDict[K, Numeric]): A nested dictionary containing the values to set.
-        """
-        self._set_recursive(self, iterable)
-
-    def _set_recursive(self, target: NestedDict[K, Numeric], source: NestedDict[K, Numeric]):
-        for key, value in source.items():
-            if key in target:
-                target_val = target[key]
-                if isinstance(target_val, dict) and isinstance(value, dict):
-                    self._set_recursive(target_val, value)
-                elif isinstance(target_val, Numeric) and isinstance(value, Numeric):
-                    target[key] = value
-                else:
-                    raise TypeError(f"Cannot set {type(value)} to {type(target[key])} for key {key}")
-            else:
-                target[key] = value
-
-    def update(self, iterable: NestedDict[K, Numeric]):
-        self._update_recursive(self, iterable)
-
-    def _update_recursive(self, target: NestedDict[K, Numeric], source: NestedDict[K, Numeric]):
-        for key, value in source.items():
-            if key in target:
-                target_val = target[key]
-                if isinstance(target_val, dict) and isinstance(value, dict):
-                    self._update_recursive(target_val, value)
-                elif isinstance(target_val, Numeric) and isinstance(value, Numeric):
-                    target[key] = target_val + value
-                else:
-                    raise TypeError(f"Cannot add {type(value)} and {type(target_val)} for key {key}")
-            else:
-                target[key] = value
-
-
-P = ParamSpec("P")
-R = TypeVar("R")
-
-
-def metric(value: float, unit: str = "", precision: int = 3) -> str:
-    if not math.isfinite(value):
-        return humanize._format_not_finite(value)  # type: ignore
-    exponent = int(math.floor(math.log10(abs(value)))) if value != 0 else 0
-
-    if exponent >= 33 or exponent < -30:
-        return humanize.scientific(value, precision - 1) + unit
-
-    value /= 10 ** (exponent // 3 * 3)
-    if exponent >= 3:
-        ordinal_ = "kMGTPEZYRQ"[exponent // 3 - 1]
-    elif exponent < 0:
-        ordinal_ = "mμnpfazyrq"[(-exponent - 1) // 3]
-    else:
-        ordinal_ = ""
-    value_ = format(value, ".%if" % max(0, precision - (exponent % 3) - 1)).rstrip("0").rstrip(".")
-    if not (unit or ordinal_) or unit in ("°", "′", "″"):
-        space = ""
-    else:
-        space = " "
-
-    return f"{value_}{space}{ordinal_}{unit}"
-
-
-def print_to_string(*args, **kwargs):
-    output = io.StringIO()
-    rich.print(*args, file=output, **kwargs)
-    contents = output.getvalue()
-    output.close()
-    return contents
-
-
-def rich_to_ansi(renderable):
-    """Convert text formatted with rich markup to standard string."""
-    if rich._console:
-        with rich._console.capture() as capture:
-            rich.print(renderable)
-        return capture.get()
-
-
-def time_delta_fmt(time_a, time_b):
-    return datetime.utcfromtimestamp((time_a - time_b).total_seconds()).strftime("%X")
-
-
-def format_time(time: TimeStats):
-    return str(time)
-
-
-def format_times(times):
-    txt = ""
-    for k, time in sorted(times.items()):
-        txt += f"\n\t{k}: {format_time(time)}"
-    return txt
-
-
-def _format_time(time: Numeric | None):
-    if time is None:
-        return "-"
-
-    return metric(time / 1_000_000, "s")
-
-
-def format_file_size(size):
-    return naturalsize(size, binary=True)
-
-
-def format_count(count, unit=""):
-    return metric(count, unit=unit, precision=3)
-    # return humanize.intword(count)
-
 
 FUNC_ARG: str = "$func"
 TIME_ARG: str = "$time"
+DEFAULT_TIMER_LABEL: str = "default"
 
 
-class BaseStatsCollector:
-    """
-    A base class for collecting statistics.
+# P = ParamSpec("P")
+# R = TypeVar("R")
 
-    Attributes:
-        stats (DeepCounter[str]): A counter object for storing the statistics.
-        enabled (bool): A flag indicating whether the statistics collection is enabled.
-    """
 
-    def __init__(self, formatters: dict[str, Callable[[str], str]] = {}):
-        self.enabled = False
-        self.start_time = datetime.now()
-        self.stats = DeepCounter[str]({})
-        self.loop = asyncio.get_event_loop()
-        self.formatters = {
-            TIME_ARG: format_times,
-        } | formatters
+class TimingStats(dict[str, TimeStats]):
+    def update_timing(self, label: str, elapsed_time: float):
+        if label not in self:
+            self[label] = TimeStats()
 
-    def set_path(self, path: str, value: Any):
+        self[label].update(elapsed_time)
+
+    def __str__(self):
+        txt = ""
+        for k, t in sorted(self.items()):
+            txt += f"\n\t{k}: {str(t)}"
+        return txt
+
+
+class BaseStatsState:
+    # __dict__ = DeepCounter[str]({})
+
+    def __init__(self):
+        self.__dict__ = DeepCounter[str]({})
+        self.timings = TimingStats()
+
+
+def has_to_string(obj):
+    return type(obj).__str__ is not object.__str__
+
+
+class BaseStatsCollector[**P, R]:
+    enabled = False
+    start_time = datetime.now()
+
+    def __init__(
+        self,
+        formatters: dict[str, Callable[[str], str]] = {},
+        on_before_get_stats_hooks: list[Callable[["BaseStatsCollector[P, R]"], None]] = [],
+        state=BaseStatsState(),
+    ):
+        self.state = state
+
+        self.on_before_get_stats_hooks = on_before_get_stats_hooks
+        # self.formatters = {
+        #     TIME_ARG: format_times,
+        # } | formatters
+        self.formatters = formatters
+
+    def get_path(self, *path: str, default=None):
+        return self.state.__dict__.get_path(*path, default=default)
+
+    def set_path(self, value: Any, *path: str):
         if self.enabled:
-            self.stats.set_path(path, value)
+            self.state.__dict__.set_path(value, *path)
 
-    def acc_path(self, path: str, value: Any):
+    def acc_path(self, value: Any, *path: str):
         if self.enabled:
-            self.stats.acc_path(path, value)
+            self.state.__dict__.acc_path(value, *path)
 
-    def dec(
-        self, make_stats_func: Callable[P, NestedDict[str, Numeric]], update_func: Callable[[], Callable[[NestedDict[str, Numeric]], None]]
-    ) -> Callable[[Callable[P, R]], Callable[P, R]]:
-        """
-        A decorator function for collecting statistics.
+    def time(self, label="default"):
+        return TimingContext(self, label)
 
-        Args:
-            counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
-            ff (Callable[[], Callable[[NestedDict[str, Numeric]], None]]): A function that returns a function for updating the statistics.
-
-        Returns:
-            Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that collects statistics.
-        """
-
-        def decorator(func: Callable[P, R]) -> Callable[P, R]:
-            @wraps(func)
-            def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-                if not self.enabled:
-                    return func(*args, **kwargs)
-                new_stats: NestedDict[str, Numeric] = make_stats_func(*args, **kwargs)
-                res = func(*args, **kwargs)
-                if FUNC_ARG in new_stats:
-                    f_name = func.__name__
-                    func_stats = new_stats.pop(FUNC_ARG)
-                    new_stats |= {f_name: func_stats}
-
-                    if f_name not in self.stats:  # pyright: ignore
-                        self.stats[f_name] = {}  # pyright: ignore
-
-                update_func()(new_stats)
-                return res
-
-            return wrapper
-
-        return decorator
-
-    def set(self, counter_func: Callable[P, NestedDict[str, Numeric]]) -> Callable[[Callable[P, R]], Callable[P, R]]:
-        """
-        Sets the counter function for the statistics module.
-
-        Args:
-            counter_func: A callable function that takes a parameter of type P and returns a nested dictionary of string keys and numeric values.
-
-        Returns:
-            A callable function that takes a parameter of type R and returns a callable function that takes a parameter of type P and returns a value of type R.
-        """
-        return self.dec(counter_func, self.stats.set)
-
-    def acc(self, counter_func: Callable[P, NestedDict[str, Numeric]]) -> Callable[[Callable[P, R]], Callable[P, R]]:
-        """
-        A decorator function for accumulating statistics.
-
-        Args:
-            counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
-
-        Returns:
-            Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
-        """
-        return self.dec(counter_func, lambda: self.stats.update)
-
-    def time(self, label=None, test=1):
-        return self._timer(self, label, test)
-
-    class _timer(ContextDecorator):
-        def __init__(self, stats: "BaseStatsCollector", label=None, test=1):
-            self.stats = stats
-            self.label = label
-
-        def __call__(self, func, *args, **kwargs):  # only called when used as a decorator
-            self.func = func
-            if self.label is None:  # Label was not provided
-                self.label = func.__name__
-            return super().__call__(func)
-
-        def __enter__(self):
-            if not self.stats.enabled:
-                return
-
-            if self.label is None:  # Label was not provided
-                f = sys._getframe().f_back
-                f_name = f.f_code.co_name
-                line = f.f_lineno
-                self.label = f"{f_name}:{line}" or "default"
-
-            if TIME_ARG not in self.stats.stats:  # pyright: ignore
-                self.stats.stats[TIME_ARG] = {}  # pyright: ignore
-
-            if self.label not in self.stats.stats[TIME_ARG]:  # pyright: ignore
-                self.stats.stats[TIME_ARG][self.label] = TimeStats()  # pyright: ignore
-
-            self.start_time = time.perf_counter_ns()
-
-        def __exit__(self, *args):
-            if not self.stats.enabled:
-                return
-
-            elapsed_time = (time.perf_counter_ns() - self.start_time) // 1000  # pyright: ignore
-
-            time_stats: TimeStats = self.stats.stats[TIME_ARG][self.label]  # pyright: ignore
-            time_stats.update(elapsed_time)
-
-    def time2(self) -> Callable[[Callable[P, R]], Callable[P, R]]:
-        """
-        A decorator function for collecting statistics.
-
-        Args:
-            counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
-            ff (Callable[[], Callable[[NestedDict[str, Numeric]], None]]): A function that returns a function for updating the statistics.
-
-        Returns:
-            Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that collects statistics.
-        """
-
-        def decorator(func: Callable[P, R]) -> Callable[P, R]:
-            f_name = func.__name__
-
-            @wraps(func)
-            def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-                if not self.enabled:
-                    return func(*args, **kwargs)
-
-                if TIME_ARG not in self.stats:  # pyright: ignore
-                    self.stats[TIME_ARG] = {}  # pyright: ignore
-
-                if f_name not in self.stats[TIME_ARG]:  # pyright: ignore
-                    self.stats[TIME_ARG][f_name] = {  # pyright: ignore
-                        "min": None,
-                        "max": None,
-                        "avg": MovingAverage(maxlen=200),
-                    }
-
-                time_stats = self.stats[TIME_ARG][f_name]  # pyright: ignore
-
-                start_time = time.perf_counter_ns()
-                res = func(*args, **kwargs)
-                elapsed_time = (time.perf_counter_ns() - start_time) // 1000  # pyright: ignore
-
-                time_stats["avg"].append(elapsed_time)  # pyright: ignore
-
-                if time_stats["min"] is None or time_stats["min"] > elapsed_time:  # pyright: ignore
-                    time_stats["min"] = elapsed_time  # pyright: ignore
-
-                if time_stats["max"] is None or time_stats["max"] < elapsed_time:  # pyright: ignore
-                    time_stats["max"] = elapsed_time  # pyright: ignore
-                # self.stats[TIME_ARG][f_name] = time_stats  # pyright: ignore
-
-                return res
-
-            return wrapper
-
-        return decorator
-
-    def reset(self):
+    def reset(self, state=BaseStatsState()):
         """
         Resets the statistics counter and enables statistics collection.
         """
-        self.stats = DeepCounter[str]({})
+        self.state = state
         self.start_time = datetime.now()
-        self.loop = asyncio.get_event_loop()
 
-    def to_tree(self):
+    def __str__(self):
         if not self.enabled:
             return ""
+
         tree = Tree("", style="gray50", hide_root=True)
-        self._to_tree(self.stats, tree)
+        self._to_tree(self.get_stats(), tree)
 
         return rich_to_ansi(Panel.fit(tree, title="stats", subtitle=time_delta_fmt(datetime.now(), self.start_time), border_style="blue"))
 
@@ -464,6 +146,10 @@ class BaseStatsCollector:
             for k, v in sorted(s.items()):
                 if k in self.formatters:
                     tree.add(f"{k}: {self.formatters[k](v)}")
+                elif has_to_string(v):
+                    v_str = str(v)
+                    if len(v_str) > 0:
+                        tree.add(f"{k}: {v_str}")
                 elif isinstance(v, dict | list):
                     if len(v) > 0:
                         self._to_tree(v, tree.add(k))
@@ -497,20 +183,22 @@ class BaseStatsCollector:
         """
         logger.log(level, self.dumps(name, stats_data), stacklevel=2)
 
-    # def avg(self, name: str, value: Numeric = 1):
-    #     """
-    #     A decorator function for accumulating statistics.
+    def get_stats(self):
+        """
+        Returns the statistics collected so far.
 
-    #     Args:
-    #         counter_func (Callable[P, NestedDict[str, Numeric]]): A function that returns a dictionary of statistics.
+        Returns:
+            dict: A dictionary containing the statistics collected so far.
+        """
+        for hook in self.on_before_get_stats_hooks:
+            # print(hook, self)
+            hook(self)
 
-    #     Returns:
-    #         Callable[[Callable[P, R]], Callable[P, R]]: A decorated function that accumulates statistics.
-    #     """
-    #     if name not in self.stats:
-    #         self.stats[name] = MovingAverage(maxlen=200)
+        self.state.__dict__[TIME_ARG] = self.state.timings
 
-    #     return self.stats[name].append(value)
+        # print(self.stats.counter)
+
+        return self.state.__dict__
 
     def total_calls(self) -> NestedDict[str, float]:
         """
@@ -519,3 +207,36 @@ class BaseStatsCollector:
         number of calls to a function.
         """
         return {FUNC_ARG: {"calls": +1}}
+
+
+class TimingContext[**P, R](ContextDecorator):
+    def __init__(self, stats: BaseStatsCollector[P, R], label="default"):
+        self.stats = stats
+        self.timings = None
+        self.label = label
+
+    def __call__(self, func, *args, **kwargs):  # only called when used as a decorator
+        # print(func, args, kwargs)
+        self.func = func
+        if self.label is DEFAULT_TIMER_LABEL:
+            self.label = func.__name__
+        return super().__call__(func)
+
+    def __enter__(self, *args, **kwargs):
+        # print("__enter__", self, args, kwargs)
+        if not self.stats.enabled:
+            return
+
+        if self.label is DEFAULT_TIMER_LABEL:
+            f = sys._getframe().f_back
+            if f is not None:
+                f_name, line = f.f_code.co_name, f.f_lineno
+                self.label = f"{f_name}:{line}"
+
+        self.start_time = time.perf_counter_ns()
+
+    def __exit__(self, *args):
+        if not self.stats.enabled:
+            return
+
+        self.stats.state.timings.update_timing(self.label, (time.perf_counter_ns() - self.start_time) // 1000)

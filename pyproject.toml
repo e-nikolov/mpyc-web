@@ -26,15 +26,15 @@ packages = [
     { include = "./*.py", from = "./mpyc-web-py/mpyc/demos" }
 ]
     [tool.poetry.dependencies]
-    python = "^3.11,<3.13"
+    python = "^3.12"
     rich = "^13.5.3"
     numpy = "^1.25.2"
-    gmpy2 = "^2.1.5"
+    # gmpy2 = "^2.1.5"
     pyyaml = "^6.0.1"
     humanize = "^4.8.0"
 
     [tool.poetry.group.dev.dependencies]
-    python = "^3.11,<3.13"
+    python = "^3.12"
     # didcomm = "0.3.0"
     # peerdid = "0.4.0"
     # qrcode = "^7.3.1"
@@ -50,10 +50,10 @@ packages = [
 
     mpyc = { path = "./mpyc-web-py/mpyc/", develop = true }
     rstats = { path = "./mpyc-web-py/lib/rstats", develop = true }
-    matplotlib = "^3.5.2"
-    pandas = "1.5.3"
-    scipy = "1.11.2"
-    lifelines = "^0.27.8"
+    # matplotlib = "^3.5.2"
+    # pandas = "1.5.3"
+    # scipy = "1.11.2"
+    # lifelines = "^0.27.8"
 
 [build-system]
 requires = ["poetry-core", "setuptools", "wheel"]

@@ -8,7 +8,8 @@ import { MPCRuntimeBase } from '../MPCRuntimeBase';
 
 function XXWorker(startupURL: string, configFilePath: string | any, hooks: any) {
     let opts: unknown = {
-        async: true, type: "pyodide", version: "0.25.0", config: configFilePath
+        async: true, type: "pyodide", version: "0.26.0a1", config: configFilePath
+        // async: true, type: "pyodide", version: "https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.mjs", config: configFilePath
     }
 
     console.log("creating a new worker")
@@ -44,21 +45,28 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
 
     constructor(opts?: PyScriptWorkerRuntimeOptions) {
         let startup = emptyBlob;
-        let config = {
-            packages: ["mpyc-web"],
+        let config: string | any = {
+            // packages: ["micropip", "mpyc-web", "numpy", "gmpy2"],
         };
 
         if (opts?.startup && opts?.startup != "") {
             startup = opts.startup
         }
 
-        if (opts?.config && opts?.config != "") {
+        if (opts?.config && typeof opts?.config === 'string' && opts?.config != "") {
             config = opts.config
+        }
+
+        if (opts?.config && typeof opts?.config === 'object') {
+            opts.config.packages ||= []
+            // opts.config.packages.push("micropip", "numpy", "gmpy2")
+
+            config = { ...config, ...opts.config }
         }
 
         let worker = XXWorker(startup, config, {
             worker: {
-                onReady: (wrap: any, xworker: ReturnType<typeof XXWorker>) => {
+                onReady: async (wrap: any, xworker: ReturnType<typeof XXWorker>) => {
                     console.log("worker onReady/init")
 
                     wrap.io.stderr = (message: any) => {
@@ -91,6 +99,9 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                             wrap.io.stderr(error);
                         }
                     };
+
+                    console.warn("micropip????")
+                    await self.pyodide.loadPackage("micropip")
 
                     // self.runAsync(wrap, startup, { filename: "startup.py" })
                     self.runAsync(`

@@ -23,14 +23,16 @@ class WebLooper(WebLoop):
         self.running = False
         self._ready = collections.deque()
         # self.set_on_message, self.trigger_run_once = run_js("""
-        self.port1, self.trigger_run_once = run_js("""
+        self.port1, self.trigger_run_once = run_js(
+            """
             let chan = new MessageChannel();
             let trigger_run_once = () => chan.port2.postMessage(undefined);
             
             // let set_on_message = (cb) => chan.port1.onmessage = (_) => {cb()}; 
             // [set_on_message, post]
             [chan.port1, trigger_run_once]
-        """)
+        """
+        )
         # self.set_on_message(create_proxy(self._run_once))
         self.port1.onmessage = self._run_once
 
@@ -43,7 +45,7 @@ class WebLooper(WebLoop):
         delay = 0
         return self.call_later(delay, callback, *args, context=context)
 
-    # @stats.time()
+    @stats.time()
     def call_later(  # type: ignore[override]
         self,
         delay: float,

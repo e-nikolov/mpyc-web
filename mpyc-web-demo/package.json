@@ -58,8 +58,6 @@
     "fontfaceobserver": "^2.3.0",
     "html5-qrcode": "^2.3.8",
     "msgpackr": "^1.10.0",
-    "peerjs": "^1.5.1",
-    "polyscript": "^0.6.1",
     "qrcode": "^1.5.3",
     "split.js": "^1.6.5",
     "thememirror": "^2.0.1",
