@@ -47,11 +47,12 @@
 .terminal-split-pane {
     position: relative;
     width: 100%;
-    overflow: scroll;
+    overflow-x: scroll;
+    overflow-y: hidden;
     background-color: #3a2f29 !important;
 }
 
-.xterm-scroll-area-clone {
+.xterm-scroll-area {
     position: absolute;
     // position: relative;
     top: 0;
@@ -69,14 +70,22 @@
 }
 
 .xterm-viewport {
-    overflow: hidden !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    z-index: 30;
+    background-color: transparent !important;
+    cursor: text !important;
+    width: auto;
 }
 
 .terminal.xterm {
-    // padding-right: 15px;
     height: 100% !important;
     width: 100% !important;
 }
+
+// .xterm-screen {
+//     padding-right: 50px;
+// }
 
 textarea.form-control {
     height: 40px !important;
