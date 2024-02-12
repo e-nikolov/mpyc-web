@@ -40,22 +40,28 @@
 }
 
 .split {
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative;
+    // display: flex !important;
+    // flex-direction: column !important;
+    // // display: flex;
+    // // flex-direction: column;
+    // align-content: flex-start;
+    // // align-items: baseline;
     // display: flex;
     // flex-direction: column;
-    align-content: flex-start;
-    // align-items: baseline;
-    display: flex;
-    flex-direction: column;
-    background-color: transparent !important;
-    user-select: initial;
-    -webkit-user-select: initial;
-    position: relative;
+    // background-color: transparent !important;
+    // user-select: initial;
+    // -webkit-user-select: initial;
     /* Create stacking context before to terminal canvases. */
-    z-index: 0;
+    // z-index: 0;
 }
 
 
 .terminal-split-pane {
+    overflow: hidden !important;
+    position: relative;
     // position: relative;
     // width: 100%;
     // overflow-x: hidden;
