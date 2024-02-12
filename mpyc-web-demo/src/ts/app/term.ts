@@ -46,6 +46,7 @@ export class Term extends Terminal {
     scrollAreaClone: HTMLDivElement;
     scrollArea: HTMLDivElement;
     viewportElement: HTMLDivElement;
+    screenElement: HTMLDivElement;
 
     constructor(selector: string, mpyc: MPCManager) {
         let parent = $(selector);
@@ -134,16 +135,37 @@ export class Term extends Terminal {
 
             // this.loadAddon(this.ligaturesAddon);
             this.viewportElement = this.core.viewport._viewportElement;
+            this.screenElement = this.core.screenElement;
             this.scrollArea = this.core.viewport._scrollArea;
 
             $<HTMLTextAreaElement>(`${selector} textarea`).readOnly = true;
+            // $<HTMLTextAreaElement>(`${selector} textarea`).remove();
+            // new ResizeObserver(() => {
+            //     console.warn("resizing scroll area")
+            //     this.scrollArea.style.width = this.screenElement.clientWidth + "px";
+            //     this.viewportElement.style.width = this.screenElement.clientWidth +20 + "px";
+            //     // this.syncPanelScroll()
+            //     // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+
+            // }).observe(this.screenElement)
+
+
             new ResizeObserver(() => {
-                this.scrollAreaClone.style.height = this.scrollArea.clientHeight + "px";
-                this.scrollAreaClone.style.width = this.scrollArea.clientWidth + "px";
-                this.syncPanelScroll()
+                console.warn("resizing scroll area")
+                this.scrollArea.style.width = this.screenElement.clientWidth + "px";
+                // this.viewportElement.style.width = this.screenElement.clientWidth + 20 + "px";
+                // this.syncPanelScroll()
                 // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
 
-            }).observe(this.scrollArea)
+            }).observe(this.screenElement)
+
+            // new ResizeObserver(() => {
+            //     this.scrollAreaClone.style.height = this.scrollArea.clientHeight + "px";
+            //     this.scrollAreaClone.style.width = this.scrollArea.clientWidth + "px";
+            //     this.syncPanelScroll()
+            //     // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+
+            // }).observe(this.scrollArea)
 
             this.fit();
             this.scrollSync()
@@ -255,45 +277,6 @@ export class Term extends Terminal {
     _controlLines(n: number) {
         return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(n)}`
     }
-
-    clearLines3(n: number) {
-        this.writeln(this._controlLines(n))
-    }
-
-    public clearLines(n: number): boolean {
-        let rows = n;
-        const inputHandler = this._core._inputHandler;
-        const bufferService = inputHandler._bufferService;
-        const activeBuffer = inputHandler._activeBuffer
-
-        const row: number = activeBuffer.y + activeBuffer.ybase;
-        let j: number;
-        j = bufferService.rows - 1 - activeBuffer.scrollBottom;
-        j = bufferService.rows - 1 + activeBuffer.ybase - j;
-        while (n--) {
-            // test: echo -e '\e[44m\e[1M\e[0m'
-            // blankLine(true) - xterm/linux behavior
-            console.log("clearing line", row, j, activeBuffer.y, activeBuffer.ybase, activeBuffer.scrollBottom, activeBuffer.ydisp, activeBuffer.ybase, activeBuffer.ybase + activeBuffer.ydisp, activeBuffer.ybase + activeBuffer.ydisp - activeBuffer.scrollBottom, activeBuffer.ybase + activeBuffer.ydisp - activeBuffer.scrollBottom - activeBuffer.y)
-            activeBuffer.lines.splice(row, 1);
-            activeBuffer.lines.splice(j, 0, activeBuffer.getBlankLine(inputHandler._eraseAttrData()));
-        }
-
-        inputHandler._dirtyRowTracker.markRangeDirty(inputHandler._activeBuffer.y, inputHandler._activeBuffer.scrollBottom);
-        inputHandler._activeBuffer.x = 0; // see https://vt100.net/docs/vt220-rm/chapter4.html - vt220 only?
-        this.refresh(rows, 0)
-        this.refresh(0, rows)
-        this.forceRedraw()
-        this.forceRefresh()
-
-        return true;
-    }
-
-    clearLines2(n: number) {
-        this.buffer.active._buffer.lines.splice(n, 0, this.buffer.active._buffer.getBlankLine(this._core._inputHandler._eraseAttrData()))
-        this._core._inputHandler._dirtyRowTracker.markRangeDirty(n, 0)
-        this.refresh(n, 0)
-    }
-
     live(message: string) {
         if (this.isLivePanelVisible) {
             message = `\n${message}`
@@ -386,6 +369,8 @@ export class Term extends Terminal {
     ignoreNextViewportScrollEvent = false;
 
     syncViewportScroll = () => {
+        // this.viewportElement.style.width = this.terminalPanel.clientWidth + this.terminalPanel.scrollLeft + "px";
+        // console.warn("viewport Width", this.terminalPanel.clientWidth, "+", this.terminalPanel.scrollLeft, "+ 20 = ", this.viewportElement.style.width)
         if (!this.ignoreNextPanelScrollEvent && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
             console.warn("syncViewportScroll", this.viewportElement.scrollTop, this.terminalPanel.scrollTop)
             this.ignoreNextViewportScrollEvent = true;

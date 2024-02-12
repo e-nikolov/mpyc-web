@@ -3,7 +3,7 @@ import { ITerminalAddon, Terminal } from 'xterm';
 import { debounce } from '../../utils';
 
 export class ScrollDownHelperAddon implements ITerminalAddon {
-    private terminal: Terminal = new Terminal();
+    private terminal: Terminal;
     private element?: HTMLElement;
     private core: any;
     private viewport: HTMLElement;
@@ -46,7 +46,7 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
         element.style.zIndex = '999';
         element.style.cursor = 'pointer';
 
-        this.terminal.element.appendChild(element);
+        this.viewport.appendChild(element);
         this.element = element;
 
         element.addEventListener('click', () => {
@@ -72,7 +72,7 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
         console.warn("bottomChecker", bottomChecker)
         bottomCheckerContainer.appendChild(bottomChecker);
 
-        $('.xterm-scroll-area-clone').insertAdjacentElement('beforeend', bottomCheckerContainer);
+        $('.xterm-scroll-area').insertAdjacentElement('beforeend', bottomCheckerContainer);
 
 
         const io = new IntersectionObserver(([entry]) => {
