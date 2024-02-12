@@ -54,10 +54,13 @@ body {
 
 }
 
-div,
-select {
-  scrollbar-color: #959595 #2c2c2c !important;
-}
+// select {
+//   scrollbar-color: #959595 #2c2c2c !important;
+// }
+
+// div {
+//   scrollbar-color: #959595 #2c2c2c !important;
+// }
 
 option:checked {
   background: linear-gradient(#c3c3c3, #c3c3c3);
@@ -119,3 +122,14 @@ option:checked {
 .form-control::placeholder {
   color: $form-control-color;
 }
+
+// .xterm-screen-wrapper::-webkit-scrollbar-thumb {
+//   background: red !important;
+// }
+
+// .xterm-screen-wrapper::-webkit-scrollbar {
+//   width: 5px;
+//   height: 8px;
+//   background-color: green !important;
+//   /* or add it to the track */
+// }
