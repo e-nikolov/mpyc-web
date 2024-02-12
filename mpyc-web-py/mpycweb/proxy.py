@@ -99,13 +99,19 @@ class Client(AbstractClient):
         self.transports[pid].on_ready_message(message)
 
     # @stats.acc(lambda self, pid, message: stats.sent_to(pid, message))
-    # @stats.time()
+    # @stats.add(lambda self, pid, message: 1, ["messages", "sent"])
+    # @stats.add(lambda self, pid, message: len(message), ["data", "sent"])
+    @stats.time()
     def send_runtime_message(self, pid: int, message: bytes):
+        stats.sent_to(pid, message)
+
         self.async_proxy.send("proxy:js:mpc:msg:runtime", pid, message)
 
     # @stats.acc(lambda self, pid, message, ts: stats.received_from(pid, message) | stats.latency(ts))
-    # @stats.time()
-    def on_runtime_message(self, pid: int, message: JsProxy, ts) -> None:
+    # @stats.add((lambda self, pid, message, ts: 1), path=["messages", "received"])
+    # @stats.add(lambda self, pid, message, ts: len(message), ["data", "received"])
+    @stats.time()
+    def on_runtime_message(self, pid: int, message: bytes, ts: float) -> None:
         """
         Handle a runtime message from a peer.
 
@@ -113,4 +119,6 @@ class Client(AbstractClient):
             pid (int): The ID of the peer sending the message.
             message (JsProxy): The message received from the peer.
         """
+        stats.latency(ts)
+        stats.received_from(pid, message)
         self.transports[pid].on_runtime_message(message)

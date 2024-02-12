@@ -1,6 +1,5 @@
-pkgs: dir:
-(pkgs.poetry2nix.mkPoetryEnv {
-  python = pkgs.python311;
+pkgs: dir: (pkgs.poetry2nix.mkPoetryEnv {
+  python = pkgs.python312;
   projectDir = ../.;
   preferWheels = true;
 

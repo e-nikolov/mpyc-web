@@ -1,6 +1,6 @@
 export function ensureStorageSchema(gen: number) {
     console.log("Storage schema generation:", localStorage.gen)
-    localStorage.gen ||= 0;
+    localStorage.gen ||= gen;
     if (localStorage.gen < gen) {
         console.log(`Clearing schema, latest generation: ${gen}`)
         localStorage.clear();
@@ -20,10 +20,6 @@ const __isTabDuplicate = () => {
         dup = true;
     }
     sessionStorage.__lock = 1;
-
-    setTimeout(() => {
-        sessionStorage.setItem("__lock", "1");
-    }, 2000)
     return dup
 }
 export const isTabDuplicate = __isTabDuplicate()
@@ -38,6 +34,7 @@ export function __loadTabID(): number {
         _tabID = parseInt(sessionStorage.tabID);
     }
     setTabState("lock", "locked", _tabID);
+    sessionStorage.tabID = _tabID;
 
     return _tabID;
 }
@@ -46,7 +43,6 @@ export function __loadTabID(): number {
 export const tabID = __loadTabID()
 console.warn("tabID", tabID)
 addEventListener('beforeunload', function () {
-    sessionStorage.tabID = tabID; // bug with preloading
     deleteTabState("lock", tabID);
 });
 

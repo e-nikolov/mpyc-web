@@ -109,6 +109,7 @@ export class Controller {
             }
 
             app.setTabState('myPeerID', peerID);
+            // this.term.warn(`tab should be locked ${app.getTabState('lock') == 'locked'}`);
 
             console.log('Peer ID: ' + peerID);
             this.term.success(`${format.green("PeerJS")} ready with ID: ${format.peerID(peerID)}`);
@@ -161,7 +162,8 @@ export class Controller {
 
         this.resetPeerIDButton.addEventListener('click', async () => { app.deleteTabState("myPeerID"); this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
-        this.runMPyCButton.addEventListener('click', async (ev) => { this.term.scrollToBottom(); mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); this.term.scrollToBottom(); });
+        // this.runMPyCButton.addEventListener('click', async (ev) => { this.term.scrollToBottom(); mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); this.term.scrollToBottom(); });
+        this.runMPyCButton.addEventListener('click', async (ev) => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); });
         this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
         this.sendMessageButton.addEventListener('click', async () => { this.sendChatMessage(); });
         this.clearTerminalButton.addEventListener('click', async () => { this.term.clear(); });

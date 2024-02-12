@@ -22,10 +22,13 @@ import gc
 import io
 import json
 import logging
+import math
 import time
 from collections import deque
+from contextlib import ContextDecorator
 from datetime import datetime
 from functools import wraps
+from re import L
 from typing import Callable, ParamSpec, TypeVar
 
 import humanize
@@ -39,18 +42,12 @@ from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
-from .rstats.rstats import BaseStatsCollector, MovingAverage, TimeStats, format_count, format_file_size, format_time
+from .rstats.rstats import BaseStatsCollector  # , format_time
+from .rstats.rstats import BaseStatsState, MovingAverage, NestedDict, TimeStats, format_count, format_file_size
 
 # type: ignore-all
 logger = logging.getLogger(__name__)
 
-K = TypeVar("K")
-V = TypeVar("V")
-NestedDict = dict[K, V | "NestedDict[K, V]"]
-
-Numeric = int | float
-
-N = TypeVar("N", int, float)
 
 # pyright: ignore-all
 # pylint: disable=all
@@ -58,63 +55,94 @@ N = TypeVar("N", int, float)
 # type: ignore=all
 
 
-P = ParamSpec("P")
-R = TypeVar("R")
-import math
+class AsyncioStats:
+    tasks = 0
+    max_tasks = 0
+    loop_iters = 0
+    loop_reiters = 0
+    loop_inner_iters = 0
+    ready = 0
+    total_tasks_count = 0
+    eager_tasks_count = 0
+    total_eager_tasks_count = 0
+    total_scheduled_tasks_count = 0
+    scheduled_tasks_count = 0
+    call_soon_count = 0
+    call_later_count = 0
+    ntodo = 0
+
+    def __str__(self):
+        return (
+            f"tasks: ce {format_count(self.eager_tasks_count)} / cs {format_count(self.scheduled_tasks_count)} / c {format_count(self.tasks)} / ∨ {format_count(self.max_tasks)} / ∑"
+            f" {format_count(self.total_tasks_count)} ({format_count(self.total_eager_tasks_count)} + {format_count(self.total_scheduled_tasks_count)}) | loop: o {format_count(self.loop_iters)} / i"
+            f" {format_count(self.loop_inner_iters)} / {format_count(self.ntodo)}"
+        )
 
 
-def format_asyncio_stats(stats):
-    return (
-        f"tasks: {format_count(stats['tasks'])} / ∨ {format_count(stats['max_tasks'])} / ∑"
-        f" {format_count(stats['total_tasks_count'])} | loop: o {format_count(stats['loop_iters'])} / i"
-        f" {format_count(stats['loop_inner_iters'])} / {format_count(stats['ntodo'])}"
-    )
+class DataStats:
+    initialized = False
+
+    sent = 0
+    received = 0
+
+    def __str__(self):
+        if not self.initialized:
+            return ""
+        return f"⬆{format_file_size(self.sent)} / ⬇{format_file_size(self.received)}"
 
 
-def format_data(data):
-    sent, received = 0, 0
-    if "sent" in data:
-        sent = data["sent"]
+class MessageStats:
+    initialized = False
 
-    if "received" in data:
-        received = data["received"]
+    sent = 0
+    received = 0
 
-    return f"⬆{format_file_size(sent)} / ⬇{format_file_size(received)}"
+    def __str__(self):
+        if not self.initialized:
+            return ""
 
-
-def format_messages(messages):
-    sent, received = 0, 0
-    if "sent" in messages:
-        sent = messages["sent"]
-
-    if "received" in messages:
-        received = messages["received"]
-
-    return f"⬆{format_count(sent)} / ⬇{format_count(received)}"
+        return f"⬆{format_count(self.sent)} / ⬇{format_count(self.received)}"
 
 
-def metric(value: float, unit: str = "", precision: int = 3) -> str:
-    if not math.isfinite(value):
-        return humanize._format_not_finite(value)  # type: ignore
-    exponent = int(math.floor(math.log10(abs(value)))) if value != 0 else 0
+# def format_asyncio_stats(stats: AsyncioStats):
+#     return (
+#             f"tasks: ce {format_count(stats.eager_tasks_count)} / cs {format_count(stats.scheduled_tasks_count)} / c {format_count(stats.tasks)} / ∨ {format_count(stats.max_tasks)} / ∑"
+#             f" {format_count(stats.total_tasks_count)} ({format_count(stats.total_eager_tasks_count)} + {format_count(stats.total_scheduled_tasks_count)}) | loop: o {format_count(stats.loop_iters)} / i"
+#             f" {format_count(stats.loop_inner_iters)} / {format_count(stats.ntodo)}"
+#         )
 
-    if exponent >= 33 or exponent < -30:
-        return humanize.scientific(value, precision - 1) + unit
 
-    value /= 10 ** (exponent // 3 * 3)
-    if exponent >= 3:
-        ordinal_ = "kMGTPEZYRQ"[exponent // 3 - 1]
-    elif exponent < 0:
-        ordinal_ = "mμnpfazyrq"[(-exponent - 1) // 3]
-    else:
-        ordinal_ = ""
-    value_ = format(value, ".%if" % max(0, precision - (exponent % 3) - 1))
-    if not (unit or ordinal_) or unit in ("°", "′", "″"):
-        space = ""
-    else:
-        space = " "
+# def format_data(data):
+#     sent, received = 0, 0
+#     if "sent" in data:
+#         sent = data["sent"]
 
-    return f"{value_}{space}{ordinal_}{unit}"
+#     if "received" in data:
+#         received = data["received"]
+
+#     return f"⬆{format_file_size(sent)} / ⬇{format_file_size(received)}"
+
+
+# def format_messages(messages):
+#     sent, received = 0, 0
+#     if "sent" in messages:
+#         sent = messages["sent"]
+
+#     if "received" in messages:
+#         received = messages["received"]
+
+#     return f"⬆{format_count(sent)} / ⬇{format_count(received)}"
+
+
+class StatsState(BaseStatsState):
+    def __init__(self):
+        super().__init__()
+
+        self.asyncio = AsyncioStats()
+        self.gc = {}
+        self.latency = TimeStats()
+        self.data = DataStats()
+        self.messages = MessageStats()
 
 
 class StatsCollector(BaseStatsCollector):
@@ -132,134 +160,160 @@ class StatsCollector(BaseStatsCollector):
     """
 
     def __init__(self):
-        self.max_tasks = 0
+        state = StatsState()
+
         super().__init__(
             formatters={
-                "total_bytes_received": format_file_size,
-                "total_bytes_sent": format_file_size,
-                "messages": format_messages,
-                "asyncio": format_asyncio_stats,
-                "data": format_data,
-                "latency": format_time,
-            }
+                # "messages": format_messages,
+                # "asyncio": format_asyncio_stats,
+                # "data": format_data,
+                # "latency": format_time,
+            },
+            on_before_get_stats_hooks=[self.asyncio_stats, self.gc_stats],
+            state=state,
         )
 
-    def to_tree(self):
-        self.asyncio_stats()
+        self.state = state
 
-        # if logger.isEnabledFor(log_levels.TRACE):
-        if logger.isEnabledFor(5):
-            self.stats["gc"] = self.gc_stats()
-        return super().to_tree()
+    def asyncio_stats(self, stats: BaseStatsCollector, label="asyncio"):
+        # if label not in stats.stats.counter:
+        #     return
 
-    def asyncio_stats(self, key="asyncio"):
-        if key not in self.stats:
+        tasks = len(asyncio.tasks._eager_tasks) + len(asyncio.tasks._scheduled_tasks)
+        if tasks > self.state.asyncio.max_tasks:
+            self.state.asyncio.max_tasks = tasks
+
+        self.state.asyncio.tasks = tasks
+
+        stats.state.__dict__[label] = self.state.asyncio
+
+    def gc_stats(self, stats: BaseStatsCollector, label="gc"):
+        if not logger.isEnabledFor(5):
             return
 
-        tasks = len(asyncio.tasks._all_tasks)
-        if tasks > self.stats[key]["max_tasks"]:
-            self.stats[key]["max_tasks"] = tasks
-
-        self.stats[key]["tasks"] = tasks
-
-        # return {
-        #     "total_tasks_count": getattr(self.loop, "total_tasks_count", 0),
-        #     "call_soon_count": getattr(self.loop, "call_soon_count", 0),
-        #     "loop_iters": getattr(self.loop, "loop_iters", 0),
-        #     "loop_inner_iters": getattr(self.loop, "loop_inner_iters", 0),
-        #     "loop_queue": {
-        #         "min": None,
-        #         "max": 0,
-        #         "avg": MovingAverage(maxlen=200),
-        #     },
-        # }
-
-    def gc_stats(self):
-        return gc.get_stats()
+        stats[label] = gc.get_stats()
 
     def reset(self):
-        super().reset()
-        self.stats["asyncio"] = {
-            "max_tasks": 0,
-            "loop_iters": 0,
-            "loop_reiters": 0,
-            "loop_inner_iters": 0,
-            "ready": 0,
-            "total_tasks_count": 0,
-            "call_soon_count": 0,
-            "call_later_count": 0,
-            "ntodo": 0,
-        }
+        state = StatsState()
+        super().reset(state=state)
+        self.state = state
 
-        # self.enabled = logging.root.getEffectiveLevel() <= logging.DEBUG
+    def latency(self, ts: float):  # pyright: ignore
+        if not self.enabled:
+            return
 
-    def stat(self, s: NestedDict[str, float]) -> NestedDict[str, float]:
-        return s
+        self.state.latency.initialized = True
 
-    def latency(self, ts: int, key="latency") -> NestedDict[str, float]:  # pyright: ignore
-        l: int = time.time_ns() // 1000 - ts
+        l = time.time_ns() // 1000 - ts
         if l <= 0:
-            return {}
+            return
+        self.state.latency.update(l)
 
-        if key not in self.stats:
-            self.stats[key] = TimeStats()  # pyright: ignore
+    def add(self, path=["default"], value=1):  # pyright: ignore
+        if not self.enabled:
+            return
 
-        self.stats[key].update(l)
-
-        return {}
+        self.state.__dict__.acc_path(value, *path)
 
     def sent_to(self, pid: int, msg: bytes) -> NestedDict[str, float]:
-        """
-        Updates the statistics for a message sent to a specific peer.
+        if not self.enabled:
+            return
 
-        Args:
-            pid (int): The ID of the peer the message was sent to.
-            msg (bytes): The message that was sent.
+        self.state.messages.initialized = True
+        self.state.data.initialized = True
 
-        Returns:
-            A dictionary containing the updated statistics.
-        """
-
-        return {
-            "messages": {
-                "sent": +1,
-            },
-            "data": {
-                "sent": +len(msg),
-            },
-            # "messages": +1,
-            # f"messages_sent_to[{pid}]": +1,
-            # "total_bytes_sent": +len(msg),
-            # f"bytes_sent_to[{pid}]": +len(msg),
-        }
+        self.state.messages.sent += 1
+        self.state.data.sent += len(msg)
+        # f"messages_sent_to[{pid}]": +1,
+        # f"bytes_sent_to[{pid}]": +len(msg),
 
     def received_from(self, pid: int, msg: bytes) -> NestedDict[str, float]:
-        """
-        Records statistics for a message received from a given party.
+        if not self.enabled:
+            return
 
-        Args:
-            pid (int): The ID of the party that sent the message.
-            msg (bytes): The message that was received.
+        self.state.messages.initialized = True
+        self.state.data.initialized = True
 
-        Returns:
-            A dictionary containing the following statistics:
-            - total_messages_received: The total number of messages received.
-            - messages_received_from[pid]: The number of messages received from the given party.
-            - total_bytes_received: The total number of bytes received.
-            - bytes_received_from[pid]: The number of bytes received from the given party.
-        """
-        return {
-            "messages": {
-                "received": +1,
-            },
-            "data": {
-                "received": +len(msg),
-            },
-            # "total_messages_received": +1,
-            # f"messages_received_from[{pid}]": +1,
-            # "total_bytes_received": +len(msg),
-            # f"bytes_received_from[{pid}]": +len(msg),
-        }
+        self.state.messages.received += 1
+        self.state.data.received += len(msg)
+        # f"messages_received_from[{pid}]": +1,
+        # f"bytes_received_from[{pid}]": +len(msg),
+
+
+# class BaseDecorator[**P, R](ContextDecorator):
+#     def __init__(self, stats: BaseStatsCollector[P, R], label="default"):
+#         self.stats = stats
+#         self.label = label
+
+#     def decorator(func: Callable[P, R]) -> Callable[P, R]:
+#         @wraps(func)
+#         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+#             if not self.enabled:
+#                 return func(*args, **kwargs)
+#             new_stats: NestedDict[str, Numeric] = make_stats_func(*args, **kwargs)
+#             res = func(*args, **kwargs)
+#             if FUNC_ARG in new_stats:
+#                 f_name = func.__name__
+#                 func_stats = new_stats.pop(FUNC_ARG)
+#                 new_stats |= {f_name: func_stats}
+
+#                 if f_name not in self.stats:  # pyright: ignore
+#                     self.stats[f_name] = {}  # pyright: ignore
+
+#             update_func()(new_stats)
+#             return res
+
+#         return wrapper
+
+#         return decorator
+
+
+DEFAULT_LABEL = "default"
+
+
+class BaseContext[**P, R](ContextDecorator):
+
+    def __init__(self, stats: StatsCollector, make_new_stats_func: Callable[P, R], label="default"):
+        self.stats = stats
+        self.timings = None
+        self.label = label
+        self.make_new_stats_func = make_new_stats_func
+        self.new_stats = None
+        self.args = None
+        self.kwargs = None
+
+    def __call__(self, func, *args, **kwargs):  # only called when used as a decorator
+        print("__call__", func, args, kwargs)
+        self.func = func
+        if self.label is DEFAULT_LABEL:
+            self.label = func.__name__
+        return super().__call__(func)
+
+    def __enter__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        print("__enter__", args, kwargs)
+        if not self.stats.enabled:
+            return
+
+        if self.label is DEFAULT_LABEL:
+            f = sys._getframe().f_back
+            if f is not None:
+                f_name, line = f.f_code.co_name, f.f_lineno
+                self.label = f"{f_name}:{line}"
+
+        # new_stats = self.make_new_stats_func(self.args, self.kwargs)
+        print(self.make_new_stats_func, *self.args, **self.kwargs)
+        self.make_new_stats_func(self.args, self.kwargs)
+        # self.stats[self.label] = new_stats
+
+        # self.start_time = time.perf_counter_ns()
+
+    def __exit__(self, *args):
+        if not self.stats.enabled:
+            return
+
+        # self.stats._update_timings(self.label, (time.perf_counter_ns() - self.start_time) // 1000)
 
 
 stats = StatsCollector()

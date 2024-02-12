@@ -75,7 +75,7 @@ from datetime import datetime
 
 class AsyncRuntimeProxy:
     on_ready_message: Callable[[int, str], None]
-    on_runtime_message: Callable[[int, JsProxy], None]
+    on_runtime_message: Callable[[int, JsProxy, int], None]
     on_run_mpc: Callable[[Any], None]
     chan: Any
     latest_stats_update = 0
@@ -98,7 +98,7 @@ class AsyncRuntimeProxy:
         self.postMessage(to_js(["proxy:js:runtime:ready"]))
 
     def _send_stats(self):
-        self.postMessage(to_js(["proxy:js:display:stats", str(stats.to_tree())]))
+        self.postMessage(to_js(["proxy:js:display:stats", str(stats)]))
         self.latest_stats_update = time.time()
 
     def send_stats(self):
@@ -216,6 +216,7 @@ class StatsPrinter:
 
     async def _do_task(self):
         while True:
+            # print(stats.stats.timings)
             async_proxy.maybe_send_stats()
             await asyncio.sleep(self.interval)
 
