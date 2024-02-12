@@ -1,8 +1,3 @@
-.split {
-    display: flex;
-    flex-direction: column;
-}
-
 @media (orientation: portrait) {
     .main-container {
         height: calc(100vh - 10px);
@@ -44,49 +39,55 @@
     border: 1px solid $gray-900;
 }
 
-.terminal-split-pane {
+.split {
+    // display: flex;
+    // flex-direction: column;
+    align-content: flex-start;
+    // align-items: baseline;
+    display: flex;
+    flex-direction: column;
+    background-color: transparent !important;
+    user-select: initial;
+    -webkit-user-select: initial;
     position: relative;
-    width: 100%;
-    overflow-x: scroll;
-    overflow-y: hidden;
-    background-color: #3a2f29 !important;
+    /* Create stacking context before to terminal canvases. */
+    z-index: 0;
+}
+
+
+.terminal-split-pane {
+    // position: relative;
+    // width: 100%;
+    // overflow-x: hidden;
+    // overflow-x: scroll;
+    // overflow-y: hidden;
+    // align-content: flex-start;
+    // align-items: baseline;
+    // display: flex;
+    // flex-direction: column;
+    // inset: 0px;
+    // display: block;
+    // white-space: normal;
+    // white-space: nowrap;
+
+    // background-color: #3a2f29 !important;
 }
 
 .xterm-scroll-area {
-    position: absolute;
-    // position: relative;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: -1;
+    // position: absolute;
+    // // position: relative;
+    // top: 0;
+    // left: 0;
+    // right: 0;
+    // bottom: 0;
+    // z-index: -1;
 }
 
-#terminal {
-    top: 0;
-    position: sticky !important;
-    height: 100%;
-    width: 100%;
-}
 
-.xterm-viewport {
-    overflow-y: scroll !important;
-    overflow-x: hidden !important;
-    z-index: 30;
-    background-color: transparent !important;
-    cursor: text !important;
-    width: auto;
-}
-
-.terminal.xterm {
-    height: 100% !important;
-    width: 100% !important;
-}
-
-// .xterm-screen {
-//     padding-right: 50px;
-// }
 
 textarea.form-control {
     height: 40px !important;
+    padding: 0px;
+    margin: 0px;
+    border: 0px
 }

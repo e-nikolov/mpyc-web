@@ -73,17 +73,7 @@ export class Controller {
         this.term.info(`Initializing ${format.green(mpyc.runtime.type())} runtime...`);
 
         this.initHostPeerIDInput();
-        this.hostPeerIDInput.addEventListener('input', debounce(() => {
-            try {
-                const peerURL = new URL(this.hostPeerIDInput.value);
-                let peerID = peerURL.searchParams.get('peer')
-
-                if (peerID) {
-                    this.hostPeerIDInput.value = peerID;
-                }
-            } catch (e) {
-            }
-        }));
+        this.hostPeerIDInput.addEventListener('input', this.handleHostPeerIDInputEvent);
 
 
         this.setupMPyCEvents(mpyc);
@@ -95,6 +85,18 @@ export class Controller {
         this.setupGlobals();
     }
 
+    @debounce()
+    handleHostPeerIDInputEvent() {
+        try {
+            const peerURL = new URL(this.hostPeerIDInput.value);
+            let peerID = peerURL.searchParams.get('peer')
+
+            if (peerID) {
+                this.hostPeerIDInput.value = peerID;
+            }
+        } catch (e) {
+        }
+    }
     setupMPyCEvents(mpyc: MPCManager) {
         addEventListener("error", (e) => {
             console.error(e);
@@ -162,8 +164,8 @@ export class Controller {
 
         this.resetPeerIDButton.addEventListener('click', async () => { app.deleteTabState("myPeerID"); this.term.writeln("Restarting PeerJS..."); mpyc.resetTransport(() => new PeerJSTransport()); });
         this.stopMPyCButton.addEventListener('click', async () => { this.term.writeln("Restarting PyScript runtime..."); mpyc.resetRuntime(); });
-        // this.runMPyCButton.addEventListener('click', async (ev) => { this.term.scrollToBottom(); mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); this.term.scrollToBottom(); });
-        this.runMPyCButton.addEventListener('click', async (ev) => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); });
+        this.runMPyCButton.addEventListener('click', async (ev) => { this.term.scrollToBottom(); mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); this.term.scrollToBottom(); });
+        // this.runMPyCButton.addEventListener('click', async (ev) => { mpyc.runMPC(this.editor.getCode(), this.demoSelect.value, ev.ctrlKey || ev.shiftKey); });
         this.connectToPeerButton.addEventListener('click', async () => { localStorage.hostPeerID = this.hostPeerIDInput.value; mpyc.transport.connect(this.hostPeerIDInput.value) });
         this.sendMessageButton.addEventListener('click', async () => { this.sendChatMessage(); });
         this.clearTerminalButton.addEventListener('click', async () => { this.term.clear(); });
