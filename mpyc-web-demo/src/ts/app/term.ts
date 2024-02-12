@@ -1,3 +1,4 @@
+import { HorizontalScrollAddon } from './xterm-addon-horizontal-scroll/index';
 
 import { Terminal, } from 'xterm';
 import { CanvasAddon } from 'xterm-addon-canvas';
@@ -26,12 +27,9 @@ import { ScrollDownHelperAddon } from './xterm-addon-scroll-down';
 import { loadWebFont } from './xterm-webfont';
 
 export class Term extends Terminal {
-    fitAddon: FitAddon;
-    scrollDownAddon: ScrollDownHelperAddon;
     searchAddon: SearchAddon;
     webglAddon: WebglAddon;
     canvasAddon: CanvasAddon;
-    searchBarAddon: SearchBarAddon;
     webLinksAddon: WebLinksAddon;
     ligaturesAddon: LigaturesAddon;
     readlineAddon: Readline;
@@ -43,16 +41,20 @@ export class Term extends Terminal {
     livePanelLines = 0;
     currentLivePanelMessage = '';
     terminalPanel: HTMLDivElement;
-    scrollAreaClone: HTMLDivElement;
     scrollArea: HTMLDivElement;
     viewportElement: HTMLDivElement;
     screenElement: HTMLDivElement;
+    horizontalScrollAddon: HorizontalScrollAddon;
+    scrollDownAddon: ScrollDownHelperAddon;
+    searchBarAddon: SearchBarAddon;
+    fitAddon: FitAddon;
 
     constructor(selector: string, mpyc: MPCManager) {
         let parent = $(selector);
         super({
             screenReaderMode: false,
             cols: 100,
+            rows: 20,
             allowProposedApi: true,
             customGlyphs: true,
             // windowsMode: true, // breaks the split panel
@@ -98,8 +100,6 @@ export class Term extends Terminal {
         this.core = (this as any)._core;
 
         this.terminalPanel = $<HTMLDivElement>('.terminal-split-pane');
-        this.scrollAreaClone = $<HTMLDivElement>('div.xterm-scroll-area-clone');
-
         this.fitAddon = new FitAddon();
         this.searchAddon = new SearchAddon();
         this.searchBarAddon = new SearchBarAddon({ searchAddon: this.searchAddon });
@@ -107,6 +107,7 @@ export class Term extends Terminal {
         this.readlineAddon = new Readline()
         this.readlineAddon.setCheckHandler(text => !text.trimEnd().endsWith("&&"));
         this.scrollDownAddon = new ScrollDownHelperAddon();
+        this.horizontalScrollAddon = new HorizontalScrollAddon();
 
         this.loadAddon(this.fitAddon);
         this.loadAddon(this.searchAddon);
@@ -127,7 +128,7 @@ export class Term extends Terminal {
         // this.loadAddon(new UnicodeGraphemesAddon());
         this.loadAddon(new Unicode11Addon());
         this.unicode.activeVersion = '11';
-        let ro = new ResizeObserver(() => { this.fit() });
+        let fitObserver = new ResizeObserver(() => { this.fit() });
 
         loadWebFont(this).then(() => {
             // this.ligaturesAddon = new LigaturesAddon();
@@ -135,11 +136,12 @@ export class Term extends Terminal {
 
             // this.loadAddon(this.ligaturesAddon);
             this.viewportElement = this.core.viewport._viewportElement;
-            this.screenElement = this.core.screenElement;
             this.scrollArea = this.core.viewport._scrollArea;
+
 
             $<HTMLTextAreaElement>(`${selector} textarea`).readOnly = true;
             // $<HTMLTextAreaElement>(`${selector} textarea`).remove();
+            // this.terminalPanel.insertAdjacentElement('afterbegin', this.viewportElement)
             // new ResizeObserver(() => {
             //     console.warn("resizing scroll area")
             //     this.scrollArea.style.width = this.screenElement.clientWidth + "px";
@@ -150,14 +152,14 @@ export class Term extends Terminal {
             // }).observe(this.screenElement)
 
 
-            new ResizeObserver(() => {
-                console.warn("resizing scroll area")
-                this.scrollArea.style.width = this.screenElement.clientWidth + "px";
-                // this.viewportElement.style.width = this.screenElement.clientWidth + 20 + "px";
-                // this.syncPanelScroll()
-                // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
+            // new ResizeObserver(() => {
+            //     console.warn("resizing scroll area")
+            //     this.scrollArea.style.width = this.screenElement.clientWidth + "px";
+            //     // this.viewportElement.style.width = this.screenElement.clientWidth + 20 + "px";
+            //     // this.syncPanelScroll()
+            //     // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
 
-            }).observe(this.screenElement)
+            // }).observe(this.screenElement)
 
             // new ResizeObserver(() => {
             //     this.scrollAreaClone.style.height = this.scrollArea.clientHeight + "px";
@@ -168,16 +170,15 @@ export class Term extends Terminal {
             // }).observe(this.scrollArea)
 
             this.fit();
-            this.scrollSync()
+            // this.scrollSync()
 
             this.onResize((_) => {
                 this.updateTermSizeEnv();
             });
-            ro.observe(this.terminalPanel)
+            fitObserver.observe(this.terminalPanel)
             this.loadAddon(this.scrollDownAddon);
+            this.loadAddon(this.horizontalScrollAddon);
         });
-
-
 
         this.mpyc.runtime.setReadlineFn((prompt: string): Promise<string> => {
             return this.readlineAddon.read(prompt)
@@ -273,6 +274,11 @@ export class Term extends Terminal {
 
         return this._controlLines(this._height(message) - 1)
     }
+
+    clearLines(n: number) {
+        this.writeln(this._controlLines(n))
+    }
+
 
     _controlLines(n: number) {
         return `${CARRIAGE_RETURN}${CURSOR_UP}${(CURSOR_UP + ERASE_IN_LINE).repeat(n)}`
@@ -396,7 +402,7 @@ export class Term extends Terminal {
 
         // * Used for updating the visible vertical scrollbar from the state of the xterm viewport
         this.viewportElement.addEventListener('scroll', (ev) => {
-            this.syncPanelScroll()
+            // this.syncPanelScroll()
         });
     }
 }

@@ -1,0 +1,33 @@
+.xterm-wrapper {
+    height: 100%;
+    width: 100%;
+}
+
+.terminal {
+    padding-right: 1rem;
+    height: 100%;
+    width: 100%;
+    background-color: #3a2f29 !important;
+}
+
+.xterm-screen-wrapper {
+    padding-right: 1rem;
+
+    overflow-x: scroll;
+    overflow-y: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+.xterm-viewport {
+    z-index: 30;
+    background-color: transparent !important;
+
+    overflow-x: hidden;
+    overflow-y: scroll;
+
+    cursor: text;
+    width: 20px;
+    height: 100%;
+    left: auto !important;
+}

@@ -16,6 +16,7 @@ export function makeSplitJS(selectors: string[]) {
         minSize: 0,
         expandToMin: true,
         gutterSize: 18,
+        gutterAlign: 'start',
         onDragEnd: function (sizes) {
             localStorage.setItem('split-sizes', JSON.stringify(sizes))
         },
