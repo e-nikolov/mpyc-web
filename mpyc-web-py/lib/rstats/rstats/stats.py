@@ -4,7 +4,7 @@ in the program. The `StatsCollector` class is a subclass of `BaseStatsCollector`
 for collecting and updating statistics.
 
 The `StatsCollector` class defines several methods that can be used to collect statistics for different types of events,
-such as `total_calls`, `sent_to`, and `received_from`. These methods return dictionaries that can be passed to the
+such as  `sent_to`, and `received_from`. These methods return dictionaries that can be passed to the
 `update` method of a `DeepCounter` object to update the statistics.
 
 The `DeepCounter` class is a subclass of `dict` that provides a way to update nested dictionaries with numeric values.
@@ -59,7 +59,6 @@ __all__ = [
 
 
 FUNC_ARG: str = "$func"
-TIME_ARG: str = "$time"
 DEFAULT_TIMER_LABEL: str = "default"
 
 
@@ -106,9 +105,6 @@ class BaseStatsCollector[**P, R]:
         self.state = state
 
         self.on_before_get_stats_hooks = on_before_get_stats_hooks
-        # self.formatters = {
-        #     TIME_ARG: format_times,
-        # } | formatters
         self.formatters = formatters
 
     def get_path(self, *path: str, default=None):
@@ -162,27 +158,6 @@ class BaseStatsCollector[**P, R]:
             for index, item in enumerate(s):
                 tree.add(f"{json.dumps(item)}")
 
-    def dumps(self, name, stats_data):
-        """
-        Convert stats_data to YAML format using json.dumps and yaml.safe_dump.
-
-        Args:
-            stats_data (dict): A dictionary containing statistics data.
-
-        Returns:
-            str: A YAML-formatted string representation of the stats_data dictionary.
-        """
-        return f"====== {name} ======\n{yaml.safe_dump(yaml.safe_load(json.dumps(stats_data)))}"
-
-    def dump(self, name, stats_data, level=logging.DEBUG):
-        """
-        Dump the given stats data to the logger in JSON format.
-
-        Args:
-            stats_data (dict): A dictionary containing the stats data to be logged.
-        """
-        logger.log(level, self.dumps(name, stats_data), stacklevel=2)
-
     def get_stats(self):
         """
         Returns the statistics collected so far.
@@ -191,22 +166,9 @@ class BaseStatsCollector[**P, R]:
             dict: A dictionary containing the statistics collected so far.
         """
         for hook in self.on_before_get_stats_hooks:
-            # print(hook, self)
             hook(self)
 
-        self.state.__dict__[TIME_ARG] = self.state.timings
-
-        # print(self.stats.counter)
-
         return self.state.__dict__
-
-    def total_calls(self) -> NestedDict[str, float]:
-        """
-        Returns a dictionary with a single key-value pair, where the key is "self.func" and the value is another dictionary
-        with a single key-value pair, where the key is "calls" and the value is +1. This method is used to track the total
-        number of calls to a function.
-        """
-        return {FUNC_ARG: {"calls": +1}}
 
 
 class TimingContext[**P, R](ContextDecorator):

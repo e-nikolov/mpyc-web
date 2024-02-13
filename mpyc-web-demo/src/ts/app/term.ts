@@ -53,7 +53,7 @@ export class Term extends Terminal {
         let parent = $(selector);
         super({
             screenReaderMode: false,
-            cols: 100,
+            cols: 85,
             rows: 20,
             allowProposedApi: true,
             customGlyphs: true,
@@ -71,8 +71,8 @@ export class Term extends Terminal {
             allowTransparency: true,
             disableStdin: true,
             altClickMovesCursor: true,
-            scrollback: 1000000000000,
-            scrollOnUserInput: false,
+            scrollback: 1_000_000,
+            scrollOnUserInput: true,
             theme: {
                 "black": "#000000",
                 "red": "#c13900",
@@ -138,39 +138,10 @@ export class Term extends Terminal {
             this.viewportElement = this.core.viewport._viewportElement;
             this.scrollArea = this.core.viewport._scrollArea;
 
-
             $<HTMLTextAreaElement>(`${selector} textarea`).readOnly = true;
-            // $<HTMLTextAreaElement>(`${selector} textarea`).remove();
-            // this.terminalPanel.insertAdjacentElement('afterbegin', this.viewportElement)
-            // new ResizeObserver(() => {
-            //     console.warn("resizing scroll area")
-            //     this.scrollArea.style.width = this.screenElement.clientWidth + "px";
-            //     this.viewportElement.style.width = this.screenElement.clientWidth +20 + "px";
-            //     // this.syncPanelScroll()
-            //     // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
-
-            // }).observe(this.screenElement)
-
-
-            // new ResizeObserver(() => {
-            //     console.warn("resizing scroll area")
-            //     this.scrollArea.style.width = this.screenElement.clientWidth + "px";
-            //     // this.viewportElement.style.width = this.screenElement.clientWidth + 20 + "px";
-            //     // this.syncPanelScroll()
-            //     // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
-
-            // }).observe(this.screenElement)
-
-            // new ResizeObserver(() => {
-            //     this.scrollAreaClone.style.height = this.scrollArea.clientHeight + "px";
-            //     this.scrollAreaClone.style.width = this.scrollArea.clientWidth + "px";
-            //     this.syncPanelScroll()
-            //     // this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
-
-            // }).observe(this.scrollArea)
+            // $<HTMLTextAreaElement>(`${selector} textarea`).remove(); 
 
             this.fit();
-            // this.scrollSync()
 
             this.onResize((_) => {
                 this.updateTermSizeEnv();
@@ -339,12 +310,9 @@ export class Term extends Terminal {
         }
 
         dims.rows = Math.max(dims.rows, 12);
-        // dims.rows = Math.max(dims.rows, this.rows);
-        // dims.cols = Math.max(dims.cols, 80);
         dims.cols = Math.max(dims.cols, this.cols);
 
         if (dims.cols == this.cols && dims.rows == this.rows) {
-            // console.log("unchanged, returning")
             return;
         }
 
@@ -355,9 +323,6 @@ export class Term extends Terminal {
         console.log("resizing terminal to ", dims.cols, dims.rows, wasScrolledDown);
         this.resize(dims.cols, dims.rows);
         this.refresh(0, this.rows - 1)
-        // this.syncPanelScroll()
-
-
 
         if (wasScrolledDown) {
             this.scrollToBottom();
@@ -369,41 +334,6 @@ export class Term extends Terminal {
     updateTermSizeEnv() {
         console.log("updating terminal size env: ", this.cols, this.rows);
         this.mpyc.runtime.updateEnv({ COLUMNS: this.cols.toString(), LINES: this.rows.toString() })
-    }
-
-    ignoreNextPanelScrollEvent = false;
-    ignoreNextViewportScrollEvent = false;
-
-    syncViewportScroll = () => {
-        // this.viewportElement.style.width = this.terminalPanel.clientWidth + this.terminalPanel.scrollLeft + "px";
-        // console.warn("viewport Width", this.terminalPanel.clientWidth, "+", this.terminalPanel.scrollLeft, "+ 20 = ", this.viewportElement.style.width)
-        if (!this.ignoreNextPanelScrollEvent && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
-            console.warn("syncViewportScroll", this.viewportElement.scrollTop, this.terminalPanel.scrollTop)
-            this.ignoreNextViewportScrollEvent = true;
-            this.viewportElement.scrollTop = this.terminalPanel.scrollTop;
-        }
-        this.ignoreNextPanelScrollEvent = false;
-    }
-
-    syncPanelScroll = () => {
-        if (!this.ignoreNextViewportScrollEvent && this.viewportElement.scrollTop != this.terminalPanel.scrollTop) {
-            console.warn("syncPanelScroll", this.viewportElement.scrollTop, this.terminalPanel.scrollTop)
-            this.ignoreNextPanelScrollEvent = true;
-            this.terminalPanel.scrollTop = this.viewportElement.scrollTop;
-        }
-        this.ignoreNextViewportScrollEvent = false;
-    }
-
-    scrollSync = () => {
-        // * Used for manually scrolling via the vertical scrollbar
-        this.terminalPanel.addEventListener('scroll', (ev) => {
-            this.syncViewportScroll()
-        });
-
-        // * Used for updating the visible vertical scrollbar from the state of the xterm viewport
-        this.viewportElement.addEventListener('scroll', (ev) => {
-            // this.syncPanelScroll()
-        });
     }
 }
 

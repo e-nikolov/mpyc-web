@@ -71,5 +71,5 @@ export const sleep_callSoon_async = sleepWithCallSoon(callSoon_async)
 
 
 
-export const sleep = sleep_callSoon_new
+export const sleep = sleep_callSoon_setTimeout
 export const callSoon = callSoon_singleChan
