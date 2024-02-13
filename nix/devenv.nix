@@ -27,8 +27,8 @@
     # pkgs.pion-stun
     # pkgs.nodePackages.lerna
     # pkgs.yarn2nix
-    pkgs.python312Packages.gmpy2
-    pkgs.python312Packages.numpy
+    # pkgs.python312Packages.gmpy2
+    # pkgs.python312Packages.numpy
     pkgs.twine
     pkgs.netlify-cli
     # pkgs.tailwindcss

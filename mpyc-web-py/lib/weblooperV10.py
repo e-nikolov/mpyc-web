@@ -2,6 +2,7 @@ import asyncio
 import collections
 import contextvars
 import types
+from asyncio import tasks
 from random import sample, shuffle
 from typing import Any, Callable, Optional
 
@@ -30,26 +31,26 @@ class WebLooper(WebLoop):
         if not stats.enabled:
             return
 
-        old_register_task = asyncio.tasks._register_task
-        old_register_eager_task = asyncio.tasks._register_eager_task
-        # old_add = asyncio.tasks._all_tasks.add
+        # old_register_task = tasks._register_task
+        # old_register_eager_task = tasks._register_eager_task
+        # # old_add = asyncio.tasks._all_tasks.add
 
-        def _register_eager_task(self, task) -> None:
-            stats.state.asyncio.total_tasks_count += 1
-            stats.state.asyncio.total_eager_tasks_count += 1
-            old_register_eager_task(task)
+        # def _register_eager_task(self, task) -> None:
+        #     stats.state.asyncio.total_tasks_count += 1
+        #     stats.state.asyncio.total_eager_tasks_count += 1
+        #     old_register_eager_task(task)
 
-        def _register_scheduled_task(self, task) -> None:
-            stats.state.asyncio.total_tasks_count += 1
-            stats.state.asyncio.total_scheduled_tasks_count += 1
-            old_register_task(task)
+        # def _register_scheduled_task(self, task) -> None:
+        #     stats.state.asyncio.total_tasks_count += 1
+        #     stats.state.asyncio.total_scheduled_tasks_count += 1
+        #     old_register_task(task)
 
-        stats.state.asyncio.total_tasks_count = len(asyncio.tasks.all_tasks())
-        stats.state.asyncio.total_eager_tasks_count = len(asyncio.tasks._eager_tasks)
-        stats.state.asyncio.total_scheduled_tasks_count = len(asyncio.tasks._scheduled_tasks)
+        # stats.state.asyncio.total_tasks_count = len(tasks.all_tasks())
+        # stats.state.asyncio.total_eager_tasks_count = len(tasks._eager_tasks)
+        # stats.state.asyncio.total_scheduled_tasks_count = len(tasks._scheduled_tasks)
 
-        asyncio.tasks._register_task = _register_scheduled_task
-        asyncio.tasks._register_eager_task = _register_eager_task
+        # tasks._register_task = _register_scheduled_task
+        # tasks._register_eager_task = _register_eager_task
 
     # @stats.acc(lambda self, callback, *args, context: stats.time())
     def call_soon(
@@ -135,7 +136,7 @@ class WebLooper(WebLoop):
                 del task._source_traceback[-1]  # type: ignore[attr-defined]
         else:
             task = self._task_factory(self, coro)
-            asyncio.tasks._set_task_name(task, name)  # type: ignore[attr-defined]
+            tasks._set_task_name(task, name)  # type: ignore[attr-defined]
 
         self._in_progress += 1
         task.add_done_callback(self._decrement_in_progress)
@@ -143,11 +144,11 @@ class WebLooper(WebLoop):
 
 
 class PyodideTaskStats(PyodideTask):
-    def __init__(self, coro, *, loop=None, name=None, context=None, eager_start=False):
+    def __init__(self, coro, *, loop=None, name=None, context=None, eager_start=True):
         super().__init__(coro, loop=loop, name=name, eager_start=eager_start)
         stats.state.asyncio.total_tasks_count += 1
 
         if eager_start:
-            stats.state.asyncio.eager_tasks_count += 1
+            stats.state.asyncio.total_eager_tasks_count += 1
         else:
-            stats.state.asyncio.scheduled_tasks_count += 1
+            stats.state.asyncio.total_scheduled_tasks_count += 1

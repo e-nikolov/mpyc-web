@@ -28,6 +28,6 @@ pkgs: dir: (pkgs.poetry2nix.mkPoetryEnv {
   #     buildInputs = old.buildInputs ++ [ super.setuptools super.asdqwrsdfsdf ];
   #   });
 
-  #   gmpy2 = pkgs.python311Packages.gmpy2;
+  #   gmpy2 = pkgs.python312Packages.gmpy2;
   # });
 })

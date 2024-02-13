@@ -12,7 +12,7 @@ reportAsyncNotInAsyncFunction = false
 
 [tool.poetry]
 name = "rstats"
-version = "0.5.0"
+version = "0.6.0"
 description = "Decorators for runtime statistics and benchmarking"
 authors = ["Emil Nikolov <eenikolov@proton.me>"]
 
