@@ -6,7 +6,7 @@ in the program. The `StatsCollector` class is a subclass of `BaseStatsCollector`
 for collecting and updating statistics.
 
 The `StatsCollector` class defines several methods that can be used to collect statistics for different types of events,
-such as `total_calls`, `sent_to`, and `received_from`. These methods return dictionaries that can be passed to the
+such as    `sent_to`, and `received_from`. These methods return dictionaries that can be passed to the
 `update` method of a `DeepCounter` object to update the statistics.
 
 The `DeepCounter` class is a subclass of `dict` that provides a way to update nested dictionaries with numeric values.
@@ -104,36 +104,6 @@ class MessageStats:
         return f"⬆{format_count(self.sent)} / ⬇{format_count(self.received)}"
 
 
-# def format_asyncio_stats(stats: AsyncioStats):
-#     return (
-#             f"tasks: ce {format_count(stats.eager_tasks_count)} / cs {format_count(stats.scheduled_tasks_count)} / c {format_count(stats.tasks)} / ∨ {format_count(stats.max_tasks)} / ∑"
-#             f" {format_count(stats.total_tasks_count)} ({format_count(stats.total_eager_tasks_count)} + {format_count(stats.total_scheduled_tasks_count)}) | loop: o {format_count(stats.loop_iters)} / i"
-#             f" {format_count(stats.loop_inner_iters)} / {format_count(stats.ntodo)}"
-#         )
-
-
-# def format_data(data):
-#     sent, received = 0, 0
-#     if "sent" in data:
-#         sent = data["sent"]
-
-#     if "received" in data:
-#         received = data["received"]
-
-#     return f"⬆{format_file_size(sent)} / ⬇{format_file_size(received)}"
-
-
-# def format_messages(messages):
-#     sent, received = 0, 0
-#     if "sent" in messages:
-#         sent = messages["sent"]
-
-#     if "received" in messages:
-#         received = messages["received"]
-
-#     return f"⬆{format_count(sent)} / ⬇{format_count(received)}"
-
-
 class StatsState(BaseStatsState):
     def __init__(self):
         super().__init__()
@@ -154,7 +124,6 @@ class StatsCollector(BaseStatsCollector):
 
     Methods:
         stat(s: NestedDict[str, float]) -> NestedDict[str, float]: Returns the input dictionary unchanged.
-        total_calls() -> NestedDict[str, float]: Returns a dictionary with a single key-value pair indicating a function call was made.
         sent_to(pid: int, msg: bytes) -> NestedDict[str, float]: Returns a dictionary with statistics on a message sent to a specific MPC party.
         received_from(pid: int, msg: bytes) -> NestedDict[str, float]: Returns a dictionary with statistics on a message received from a specific MPC party.
     """
@@ -163,12 +132,7 @@ class StatsCollector(BaseStatsCollector):
         state = StatsState()
 
         super().__init__(
-            formatters={
-                # "messages": format_messages,
-                # "asyncio": format_asyncio_stats,
-                # "data": format_data,
-                # "latency": format_time,
-            },
+            formatters={},
             on_before_get_stats_hooks=[self.asyncio_stats, self.gc_stats],
             state=state,
         )
@@ -238,82 +202,6 @@ class StatsCollector(BaseStatsCollector):
         self.state.data.received += len(msg)
         # f"messages_received_from[{pid}]": +1,
         # f"bytes_received_from[{pid}]": +len(msg),
-
-
-# class BaseDecorator[**P, R](ContextDecorator):
-#     def __init__(self, stats: BaseStatsCollector[P, R], label="default"):
-#         self.stats = stats
-#         self.label = label
-
-#     def decorator(func: Callable[P, R]) -> Callable[P, R]:
-#         @wraps(func)
-#         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-#             if not self.enabled:
-#                 return func(*args, **kwargs)
-#             new_stats: NestedDict[str, Numeric] = make_stats_func(*args, **kwargs)
-#             res = func(*args, **kwargs)
-#             if FUNC_ARG in new_stats:
-#                 f_name = func.__name__
-#                 func_stats = new_stats.pop(FUNC_ARG)
-#                 new_stats |= {f_name: func_stats}
-
-#                 if f_name not in self.stats:  # pyright: ignore
-#                     self.stats[f_name] = {}  # pyright: ignore
-
-#             update_func()(new_stats)
-#             return res
-
-#         return wrapper
-
-#         return decorator
-
-
-DEFAULT_LABEL = "default"
-
-
-class BaseContext[**P, R](ContextDecorator):
-
-    def __init__(self, stats: StatsCollector, make_new_stats_func: Callable[P, R], label="default"):
-        self.stats = stats
-        self.timings = None
-        self.label = label
-        self.make_new_stats_func = make_new_stats_func
-        self.new_stats = None
-        self.args = None
-        self.kwargs = None
-
-    def __call__(self, func, *args, **kwargs):  # only called when used as a decorator
-        print("__call__", func, args, kwargs)
-        self.func = func
-        if self.label is DEFAULT_LABEL:
-            self.label = func.__name__
-        return super().__call__(func)
-
-    def __enter__(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-        print("__enter__", args, kwargs)
-        if not self.stats.enabled:
-            return
-
-        if self.label is DEFAULT_LABEL:
-            f = sys._getframe().f_back
-            if f is not None:
-                f_name, line = f.f_code.co_name, f.f_lineno
-                self.label = f"{f_name}:{line}"
-
-        # new_stats = self.make_new_stats_func(self.args, self.kwargs)
-        print(self.make_new_stats_func, *self.args, **self.kwargs)
-        self.make_new_stats_func(self.args, self.kwargs)
-        # self.stats[self.label] = new_stats
-
-        # self.start_time = time.perf_counter_ns()
-
-    def __exit__(self, *args):
-        if not self.stats.enabled:
-            return
-
-        # self.stats._update_timings(self.label, (time.perf_counter_ns() - self.start_time) // 1000)
 
 
 stats = StatsCollector()

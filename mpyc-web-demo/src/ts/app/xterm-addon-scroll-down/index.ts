@@ -19,7 +19,7 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
 
     // @debounce(500)
     handleScrollHelper(isScrolledDown: boolean) {
-        console.warn("handleScrollHelper", isScrolledDown)
+        // console.warn("handleScrollHelper", isScrolledDown)
         this.isScrolledDown = isScrolledDown;
         if (isScrolledDown) {
             this.hide();
@@ -29,8 +29,6 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
     }
 
     createElement() {
-        this.terminal.element.style.position = 'relative';
-
         let scrollDownBtn = document.createElement('div');
         scrollDownBtn.classList.add("xterm-scroll-down-helper")
         let scrollDownBtnSpan = document.createElement('span')
@@ -40,7 +38,6 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
         this.scrollDownBtn = scrollDownBtn;
 
         scrollDownBtn.addEventListener('click', () => {
-            this.terminal.scrollToBottom();
             this.hide();
         });
 
@@ -55,12 +52,9 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
 
         this.core._viewportScrollArea.insertAdjacentElement('beforeend', scrollCheckerWrapper);
 
-        const io = new IntersectionObserver(([entry]) => {
-            let { isIntersecting, boundingClientRect } = entry;
+        const io = new IntersectionObserver(([{ isIntersecting }]) => {
             this.handleScrollHelper(isIntersecting);
-        },
-            { threshold: 0 }
-        );
+        }, { threshold: 0 });
 
         io.observe(scrollChecker);
     }
@@ -83,12 +77,9 @@ export class ScrollDownHelperAddon implements ITerminalAddon {
     }
     hide(): void {
         this.terminal.scrollToBottom();
-        this.viewport.scrollTop = this.viewport.scrollHeight;
         if (this.scrollDownBtn && this.scrollDownBtn.style.visibility != 'hidden') {
             this.scrollDownBtn.style.visibility = 'hidden';
             // console.warn("hiding, wasScrolledDown", this.isScrolledDown)
         }
     }
-
-
 }

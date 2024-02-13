@@ -46,7 +46,7 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
     constructor(opts?: PyScriptWorkerRuntimeOptions) {
         let startup = emptyBlob;
         let config: string | any = {
-            // packages: ["micropip", "mpyc-web", "numpy", "gmpy2"],
+            packages: ["mpyc-web"],
         };
 
         if (opts?.startup && opts?.startup != "") {
@@ -59,7 +59,7 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
 
         if (opts?.config && typeof opts?.config === 'object') {
             opts.config.packages ||= []
-            // opts.config.packages.push("micropip", "numpy", "gmpy2")
+            opts.config.packages.push("numpy", "gmpy2")
 
             config = { ...config, ...opts.config }
         }
@@ -99,9 +99,6 @@ export class PyScriptWorkerRuntime extends MPCRuntimeBase {
                             wrap.io.stderr(error);
                         }
                     };
-
-                    console.warn("micropip????")
-                    await self.pyodide.loadPackage("micropip")
 
                     // self.runAsync(wrap, startup, { filename: "startup.py" })
                     self.runAsync(`
