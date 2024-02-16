@@ -123,9 +123,9 @@ devs2:
 	WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT op.exe run --env-file="./.env" -- wsl env | grep VITE
 
 # WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT op.exe run --no-masking --env-file="./.env" -- wsl.exe -- echo ${PATH@Q}
+# WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT:PATH/p op.exe run --no-masking --env-file="./.env" -- wsl.exe -- VITE_HTTPS=true yarn dev
+# WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT op.exe run --no-masking --env-file="./.env" -- wsl.exe -- export PATH="$PATH" && VITE_HTTPS=true yarn dev
 devs:
-	# WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT op.exe run --no-masking --env-file="./.env" -- wsl.exe -- export PATH="$PATH" && VITE_HTTPS=true yarn dev
-	# WSLENV=$WSLENV:VITE_HTTPS_KEY:VITE_HTTPS_CERT:PATH/p op.exe run --no-masking --env-file="./.env" -- wsl.exe -- VITE_HTTPS=true yarn dev
 	VITE_HTTPS=true op-run yarn dev
 	
 watch:

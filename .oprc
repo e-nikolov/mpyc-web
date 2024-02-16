@@ -1,0 +1,10 @@
+export TAILSCALE_API_KEY=op://personal/mpyc-demo/tailscale-api-token
+export TAILSCALE_TAILNET=op://personal/mpyc-demo/tailscale-tailnet
+export DIGITALOCEAN_TOKEN=op://personal/mpyc-demo/digitalocean-api-token
+export AWS_ACCESS_KEY_ID=op://personal/mpyc-demo/digitalocean-spaces-key-id
+export AWS_SECRET_ACCESS_KEY=op://personal/mpyc-demo/digitalocean-spaces-secret-access-key
+export SPACES_ACCESS_KEY_ID=op://personal/mpyc-demo/digitalocean-spaces-key-id
+export SPACES_SECRET_ACCESS_KEY=op://personal/mpyc-demo/digitalocean-spaces-secret-access-key
+export TF_VAR_DOMAIN=mpyc-web.e-nikolov.me
+export VITE_HTTPS_KEY='op://personal/mpyc-demo/tls-home-nix-key'
+export VITE_HTTPS_CERT='op://personal/mpyc-demo/tls-home-nix-crt'
