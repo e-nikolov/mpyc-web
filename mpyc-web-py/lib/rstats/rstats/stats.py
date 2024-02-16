@@ -92,14 +92,14 @@ def has_to_string(obj):
     return type(obj).__str__ is not object.__str__
 
 
-class BaseStatsCollector[**P, R]:
+class BaseStatsCollector:
     enabled = False
     start_time = datetime.now()
 
     def __init__(
         self,
         formatters: dict[str, Callable[[str], str]] = {},
-        on_before_get_stats_hooks: list[Callable[["BaseStatsCollector[P, R]"], None]] = [],
+        on_before_get_stats_hooks: list[Callable[["BaseStatsCollector"], None]] = [],
         state=BaseStatsState(),
     ):
         self.state = state
@@ -171,8 +171,8 @@ class BaseStatsCollector[**P, R]:
         return self.state.__dict__
 
 
-class TimingContext[**P, R](ContextDecorator):
-    def __init__(self, stats: BaseStatsCollector[P, R], label="default"):
+class TimingContext(ContextDecorator):
+    def __init__(self, stats: BaseStatsCollector, label="default"):
         self.stats = stats
         self.timings = None
         self.label = label

@@ -25,6 +25,7 @@
     "deploy:test": "APP_DEPLOYMENT='test' yarn ghp --remote test",
     "deploy:test2": "APP_DEPLOYMENT='test' yarn ghp --remote test2",
     "deploy:old": "APP_DEPLOYMENT='' bun ghp --remote mpyc",
+    "publish:wsl": "yarn workspace @mpyc-web/core npm publish --access public --otp $(op.exe item get npmjs.com --otp)",
     "publish": "yarn workspace @mpyc-web/core npm publish --access public --otp $(op item get npmjs.com --otp)",
     "publish:py": "poetry publish --build",
     "publish:py:rstats": "cd ./mpyc-web-py/lib/rstats && poetry publish --build",

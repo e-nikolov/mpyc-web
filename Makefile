@@ -27,6 +27,12 @@ image-docker:
 run-image:
 	docker run enikolov/mpyc-demo:nix-v0.0.1
 
+tf-init:
+	@echo ===================================================
+	@echo Initializing terraform
+	@echo ===================================================
+	terraform -chdir=./deployments/terraform init -upgrade
+	
 provision:
 	@echo ===================================================
 	@echo Provisioning with terraform

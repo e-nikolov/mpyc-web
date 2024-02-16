@@ -32,27 +32,6 @@
     pkgs.twine
     pkgs.netlify-cli
     # pkgs.tailwindcss
-
-    (pkgs.terraform.withPlugins (tp: [
-      # (tp.digitalocean.overrideAttrs (final: old: {
-      #   rev = "a88a19be189e01aec9a9152dc3543f9a6493cc80";
-      #   hash = "123";
-      #   vendorHash = "123";
-      # }))
-      tp.null
-      tp.external
-      tp.tailscale
-      tp.random
-      tp.digitalocean
-      (tp.mkProvider {
-        hash = "sha256-WCHs4riA0jRG77LcgkLDo1zyiYRNdlilrubSL2bPg9k=";
-        owner = "loafoe";
-        repo = "terraform-provider-ssh";
-        rev = "v2.6.0";
-        homepage = "https://registry.terraform.io/providers/loafoe/ssh/";
-        vendorHash = "sha256-MFp6KD9xXB6+B9XenGxxlR9Tueu4gDNeF1sMRvpIxGc=";
-      })
-    ]))
   ];
 
   # # https://devenv.sh/scripts/
@@ -81,6 +60,27 @@
   languages.python.poetry.enable = true;
   languages.python.poetry.activate.enable = true;
   languages.python.poetry.install.enable = true;
+  languages.terraform.enable = true;
+  languages.terraform.package = pkgs.terraform.withPlugins (tp: [
+    # (tp.digitalocean.overrideAttrs (final: old: {
+    #   rev = "a88a19be189e01aec9a9152dc3543f9a6493cc80";
+    #   hash = "123";
+    #   vendorHash = "123";
+    # }))
+    tp.null
+    tp.external
+    tp.tailscale
+    tp.random
+    tp.digitalocean
+    (tp.mkProvider {
+      hash = "sha256-WCHs4riA0jRG77LcgkLDo1zyiYRNdlilrubSL2bPg9k=";
+      owner = "loafoe";
+      repo = "terraform-provider-ssh";
+      rev = "v2.6.0";
+      homepage = "https://registry.terraform.io/providers/loafoe/ssh/";
+      vendorHash = "sha256-MFp6KD9xXB6+B9XenGxxlR9Tueu4gDNeF1sMRvpIxGc=";
+    })
+  ]);
   # languages.deno.enable = true;
   # languages.python.venv.enable = false;
   # languages.python.version = "3.11.5";
