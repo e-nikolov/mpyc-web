@@ -8,7 +8,7 @@ import { MPCRuntimeBase } from '../MPCRuntimeBase';
 
 function XXWorker(startupURL: string, configFilePath: string | any, hooks: any) {
     let opts: unknown = {
-        async: true, type: "pyodide", version: "0.26.0a1", config: configFilePath
+        async: true, type: "pyodide", version: "0.26.0a2", config: configFilePath
         // async: true, type: "pyodide", version: "https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.mjs", config: configFilePath
     }
 
