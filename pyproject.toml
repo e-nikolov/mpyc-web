@@ -14,7 +14,7 @@ ignore = ["mpyc-web-py/lib/stats.py"]
 
 [tool.poetry]
 name = "mpyc-web"
-version = "0.6.2"
+version = "0.7.0"
 description = "MPyC for Multiparty Computation in Python for the Web"
 authors = ["Emil Nikolov <eenikolov@proton.me>"]
 packages = [
@@ -25,11 +25,13 @@ packages = [
     { include = "./mpyc", from = "./mpyc-web-py/mpyc" },
     { include = "./*.py", from = "./mpyc-web-py/mpyc/demos" }
 ]
+    [tool.poetry.extras]
+    dev_tools = ["gmpy2"]
+
     [tool.poetry.dependencies]
     python = "^3.12"
     rich = "^13.5.3"
     numpy = "^1.25.2"
-    # gmpy2 = "^2.1.5"
     pyyaml = "^6.0.1"
     humanize = "^4.8.0"
 
@@ -40,6 +42,7 @@ packages = [
     # qrcode = "^7.3.1"
     # numpy = "^1.23.4"
     # gmpy2 = "^2.1.2"
+    gmpy2 = "^2.2.0a1"
     packaging = "^23.0.0"
     # uvloop = "^0.17.0"
     # pyodide-pack = "^2.1.2"

@@ -24,6 +24,7 @@ import json
 import logging
 import math
 import time
+from asyncio import tasks
 from collections import deque
 from contextlib import ContextDecorator
 from datetime import datetime
@@ -73,11 +74,11 @@ class AsyncioStats:
 
     def __str__(self):
         return (
-            f"tasks: ce {format_count(self.eager_tasks_count)} / cs {format_count(self.scheduled_tasks_count)} / c {format_count(self.tasks)} / ∨ {format_count(self.max_tasks)} / ∑"
-            f" {format_count(self.total_tasks_count)} ({format_count(self.total_eager_tasks_count)} + {format_count(self.total_scheduled_tasks_count)}) | loop: o {format_count(self.loop_iters)} / i"
-            f" {format_count(self.loop_inner_iters)} / {format_count(self.ntodo)}"
+            f"tasks: c {format_count(self.tasks)} / ∨ {format_count(self.max_tasks)}"
+            f" | loop: o {format_count(self.loop_iters)} / i {format_count(self.loop_inner_iters)} / {format_count(self.ntodo)}"
         )
-
+        #   ({format_count(self.eager_tasks_count)} + {format_count(self.scheduled_tasks_count)})
+        #  f"/ ∑ {format_count(self.total_tasks_count)} ({format_count(self.total_eager_tasks_count)} + {format_count(self.total_scheduled_tasks_count)})
 
 class DataStats:
     initialized = False
@@ -142,12 +143,11 @@ class StatsCollector(BaseStatsCollector):
     def asyncio_stats(self, stats: BaseStatsCollector, label="asyncio"):
         # if label not in stats.stats.counter:
         #     return
-
-        tasks = len(asyncio.tasks._eager_tasks) + len(asyncio.tasks._scheduled_tasks)
-        if tasks > self.state.asyncio.max_tasks:
-            self.state.asyncio.max_tasks = tasks
-
-        self.state.asyncio.tasks = tasks
+        self.state.asyncio.eager_tasks_count = len(tasks._eager_tasks)
+        self.state.asyncio.scheduled_tasks_count = len(tasks._scheduled_tasks)
+        self.state.asyncio.tasks = self.state.asyncio.eager_tasks_count + self.state.asyncio.scheduled_tasks_count
+        if self.state.asyncio.tasks > self.state.asyncio.max_tasks:
+            self.state.asyncio.max_tasks = self.state.asyncio.tasks
 
         stats.state.__dict__[label] = self.state.asyncio
 
