@@ -44,6 +44,7 @@ packages = [
     # gmpy2 = "^2.1.2"
     gmpy2 = "^2.2.0a1"
     packaging = "^23.0.0"
+    transcrypt = "^3.9.1"
     # uvloop = "^0.17.0"
     # pyodide-pack = "^2.1.2"
     # pyodide-pack = "^0.2.0"

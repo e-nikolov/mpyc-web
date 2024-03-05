@@ -51,6 +51,7 @@
   # https://devenv.sh/languages/
   languages.nix.enable = true;
 
+  languages.java.enable = true;
   languages.javascript.enable = true;
   languages.javascript.corepack.enable = true;
   # languages.javascript.npm.install.enable = true;
