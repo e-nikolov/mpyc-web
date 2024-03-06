@@ -50,5 +50,5 @@ export class TimeoutsBench extends BenchSuite {
 
 
 export async function main() {
-    await TimeoutsBench.run2()
+    await TimeoutsBench.run()
 }

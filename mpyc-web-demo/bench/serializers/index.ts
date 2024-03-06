@@ -3,7 +3,7 @@
 import * as cbor from "cbor-x";
 import * as msgpackr from 'msgpackr';
 
-import { bench, Benchmark, BenchSuite } from "../../src/ts/bench";
+import { AsyncBenchmark, BenchSuite, bench } from "../../src/ts/bench";
 // import 'crypto'
 // import { randomBytes } from "crypto";
 
@@ -202,7 +202,7 @@ let benchSerializer = async <T, K extends (Uint8Array | string)>(name: string, v
     }
 }
 
-function table(...benches: Benchmark[]) {
+function table(...benches: AsyncBenchmark<any>[]) {
     console.table(benches.map(b => {
         return {
             name: b.name,

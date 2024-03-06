@@ -1,15 +1,18 @@
+def print(s):
+    document.getElementById("output").innerHTML += s + "<br />"
+
+
 import itertools
 import random
-import sys
 import time
 
 bench_input_size = 100000
 bench_min_duration = 0.2
-bench_best_of = 3
+bench_best_of = 2
 
 
-range_fn = range
-# range_fn = lambda iters: itertools.repeat(None, iters)  # Pyodide
+# range_fn = range
+range_fn = lambda iters: itertools.repeat(None, iters)  # Pyodide
 
 
 default_timer = time.time
@@ -100,6 +103,11 @@ def sortlist():
     return sorted(l[:])
 
 
+@bench("sortlist2")
+def sortlist2():
+    return l[:].sort()
+
+
 @bench("fibonacci")
 def fibonacci(n=bench_input_size):
     if n < 2:
@@ -140,5 +148,6 @@ bigints()
 l = randlist()
 cpylist()
 sortlist()
+sortlist2()
 fibonacci()
 primes()

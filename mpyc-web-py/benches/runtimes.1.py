@@ -1,18 +1,60 @@
 import itertools
+import random
+import sys
 import time
 
-default_iterations = 1000000
-default_timer = time.time
-min_bench_duration = 0.2
+bench_input_size = 100000
+bench_min_duration = 0.2
+bench_best_of = 3
 
 
-def timeit(func, iterations=default_iterations, timer=default_timer):
-    it = itertools.repeat(None, iterations - 1)
+def is_brython():
+    try:
+        __BRYTHON__
+        return True
+    except NameError:
+        return False
+
+
+def is_skulpt():
+    return "Skulpt" in str(sys.version)
+
+
+def is_micropython():
+    return "MicroPython" in str(sys.version)
+
+
+def is_rustpython():
+    return "rustc" in str(sys.version)
+
+
+if is_micropython():
+    import js
+
+    def print(s):
+        js.document.currentScript.target.innerHTML += s + "<br />"
+
+
+if is_brython() or is_skulpt() or is_micropython():
+    range_fn = range
+else:
+    range_fn = lambda iters: itertools.repeat(None, iters)  # Pyodide
+
+if hasattr(time, "ticks_ms"):
+    default_timer = time.ticks_ms
+    default_time_diff = lambda a, b: time.ticks_diff(a, b) / 1000.0
+
+elif hasattr(time, "time"):
+    default_timer = time.time
+    default_time_diff = lambda a, b: a - b
+
+
+def timeit(func, iterations=bench_input_size, timer=default_timer, time_diff=default_time_diff):
     t1 = timer()
     res = func()
-    for _ in it:
+    for _ in range_fn(iterations - 1):
         func()
-    timing = timer() - t1
+    timing = time_diff(timer(), t1)
     return timing, res
 
 
@@ -22,7 +64,7 @@ def autorange(func):
         for j in 1, 2, 5:
             iterations = i * j
             time_taken, res = timeit(func, iterations)
-            if time_taken >= min_bench_duration:
+            if time_taken >= bench_min_duration:
                 return (round(iterations / time_taken, 2), res)
         i *= 10
 
@@ -35,7 +77,7 @@ def bench(func):
         def handle():
             return func(*args, **kwargs)
 
-        for _ in range(3):
+        for _ in range(bench_best_of):
             ops, res = autorange(handle)
             maxOpS = max(maxOpS, ops)
 
@@ -53,114 +95,35 @@ def print_bench(name, t, *args, **kwargs):
 
 
 @bench
-def assign(iters=default_iterations):
-    x = 0
-    for i in range(iters):
-        x = i
+def random_list(size=bench_input_size):
+    return _random_list(size)
 
 
 @bench
-def add(iters=default_iterations):
-    x = 0
-    for i in range(iters):
-        x = x + i
+def random_int(size=bench_input_size):
+    for _ in range_fn(size):
+        random.randint(0, size)
+
+
+def _random_list(size=bench_input_size):
+    return [random.randint(0, size) for _ in range(size)]
 
 
 @bench
-def mod(iters=default_iterations):
-    x = 123456
-    for i in range(iters):
-        x % 12345
+def sort_copied_list():
+    return l.copy().sort()
 
 
 @bench
-def big_int(iters=default_iterations):
-    n = 60
-    for i in range(iters):
-        2**n
+def copy_list():
+    return l.copy()
 
 
 @bench
-def mult(iters=default_iterations):
-    x = 0
-    for i in range(iters):
-        x *= i
-
-
-@bench
-def create_func(iters=default_iterations):
-    for i in range(iters):
-
-        def ff(x):
-            return x
-
-    return ff
-
-
-@bench
-def append_list(iters=default_iterations):
-    t = []
-    i = 0
-    while i < iters:
-        t.append(i)
-        i += 1
-
-
-@bench
-def add_dict(iters=default_iterations):
-    d = {}
-
-    for i in range(iters):
-        d[i] = i
-
-
-@bench
-def build_dict(iters=default_iterations):
-    for i in range(iters):
-        a = {0: 0, "a": "a"}
-
-
-@bench
-def build_list(iters=default_iterations):
-    for i in range(iters):
-        a = [1, 2, 3]
-
-
-def f(x):
-    return x
-
-
-@bench
-def function_call(iters=default_iterations):
-
-    for i in range(iters):
-        f(i)
-
-
-@bench
-def str_of_int(iters=default_iterations):
-    for i in range(iters):
-        str(i)
-
-
-# @bench
-def set_dict_item(iters=default_iterations):
-    a = {0: 0}
-    for i in range(iters):
-        a[0] = i
-
-
-@bench
-def hash_str(iters=default_iterations):
-    for i in range(iters):
-        hash("abcdef")
-
-
-# @bench
-def primes(n=default_iterations):
+def primes(n=bench_input_size):
     if n == 2:
         return [2]
-    elif n < 2:
+    if n < 2:
         return []
     s = list(range(3, n + 1, 2))
     mroot = n**0.5
@@ -179,36 +142,86 @@ def primes(n=default_iterations):
     return [2] + [x for x in s if x]
 
 
-from mpyc import finfields, gfpx, thresha
+@bench
+def fib(n=bench_input_size):
+    if n < 2:
+        return n
+    a, b = 1, 2
+
+    for _ in range_fn(n - 1):
+        a, b = b, (a + b) % 100000
+    return a
+
+
+l = _random_list()
 
 
 @bench
-def fields():
-    f2 = finfields.GF(2)
-    f256 = finfields.GF(gfpx.GFpX(2)(283))
-
-    for field in (f2, f256):
-        t = 0
-        m = 1
-        a = [field(0), field(1)]
-        shares = thresha.random_split(field, a, t, m)
-        b = thresha.recombine(field, [(j + 1, shares[j]) for j in range(len(shares))])
-        b = thresha.recombine(field, [(j + 1, shares[j]) for j in range(len(shares))], [0])[0]
+def sort_list():
+    return sorted(l)
 
 
-fields()
+@bench
+def hash_string(iters=bench_input_size):
+    for _ in range_fn(iters):
+        hash("abcdef")
 
-# assign()
-# add()
-# mod()
-# mult()
-# big_int()
-# str_of_int()
-# function_call()
-# hash_str()
-# create_func()
-# append_list()
-# add_dict()
-# build_dict()
-# create_function_single_pos_arg()
-# set_dict_item()
+
+@bench
+def assign(iters=bench_input_size):
+    for _ in range_fn(iters):
+        x = 1
+
+
+@bench
+def reassign(iters=bench_input_size):
+    x = 0
+
+    for _ in range_fn(iters):
+        x = 1
+
+
+@bench
+def add(iters=bench_input_size):
+    a, b = 17, 41
+    for _ in range_fn(iters):
+        x = a + b
+
+
+@bench
+def mult(iters=bench_input_size):
+    a, b = 17, 41
+    for _ in range_fn(iters):
+        x = a * b
+
+
+@bench
+def bigints(iters=bench_input_size):
+    n = 60
+    for _ in range_fn(iters):
+        2**n
+
+
+if not is_micropython():
+
+    @bench
+    def random_shuffle(size=bench_input_size):
+        return random.shuffle(list(range(size)))
+
+    random_shuffle()
+
+random_int()
+random_list()
+copy_list()
+sort_list()
+sort_copied_list()
+fib()
+primes()
+
+
+hash_string()
+assign()
+reassign()
+add()
+mult()
+bigints()
