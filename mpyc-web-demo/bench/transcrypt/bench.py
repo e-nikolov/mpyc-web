@@ -11,8 +11,8 @@ bench_min_duration = 0.2
 bench_best_of = 2
 
 
-# range_fn = range
-range_fn = lambda iters: itertools.repeat(None, iters)  # Pyodide
+range_fn = range
+# range_fn = lambda iters: itertools.repeat(None, iters)  # Pyodide
 
 
 default_timer = time.time

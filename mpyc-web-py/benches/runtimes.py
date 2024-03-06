@@ -8,14 +8,41 @@ bench_min_duration = 0.2
 bench_best_of = 3
 
 
-range_fn = range
-# range_fn = lambda iters: itertools.repeat(None, iters)  # Pyodide
+def is_brython():
+    return "Brython" in str(sys.version)
 
 
-default_timer = time.time
-default_time_diff = lambda a, b: a - b
+def is_skulpt():
+    return "Skulpt" in str(sys.version)
 
-l = None
+
+def is_micropython():
+    return "MicroPython" in str(sys.version)
+
+
+def is_rustpython():
+    return "rustc" in str(sys.version)
+
+
+if is_micropython():
+    import js
+
+    def print(s):
+        js.document.currentScript.target.innerHTML += s + "<br />"
+
+
+if is_brython() or is_skulpt() or is_micropython():
+    range_fn = range
+else:
+    range_fn = lambda iters: itertools.repeat(None, iters)  # Pyodide
+
+if hasattr(time, "ticks_ms"):
+    default_timer = time.ticks_ms
+    default_time_diff = lambda a, b: time.ticks_diff(a, b) / 1000.0
+
+elif hasattr(time, "time"):
+    default_timer = time.time
+    default_time_diff = lambda a, b: a - b
 
 
 def timeit(func, iterations=bench_input_size, timer=default_timer, time_diff=default_time_diff):
@@ -34,73 +61,79 @@ def autorange(func):
             iterations = i * j
             time_taken, res = timeit(func, iterations)
             if time_taken >= bench_min_duration:
-                return (round(iterations / time_taken, 0), res)
+                return (round(iterations / time_taken, 2), res)
         i *= 10
 
 
-def bench(name):
-    def _bench(func):
+def bench(func):
+    def wrapper(*args, **kwargs):
+        maxOpS = 0
+        res = None
 
-        def wrapper(*args):
-            maxOpS = 0
-            res = None
+        def handle():
+            return func(*args, **kwargs)
 
-            def handle():
-                return func(*args)
+        for _ in range(bench_best_of):
+            ops, res = autorange(handle)
+            maxOpS = max(maxOpS, ops)
 
-            for _ in range(bench_best_of):
-                ops, res = autorange(handle)
-                maxOpS = max(maxOpS, ops)
-            print_bench(name, maxOpS, *args)
-            return res
+        print_bench(func.__name__, maxOpS, *args, **kwargs)
+        return res
 
-        return wrapper
-
-    return _bench
+    return wrapper
 
 
-def print_bench(name, t, *args):
+def print_bench(name, t, *args, **kwargs):
     args_repr = [repr(arg) for arg in args]
-    args_fmt = ", ".join(args_repr)
+    kwargs_repr = [f"{key}={repr(value)}" for key, value in kwargs.items()]
+    args_fmt = ", ".join(args_repr + kwargs_repr)
     print(f"{name}({args_fmt}): {t:,} ops/sec")
 
 
-@bench("assign")
+@bench
 def assign(iters=bench_input_size):
     for _ in range_fn(iters):
         x = 1
 
 
-@bench("multiply")
+@bench
 def multiply(iters=bench_input_size):
     a, b = 17, 41
     for _ in range_fn(iters):
         x = a * b
 
 
-@bench("bigints")
+@bench
 def bigints(iters=bench_input_size):
-    n = 600
+    n = 60
     for _ in range_fn(iters):
         2**n
 
 
-@bench("randlist")
+@bench
 def randlist(size=bench_input_size):
     return [random.randint(0, size) for _ in range(size)]
 
 
-@bench("cpylist")
-def cpylist() -> list[int]:
+l = None
+
+
+@bench
+def cpylist():
+    return l.copy()
+
+
+@bench
+def cpylist2():
     return l[:]
 
 
-@bench("sortlist")
+@bench
 def sortlist():
-    return sorted(l[:])
+    return l.copy().sort()
 
 
-@bench("fibonacci")
+@bench
 def fibonacci(n=bench_input_size):
     if n < 2:
         return n
@@ -111,7 +144,7 @@ def fibonacci(n=bench_input_size):
     return a
 
 
-@bench("primes")
+@bench
 def primes(n=bench_input_size):
     if n == 2:
         return [2]
@@ -139,6 +172,7 @@ multiply()
 bigints()
 l = randlist()
 cpylist()
+cpylist2()
 sortlist()
 fibonacci()
 primes()
