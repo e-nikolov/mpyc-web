@@ -61,7 +61,7 @@ def autorange(func):
             iterations = i * j
             time_taken, res = timeit(func, iterations)
             if time_taken >= bench_min_duration:
-                return (round(iterations / time_taken, 2), res)
+                return (round(iterations / time_taken), res)
         i *= 10
 
 

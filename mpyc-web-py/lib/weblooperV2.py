@@ -16,17 +16,17 @@ class WebLooper(WebLoop):
     def __init__(self):
         super().__init__()
         stats.reset()
-        old_add = asyncio.tasks._all_tasks.add
+        # old_add = asyncio.tasks._all_tasks.add
 
-        def add(self, task):
-            stats_add("total_tasks_count")
-            old_add(task)
+        # def add(self, task):
+        #     stats_add("total_tasks_count")
+        #     old_add(task)
 
-        asyncio.tasks._all_tasks.add = types.MethodType(add, asyncio.tasks._all_tasks)
+        # asyncio.tasks._all_tasks.add = types.MethodType(add, asyncio.tasks._all_tasks)
 
         self.running = False
         self._ready = collections.deque()
-        stats_set("total_tasks_count", len(asyncio.tasks._all_tasks))
+        # stats_set("total_tasks_count", len(asyncio.tasks._all_tasks))
         self.promise = js.Promise.resolve()
         self._run_once_proxy = create_proxy(self._run_once)
         self.chan = js.MessageChannel.new()

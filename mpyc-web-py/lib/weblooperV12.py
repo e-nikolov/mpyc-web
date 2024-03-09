@@ -3,7 +3,6 @@ import collections
 import contextvars
 import types
 from asyncio import tasks
-from functools import partial, partialmethod
 from random import sample, shuffle
 from typing import Any, Callable, Optional
 
@@ -14,6 +13,38 @@ from lib.stats import MovingAverage, stats
 from pyodide.code import run_js
 from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
 from pyodide.webloop import PyodideFuture, PyodideTask, WebLoop
+
+scheduleCallback = run_js(
+    """
+const messageChannelsQueue = [];
+
+function schduleCallbackImmediate(callback) {
+    let channel = messageChannelsQueue.pop();
+    if (channel === undefined) {
+        channel = new MessageChannel();
+        channel.port1.onmessage = () => {
+            try {
+                channel._callback();
+            } finally {
+                messageChannelsQueue.push(channel);
+            }
+        };
+    }
+
+    channel._callback = callback;
+    channel.port2.postMessage("");
+}
+function scheduleCallback(callback, timeout) {
+    if (timeout < 4) {
+        schduleCallbackImmediate(callback)
+    } else {
+        setTimeout(callback, timeout);
+    }
+}
+
+scheduleCallback
+"""
+)
 
 
 class WebLooper(WebLoop):
@@ -32,23 +63,6 @@ class WebLooper(WebLoop):
         if not stats.enabled:
             return
 
-    def run_handle(self, h: asyncio.Handle):
-        if h._cancelled:
-            return
-        try:
-            h._run()
-        except SystemExit as e:
-            if self._system_exit_handler:
-                self._system_exit_handler(e.code)
-            else:
-                raise
-        except KeyboardInterrupt:
-            if self._keyboard_interrupt_handler:
-                self._keyboard_interrupt_handler()
-            else:
-                raise
-
-    # @stats.time()
     def call_soon(
         self,
         callback: Callable[..., Any],
@@ -67,18 +81,26 @@ class WebLooper(WebLoop):
     ) -> asyncio.Handle:
         if delay < 0:
             raise ValueError("Can't schedule in the past")
-
         h = asyncio.Handle(callback, args, self, context=context)
 
-        if delay == 0:
-            self._ready.append(lambda: self.run_handle(h))
-            if not self.running:
-                self.running = True
-                self.trigger_run_once()
-                # self._run_once()
+        def run_handle():
+            if h._cancelled:
+                return
+            try:
+                h._run()
+            except SystemExit as e:
+                if self._system_exit_handler:
+                    self._system_exit_handler(e.code)
+                else:
+                    raise
+            except KeyboardInterrupt:
+                if self._keyboard_interrupt_handler:
+                    self._keyboard_interrupt_handler()
+                else:
+                    raise
 
-            return h
-        js.setTimeout(create_once_callable(lambda: self.run_handle(h), _may_syncify=True), delay * 1000)
+        scheduleCallback(create_once_callable(run_handle, _may_syncify=True), delay * 1000)
+
         return h
 
     def trigger_run_once(self):

@@ -77,7 +77,15 @@ async def run_code(code: str, filename=None):
     """
     await load_missing_packages(code)
     # return await run_code_async(code, filename)
-    await pyodide.code.eval_code_async(code, globals() | {"__name__": "__main__"}, filename=filename)  # pyright: ignore
+    try:
+        await pyodide.code.eval_code_async(code, globals() | {"__name__": "__main__"}, filename=filename)  # pyright: ignore
+
+    except Exception as e:
+        logging.error(
+            "",
+            exc_info=e,
+            stack_info=True,
+        )
     # try:
     #     await load_missing_packages(code)
     #     # return await run_code_async(code, filename)

@@ -27,12 +27,6 @@ import asyncio
 import logging
 import sys
 
-from lib.weblooper import WebLooper
-
-# from lib.weblooperV2 import WebLooper
-
-asyncio.set_event_loop(WebLooper())
-
 import js
 import pyodide
 import rich
@@ -41,6 +35,10 @@ from lib import log
 from lib.exception_handler import exception_handler
 from lib.log import *
 from lib.log_levels import *
+from lib.weblooper import WebLooper
+
+asyncio.set_event_loop(WebLooper())
+
 
 log.install(DEBUG)
 asyncio.get_event_loop().set_exception_handler(exception_handler)

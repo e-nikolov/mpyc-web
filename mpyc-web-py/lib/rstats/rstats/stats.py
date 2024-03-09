@@ -118,7 +118,7 @@ class BaseStatsCollector:
         if self.enabled:
             self.state.__dict__.acc_path(value, *path)
 
-    def time(self, label="default"):
+    def time(self, label=DEFAULT_TIMER_LABEL):
         return TimingContext(self, label)
 
     def reset(self, state=BaseStatsState()):
@@ -172,7 +172,7 @@ class BaseStatsCollector:
 
 
 class TimingContext(ContextDecorator):
-    def __init__(self, stats: BaseStatsCollector, label="default"):
+    def __init__(self, stats: BaseStatsCollector, label=DEFAULT_TIMER_LABEL):
         self.stats = stats
         self.timings = None
         self.label = label

@@ -15,22 +15,53 @@ from pyodide.code import run_js
 from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
 from pyodide.webloop import PyodideFuture, PyodideTask, WebLoop
 
+scheduleCallback = run_js(
+    """
+const channel = new MessageChannel();
+
+self.queue = {};
+self.readyCounter = 0;
+self.doneCounter = 0;
+
+let running = false;
+
+_runOnce = () => {
+    self.ntodo = self.readyCounter - self.doneCounter;
+    while(self.doneCounter < self.readyCounter) {
+        self.doneCounter++;
+        queue[self.doneCounter]();
+        delete queue[self.doneCounter];
+    }
+    running = false
+};
+
+channel.port1.onmessage = (_) => _runOnce()
+
+function runOnce() {
+    channel.port2.postMessage(undefined);
+}
+
+function scheduleCallback(callback, timeout) {
+    if (timeout >= 4) {
+        return setTimeout(callback, timeout);
+    }
+    
+    queue[++self.readyCounter] = callback;
+    if(!running) {
+        running = true
+        runOnce()
+    }
+}
+
+scheduleCallback
+"""
+)
+
 
 class WebLooper(WebLoop):
     def __init__(self):
         super().__init__()
         stats.reset()
-        self.setup_stats()
-
-        self.running = False
-        self._ready = collections.deque()
-        self._run_once_proxy = create_proxy(self._run_once)
-        self.chan = js.MessageChannel.new()
-        self.chan.port1.onmessage = self._run_once_proxy
-
-    def setup_stats(self):
-        if not stats.enabled:
-            return
 
     def run_handle(self, h: asyncio.Handle):
         if h._cancelled:
@@ -48,15 +79,15 @@ class WebLooper(WebLoop):
             else:
                 raise
 
-    # @stats.time()
     def call_soon(
         self,
         callback: Callable[..., Any],
         *args: Any,
         context: contextvars.Context | None = None,
     ) -> asyncio.Handle:
-        delay = 0
-        return self.call_later(delay, callback, *args, context=context)
+        h = asyncio.Handle(callback, args, self, context=context)
+        scheduleCallback(create_once_callable(h._run), 0)
+        return h
 
     def call_later(  # type: ignore[override]
         self,
@@ -65,40 +96,11 @@ class WebLooper(WebLoop):
         *args: Any,
         context: contextvars.Context | None = None,
     ) -> asyncio.Handle:
-        if delay < 0:
-            raise ValueError("Can't schedule in the past")
-
         h = asyncio.Handle(callback, args, self, context=context)
 
-        if delay == 0:
-            self._ready.append(lambda: self.run_handle(h))
-            if not self.running:
-                self.running = True
-                self.trigger_run_once()
-                # self._run_once()
+        scheduleCallback(create_once_callable(h._run), delay * 1000)
 
-            return h
-        js.setTimeout(create_once_callable(lambda: self.run_handle(h), _may_syncify=True), delay * 1000)
         return h
-
-    def trigger_run_once(self):
-        self.chan.port2.postMessage(None)
-
-    # @stats.time()
-    def _run_once(self, *args, **kwargs):
-        stats.state.asyncio.loop_iters += 1
-        ntodo = len(self._ready)
-        stats.state.asyncio.ntodo = ntodo
-
-        for _ in range(ntodo):
-            stats.state.asyncio.loop_inner_iters += 1
-            self._ready.popleft()()
-
-        nleft = len(self._ready)
-        if nleft == 0:
-            self.running = False
-        else:
-            self.trigger_run_once()
 
     def create_task(self, coro, *, name=None):
         """Schedule a coroutine object.

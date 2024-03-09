@@ -46,46 +46,37 @@ async def autorange_async(func):
         i *= 10
 
 
-def bench(name):
-    def _bench(func):
-        def bench_async(func):
-            async def wrapper(*args, **kwargs):
-                maxOpS = 0
-                res = None
+def bench(func):
+    async def wrapper(*args, **kwargs):
+        maxOpS = 0
+        res = None
 
-                def handle():
-                    return func(*args, **kwargs)
+        def handle():
+            return func(*args, **kwargs)
 
-                for _ in range(3):
-                    ops, res = await autorange_async(handle)
-                    maxOpS = max(maxOpS, ops)
+        for _ in range(3):
+            ops, res = await autorange_async(handle)
+            maxOpS = max(maxOpS, ops)
 
-                print_bench(name, maxOpS, res, *args, **kwargs)
-                return maxOpS, res
+        print_bench(func.__name__, maxOpS, res, *args, **kwargs)
+        return res
 
-            return wrapper  # pyright: ignore
-
-        return bench_async(func)
-
-    return _bench
+    return wrapper  # pyright: ignore
 
 
 def print_bench(name, t, res, *args, **kwargs):
-    if name == "<lambda>":
-        name = ""
     args_repr = [repr(arg) for arg in args]
     kwargs_repr = [f"{key}={repr(value)}" for key, value in kwargs.items()]
     args_fmt = ", ".join(args_repr + kwargs_repr)
     print(f"{name}({args_fmt}): {t:,} ops/sec")
-    print(f"res: {res}")
 
 
-@bench("sleep")
+@bench
 async def sleep(n):
     await async_sleep(n)
 
 
-@bench("add")
+@bench
 async def add(n):
     x = 0
     for i in range(n):
@@ -94,8 +85,8 @@ async def add(n):
 
 
 async def main():
-    await add(10)
     await sleep(0)
+    await add(1)
 
 
 async_run(main())

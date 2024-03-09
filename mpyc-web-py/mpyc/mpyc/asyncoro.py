@@ -359,7 +359,6 @@ def _reconcile(decl, task):
     __reconcile(decl, givn)
 
 
-# @stats.acc(lambda decl, givn: stats.time() | async_proxy.maybe_send_stats())
 def __reconcile(decl, givn):
     if isinstance(decl, SecureObject):
         if isinstance(givn, SecureObject):

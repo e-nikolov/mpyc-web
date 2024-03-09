@@ -6,8 +6,8 @@ from .types import Numeric
 class MovingAverage:
     def __init__(self, maxlen: int = 100):
         self._maxlen = maxlen
-        self._ring = deque(maxlen=maxlen)
-        self._total = 0
+        self._ring: deque = deque(maxlen=maxlen)
+        self._total: Numeric = 0
 
     def append(self, value: Numeric):
         if len(self._ring) == self._maxlen:

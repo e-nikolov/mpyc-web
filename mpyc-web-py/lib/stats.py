@@ -33,6 +33,7 @@ from re import L
 from typing import Callable, ParamSpec, TypeVar
 
 import humanize
+import js
 import rich
 import yaml
 from humanize import naturalsize
@@ -79,6 +80,7 @@ class AsyncioStats:
         )
         #   ({format_count(self.eager_tasks_count)} + {format_count(self.scheduled_tasks_count)})
         #  f"/ ∑ {format_count(self.total_tasks_count)} ({format_count(self.total_eager_tasks_count)} + {format_count(self.total_scheduled_tasks_count)})
+
 
 class DataStats:
     initialized = False
@@ -148,6 +150,9 @@ class StatsCollector(BaseStatsCollector):
         self.state.asyncio.tasks = self.state.asyncio.eager_tasks_count + self.state.asyncio.scheduled_tasks_count
         if self.state.asyncio.tasks > self.state.asyncio.max_tasks:
             self.state.asyncio.max_tasks = self.state.asyncio.tasks
+
+        # self.state.asyncio.loop_inner_iters = js.doneCounter
+        # self.state.asyncio.ntodo = js.ntodo
 
         stats.state.__dict__[label] = self.state.asyncio
 

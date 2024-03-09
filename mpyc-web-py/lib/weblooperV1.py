@@ -9,9 +9,11 @@ from pyodide.code import run_js
 from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
 from pyodide.webloop import PyodideFuture, PyodideTask, WebLoop
 
-run_js("""    
+run_js(
+    """    
     self.webChannel = new MessageChannel()
-""")
+"""
+)
 
 setTimeout = js.setTimeout
 chan = js.webChannel
@@ -22,19 +24,19 @@ class WebLooper(WebLoop):
         super().__init__()
 
         loop = self
-        old_add = asyncio.tasks._all_tasks.add
+        # old_add = asyncio.tasks._all_tasks.add
 
-        def add(self, task):
-            loop.total_tasks_count += 1
-            old_add(task)
+        # def add(self, task):
+        #     loop.total_tasks_count += 1
+        #     old_add(task)
 
-        asyncio.tasks._all_tasks.add = types.MethodType(add, asyncio.tasks._all_tasks)
+        # asyncio.tasks._all_tasks.add = types.MethodType(add, asyncio.tasks._all_tasks)
 
         self.loop_iters = 0
         self._ready = collections.deque()
         self._callbacks = {}
         self.counter = 0
-        self.total_tasks_count = len(asyncio.tasks._all_tasks)
+        # self.total_tasks_count = len(asyncio.tasks._all_tasks)
         self.total_futures_count = 0
         self.call_soon_count = 0
         self.call_later_count = 0
@@ -67,7 +69,6 @@ class WebLooper(WebLoop):
         else:
             chan.port2.postMessage(None)
 
-    # @stats.acc(lambda self, callb)
     def call_soon(
         self,
         callback: Callable[..., Any],
@@ -142,7 +143,7 @@ class WebLooper(WebLoop):
         setTimeout(create_once_callable(run_handle), delay * 1000)
         return h
 
-    # @stats.acc(lambda self, *args, **kwargs: {"$func": "calls"})
+    # @stats.time()
     def call_callback(self, *args, **kwargs):
         # print("call_callback")
         # self._ready.popleft()()

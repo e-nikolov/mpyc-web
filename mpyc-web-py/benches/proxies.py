@@ -26,23 +26,23 @@ def fn2(*args, **kwargs):
     return asyncio.Handle(fn, args, loop)
 
 
-@bench
+@bench()
 def bench_create_once_callable():
     return create_once_callable(fn)
 
 
-@bench
+@bench()
 def bench_promise_once_callable():
     x = js.Promise.resolve(create_once_callable(fn))
     x.then(create_once_callable(fn))
 
 
-@bench
+@bench()
 def bench_call_once_callable():
     create_once_callable(fn)()
 
 
-@bench
+@bench()
 def bench_create_proxy():
     return create_proxy(fn)
 
@@ -50,7 +50,7 @@ def bench_create_proxy():
 proxy = create_proxy(fn)
 
 
-@bench
+@bench()
 def bench_call_proxy():
     proxy()
 
@@ -71,25 +71,27 @@ fn2()
 
 fn2_proxy = create_proxy(fn2)
 
-run_js("""
+run_js(
+    """
 function jsfn(fn) {
     let res = fn();
     return res;
 }
-""")
+"""
+)
 
 
-@bench
+@bench()
 def bench_calljsfn2():
     return js.jsfn(fn2)
 
 
-@bench
+@bench()
 def bench_calljsfn2_proxy():
     return js.jsfn(fn2_proxy)
 
 
-@bench
+@bench()
 def bench_calljsfn2_callable():
     return js.jsfn(create_once_callable(fn2))
 

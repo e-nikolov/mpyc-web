@@ -14,115 +14,116 @@ from lib.stats import stats
 # stats = BaseStatsCollector()
 
 
-@bench
+@bench()
 def stats_add(path: str, value=1, prefix="asyncio."):
-    stats.acc_path(f"{prefix}{path}", value)
+    stats.acc_path(value, f"{prefix}{path}")
 
 
-@bench
+@bench()
 @stats.time()
-@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time(path: str, value=1, prefix="asyncio."):
+    stats.add("asyncio.test2", 1)
     pass
 
 
-@bench
-@stats.acc(lambda path, value=1, prefix="asyncio.": {} | {"test2": 1})
+@bench()
 def stats_acc(path: str, value=1, prefix="asyncio."):
+    stats.add("asyncio.test2", 1)
     pass
 
 
-@bench
+@bench()
 @stats.time()
-@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time_maybe_send(path: str, value=1, prefix="asyncio."):
+    stats.add("asyncio.test2", 1)
     async_proxy.maybe_send_stats()
 
 
-@bench
+@bench()
 @stats.time()
-@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time_send(path: str, value=1, prefix="asyncio."):
+    stats.add("asyncio.test2", 1)
     async_proxy.send_stats()
 
 
-@bench
+@bench()
 def loop(path: str, value=1, prefix="asyncio."):
     for i in range(1000):
         pass
 
 
-@bench
+@bench()
 @stats.time()
-@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_loop(path: str, value=1, prefix="asyncio."):
+    stats.add("asyncio.test2", 1)
     for i in range(1000):
         pass
 
 
-@bench
+@bench()
 @stats.time()
-@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time_maybe_send_loop(path: str, value=1, prefix="asyncio."):
+    stats.add("asyncio.test2", 1)
     for i in range(1000):
         async_proxy.maybe_send_stats()
 
 
-@bench
+@bench()
 @stats.time()
-@stats.acc(lambda path, value=1, prefix="asyncio.": {"test2": 1})
 def stats_acc_time_send_loop(path: str, value=1, prefix="asyncio."):
+    stats.add("asyncio.test2", 1)
+
     for i in range(1000):
         async_proxy.send_stats()
 
 
-@bench
+@bench()
 def nothing():
     return
 
 
-@bench
+@bench()
 def nothing2():
     pass
 
 
-@bench
+@bench()
 def merge_maps():
     {"asdf": 1} | {"asdf": 2}
 
 
-@bench
+@bench()
 def merge_maps_assign():
     x = {"asdf": 1} | {"asdf": 2}
 
 
-@bench
+@bench()
 def merge_maps_return():
     return {"asdf": 1} | {"asdf": 2}
 
 
-@bench
+@bench()
 def merge_maps_args(a, b):
     a | b
 
 
-@bench
+@bench()
 def merge_maps_args_assign(a, b):
     x = a | b
 
 
-@bench
+@bench()
 def merge_maps_args_return(a, b):
     return a | b
 
 
-@bench
+@bench()
 def merge_maps_args_assign_return(a, b):
     x = a | b
     return x
 
 
-@bench
+@bench()
 def merge_maps_args_assign_return_big(a, b):
     x = a | b
     return x
