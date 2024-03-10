@@ -10,6 +10,7 @@ from lib.rstats.rstats import BaseStatsCollector, bench
 
 # from rstats import bench, stats
 from lib.stats import stats
+from rstats.stats import TimingContext
 
 # stats = BaseStatsCollector()
 
@@ -68,13 +69,19 @@ def stats_acc_time_maybe_send_loop(path: str, value=1, prefix="asyncio."):
         async_proxy.maybe_send_stats()
 
 
-@bench()
+# @bench()
 @stats.time()
-def stats_acc_time_send_loop(path: str, value=1, prefix="asyncio."):
+@TimingContext(stats)
+def stats_acc_time_send_loop(path: str, value=1, prefix="asyncio.") -> bool:
     stats.add("asyncio.test2", 1)
 
     for i in range(1000):
         async_proxy.send_stats()
+
+    return True
+
+
+x = stats_acc_time_send_loop("")
 
 
 @bench()

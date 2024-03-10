@@ -1,3 +1,4 @@
+import gc
 import itertools
 import random
 import sys
@@ -9,11 +10,7 @@ bench_best_of = 3
 
 
 def is_brython():
-    try:
-        __BRYTHON__
-        return True
-    except NameError:
-        return False
+    return "Brython" in str(sys.version)
 
 
 def is_skulpt():
@@ -65,7 +62,7 @@ def autorange(func):
             iterations = i * j
             time_taken, res = timeit(func, iterations)
             if time_taken >= bench_min_duration:
-                return (round(iterations / time_taken, 2), res)
+                return (round(iterations / time_taken), res)
         i *= 10
 
 
@@ -82,7 +79,7 @@ def bench(func):
             maxOpS = max(maxOpS, ops)
 
         print_bench(func.__name__, maxOpS, *args, **kwargs)
-        return maxOpS, res
+        return res
 
     return wrapper
 
@@ -95,28 +92,68 @@ def print_bench(name, t, *args, **kwargs):
 
 
 @bench
-def random_list(size=bench_input_size):
-    return _random_list(size)
+def assign(iters=bench_input_size):
+    for _ in range_fn(iters):
+        x = 1
 
 
 @bench
-def random_int(size=bench_input_size):
-    for _ in range_fn(size):
-        random.randint(0, size)
+def multiply(iters=bench_input_size):
+    a, b = 17, 41
+    for _ in range_fn(iters):
+        x = a * b
 
 
-def _random_list(size=bench_input_size):
+@bench
+def nothing(iters=bench_input_size):
+    for _ in range_fn(iters):
+        pass
+
+
+@bench
+def nothing2(iters=bench_input_size):
+    pass
+
+
+@bench
+def bigints(iters=bench_input_size):
+    n = 60
+    for _ in range_fn(iters):
+        2**n
+
+
+@bench
+def randlist(size=bench_input_size):
     return [random.randint(0, size) for _ in range(size)]
 
 
+l = None
+
+
 @bench
-def sort_copied_list():
+def cpylist():
+    return l.copy()
+
+
+@bench
+def cpylist2():
+    return l[:]
+
+
+@bench
+def sortlist():
     return l.copy().sort()
 
 
 @bench
-def copy_list():
-    return l.copy()
+def fibonacci(n=bench_input_size):
+    if n < 2:
+        return n
+    a, b = 1, 2
+
+    for _ in range_fn(n - 1):
+        a, b = b, (a + b) % 100000
+    return a
 
 
 @bench
@@ -142,86 +179,14 @@ def primes(n=bench_input_size):
     return [2] + [x for x in s if x]
 
 
-@bench
-def fib(n=bench_input_size):
-    if n < 2:
-        return n
-    a, b = 1, 2
-
-    for _ in range_fn(n - 1):
-        a, b = b, (a + b) % 100000
-    return a
-
-
-l = _random_list()
-
-
-@bench
-def sort_list():
-    return sorted(l)
-
-
-@bench
-def hash_string(iters=bench_input_size):
-    for _ in range_fn(iters):
-        hash("abcdef")
-
-
-@bench
-def assign(iters=bench_input_size):
-    for _ in range_fn(iters):
-        x = 1
-
-
-@bench
-def reassign(iters=bench_input_size):
-    x = 0
-
-    for _ in range_fn(iters):
-        x = 1
-
-
-@bench
-def add(iters=bench_input_size):
-    a, b = 17, 41
-    for _ in range_fn(iters):
-        x = a + b
-
-
-@bench
-def mult(iters=bench_input_size):
-    a, b = 17, 41
-    for _ in range_fn(iters):
-        x = a * b
-
-
-@bench
-def bigints(iters=bench_input_size):
-    n = 60
-    for _ in range_fn(iters):
-        2**n
-
-
-if not is_micropython():
-
-    @bench
-    def random_shuffle(size=bench_input_size):
-        return random.shuffle(list(range(size)))
-
-    random_shuffle()
-
-random_int()
-random_list()
-copy_list()
-sort_list()
-sort_copied_list()
-fib()
-primes()
-
-
-hash_string()
+nothing()
+nothing2()
 assign()
-reassign()
-add()
-mult()
+multiply()
 bigints()
+l = randlist()
+cpylist()
+cpylist2()
+sortlist()
+fibonacci()
+primes()

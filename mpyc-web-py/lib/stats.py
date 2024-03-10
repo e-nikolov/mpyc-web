@@ -33,7 +33,8 @@ from re import L
 from typing import Callable, ParamSpec, TypeVar
 
 import humanize
-import js
+
+# import js
 import rich
 import yaml
 from humanize import naturalsize

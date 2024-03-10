@@ -184,7 +184,7 @@ class TimingContext(ContextDecorator):
             self.label = func.__name__
         return super().__call__(func)
 
-    def __enter__(self, *args, **kwargs):
+    def __enter__(self):
         # print("__enter__", self, args, kwargs)
         if not self.stats.enabled:
             return

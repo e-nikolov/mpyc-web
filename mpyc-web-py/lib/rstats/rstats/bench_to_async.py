@@ -8,17 +8,17 @@ import itertools
 import logging
 import sys
 import time
+import timeit
 from contextlib import ContextDecorator, contextmanager
-
-# from functools import _Wrapped, _Wrapper, partial, reduce, wraps
 from functools import partial, reduce, wraps
 from inspect import isawaitable, isfunction
 from types import FrameType
-from typing import Any, Awaitable, Callable, ParamSpec, Sized, TypeGuard, TypeVar, overload
+from typing import Any, Awaitable, Callable, ParamSpec, TypeGuard, TypeVar, overload
 
 if len(logging.root.handlers) == 0:
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
+gc.disable()
 default_min_duration = 0.2
 default_best_of = 3
 default_iterations = 1000000
@@ -104,7 +104,7 @@ def autorange_sync[R](func: Callable[[], R], min_duration=default_min_duration) 
     for iterations in autorange_generator():
         time_taken, res = timeit(func, iterations)
         if time_taken >= min_duration:
-            return (iterations / time_taken, res)
+            return iterations / time_taken, res
     raise ValueError("autorange_sync: no result")
 
 
@@ -112,11 +112,11 @@ async def autorange_async[R](func: AsyncCallable[[], R], min_duration=default_mi
     for iterations in autorange_generator():
         time_taken, res = await timeit(func, iterations)
         if time_taken >= min_duration:
-            return (iterations / time_taken, res)
+            return iterations / time_taken, res
     raise ValueError("autorange_async: no result")
 
 
-class bench:
+class bench[**P, R](ContextDecorator):
     def __init__(
         self,
         label: str | None = None,
@@ -134,29 +134,36 @@ class bench:
 
         self.ops = 0.0
 
-    def __call__(self, func, *args, **kwargs):  # only called when used as a decorator
+    def _recreate_cm(self):
+        """Return a recreated instance of self.
+
+        Allows an otherwise one-shot context manager like
+        _GeneratorContextManager to support use as
+        a decorator via implicit recreation.
+
+        This is a private interface just for _GeneratorContextManager.
+        See issue #11647 for details.
+        """
+        return self
+
+    def __call__(self, func: MaybeAsyncCallable[P, R]):
         self.label = self.label or func.__name__
         self.func = func
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args: P.args, **kwargs: P.kwargs):
             self.args = args
             self.kwargs = kwargs
+            if isasynccallable(func):
+                afunc = func
+            else:
 
-            handle = func
+                async def afunc():
+                    return func(*args, **kwargs)
 
-            if isnotasynccallable(func):
-                with self:
-                    self.ops, res = autorange_sync(handle)
-                    return res
-            elif isasynccallable(func):
-
-                async def tmp():
-                    with self:
-                        self.ops, res = await autorange_async(handle)
-                        return res
-
-                return tmp()
+            with self._recreate_cm():
+                self.ops, res = await autorange_async(afunc)
+                return res
 
         return wrapper
 
@@ -172,6 +179,10 @@ class bench:
 
         print_bench(self.label or "default", self.ops, *self.args, **self.kwargs)
         self.ops = 0.0
+
+
+async def to_async(func):
+    return func()
 
 
 def label_from_frame(frame: FrameType):
@@ -192,11 +203,8 @@ def format_ops(ops: float) -> str:
 
 
 def _repr(arg):
-    if isinstance(arg, Sized):
-        l = len(arg)
-        if l > 10:
-            return f"{type(arg).__name__}[{l}]"
-        return repr(arg)
+    if isinstance(arg, list | dict | tuple | set | collections.deque):
+        return f"{type(arg).__name__}[{len(arg)}]"
     else:
         return repr(arg)
 

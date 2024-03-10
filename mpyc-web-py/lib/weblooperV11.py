@@ -18,15 +18,6 @@ class WebLooper(WebLoop):
     def __init__(self):
         super().__init__()
         stats.reset()
-        # old_add = asyncio.tasks._all_tasks.add
-
-        # def add(self, task):
-        #     stats_add("total_tasks_count")
-        #     old_add(task)
-
-        # asyncio.tasks._all_tasks.add = types.MethodType(add, asyncio.tasks._all_tasks)
-        # stats_set("total_tasks_count", len(asyncio.tasks._all_tasks))
-
         self.running = False
         self._ready = collections.deque()
 
@@ -46,7 +37,6 @@ class WebLooper(WebLoop):
             else:
                 raise
 
-    # @stats.time()
     def call_soon(
         self,
         callback: Callable[..., Any],
@@ -78,10 +68,30 @@ class WebLooper(WebLoop):
         js.setTimeout(create_once_callable(h._run), delay * 1000)
         return h
 
+    def create_task(self, coro, *, name=None):
+        """Schedule a coroutine object.
 
-def stats_add(path: str, value=1, prefix="asyncio."):
-    stats.acc_path(f"{prefix}{path}", value)
+        Return a task object.
+
+        Copied from ``BaseEventLoop.create_task``
+        """
+        self._check_closed()
+        if self._task_factory is None:
+            task = PyodideTaskStats(coro, loop=self, name=name)
+            if task._source_traceback:  # type: ignore[attr-defined]
+                # Added comment:
+                # this only happens if get_debug() returns True.
+                # In that case, remove create_task from _source_traceback.
+                del task._source_traceback[-1]  # type: ignore[attr-defined]
+        else:
+            task = self._task_factory(self, coro)
+            tasks._set_task_name(task, name)  # type: ignore[attr-defined]
+
+        self._in_progress += 1
+        task.add_done_callback(self._decrement_in_progress)
+        return task
 
 
-def stats_set(path: str, value=1, prefix="asyncio."):
-    stats.set_path(f"{prefix}{path}", value)
+class PyodideTaskStats(PyodideTask):
+    def __init__(self, coro, *, loop=None, name=None, context=None, eager_start=True):
+        super().__init__(coro, loop=loop, name=name, eager_start=eager_start)

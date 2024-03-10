@@ -2,10 +2,10 @@ import asyncio
 import collections
 import contextvars
 import types
-from asyncio import tasks
+from asyncio import Future, tasks
 from functools import partial, partialmethod
 from random import sample, shuffle
-from typing import Any, Callable, Optional
+from typing import Any, Awaitable, Callable, Optional, TypeVar, overload
 
 import js
 import rich
@@ -13,7 +13,7 @@ from lib.api import async_proxy
 from lib.stats import MovingAverage, stats
 from pyodide.code import run_js
 from pyodide.ffi import IN_BROWSER, create_once_callable, create_proxy
-from pyodide.webloop import PyodideFuture, PyodideTask, WebLoop
+from pyodide.webloop import PyodideTask, WebLoop
 
 scheduleCallback = run_js(
     """
@@ -122,12 +122,162 @@ class WebLooper(WebLoop):
         return task
 
 
+T = TypeVar("T")
+S = TypeVar("S")
+
+
+class PyodideFuture(Future[T]):
+    """A :py:class:`~asyncio.Future` with extra :js:meth:`~Promise.then`,
+    :js:meth:`~Promise.catch`, and :js:meth:`finally_() <Promise.finally>` methods
+    based on the Javascript promise API. :py:meth:`~asyncio.loop.create_future`
+    returns these so in practice all futures encountered in Pyodide should be an
+    instance of :py:class:`~pyodide.webloop.PyodideFuture`.
+    """
+
+    @overload
+    def then(
+        self,
+        onfulfilled: None,
+        onrejected: Callable[[BaseException], Awaitable[S]],
+    ) -> "PyodideFuture[S]": ...
+
+    @overload
+    def then(
+        self,
+        onfulfilled: None,
+        onrejected: Callable[[BaseException], S],
+    ) -> "PyodideFuture[S]": ...
+
+    @overload
+    def then(
+        self,
+        onfulfilled: Callable[[T], Awaitable[S]],
+        onrejected: Callable[[BaseException], Awaitable[S]] | None = None,
+    ) -> "PyodideFuture[S]": ...
+
+    @overload
+    def then(
+        self,
+        onfulfilled: Callable[[T], S],
+        onrejected: Callable[[BaseException], S] | None = None,
+    ) -> "PyodideFuture[S]": ...
+
+    def then(
+        self,
+        onfulfilled: Callable[[T], S | Awaitable[S]] | None,
+        onrejected: Callable[[BaseException], S | Awaitable[S]] | None = None,
+    ) -> "PyodideFuture[S]":
+        """When the Future is done, either execute onfulfilled with the result
+        or execute onrejected with the exception.
+
+        Returns a new Future which will be marked done when either the
+        onfulfilled or onrejected callback is completed. If the return value of
+        the executed callback is awaitable it will be awaited repeatedly until a
+        nonawaitable value is received. The returned Future will be resolved
+        with that value. If an error is raised, the returned Future will be
+        rejected with the error.
+
+        Parameters
+        ----------
+        onfulfilled:
+            A function called if the Future is fulfilled. This function receives
+            one argument, the fulfillment value.
+
+        onrejected:
+            A function called if the Future is rejected. This function receives
+            one argument, the rejection value.
+
+        Returns
+        -------
+            A new future to be resolved when the original future is done and the
+            appropriate callback is also done.
+        """
+        print("PyodideFuture then")
+
+        result: PyodideFuture[S] = PyodideFuture()
+
+        onfulfilled_: Callable[[T], S | Awaitable[S]]
+        onrejected_: Callable[[BaseException], S | Awaitable[S]]
+        if onfulfilled:
+            onfulfilled_ = onfulfilled
+        else:
+
+            def onfulfilled_(x):
+                return x
+
+        if onrejected:
+            onrejected_ = onrejected
+        else:
+
+            def onrejected_(x):
+                raise x
+
+        async def callback(fut: Future[T]) -> None:
+            e = fut.exception()
+            try:
+                if e:
+                    r = onrejected_(e)
+                else:
+                    r = onfulfilled_(fut.result())
+                while inspect.isawaitable(r):
+                    r = await r
+            except Exception as result_exception:
+                result.set_exception(result_exception)
+                return
+            result.set_result(r)
+
+        def wrapper(fut: Future[T]) -> None:
+            asyncio.ensure_future(callback(fut))
+
+        self.add_done_callback(wrapper)
+        return result
+
+    @overload
+    def catch(self, onrejected: Callable[[BaseException], Awaitable[S]]) -> "PyodideFuture[S]": ...
+
+    @overload
+    def catch(self, onrejected: Callable[[BaseException], S]) -> "PyodideFuture[S]": ...
+
+    def catch(self, onrejected: Callable[[BaseException], object]) -> "PyodideFuture[Any]":
+        """Equivalent to ``then(None, onrejected)``"""
+        print("PyodideFuture catch")
+        return self.then(None, onrejected)
+
+    def finally_(self, onfinally: Callable[[], None]) -> "PyodideFuture[T]":
+        """When the future is either resolved or rejected, call ``onfinally`` with
+        no arguments.
+        """
+        print("PyodideFuture finally")
+        result: PyodideFuture[T] = PyodideFuture()
+
+        async def callback(fut: Future[T]) -> None:
+            exc = fut.exception()
+            try:
+                r = onfinally()
+                while inspect.isawaitable(r):
+                    r = await r
+            except Exception as e:
+                result.set_exception(e)
+                return
+            if exc:
+                result.set_exception(exc)
+            else:
+                result.set_result(fut.result())
+
+        def wrapper(fut: Future[T]) -> None:
+            asyncio.ensure_future(callback(fut))
+
+        self.add_done_callback(wrapper)
+        return result
+
+
 class PyodideTaskStats(PyodideTask):
     def __init__(self, coro, *, loop=None, name=None, context=None, eager_start=True):
+        print("PyodideTask init", coro)
         super().__init__(coro, loop=loop, name=name, eager_start=eager_start)
-        stats.state.asyncio.total_tasks_count += 1
+        # stats.state.asyncio.total_tasks_count += 1
 
-        if eager_start:
-            stats.state.asyncio.total_eager_tasks_count += 1
-        else:
-            stats.state.asyncio.total_scheduled_tasks_count += 1
+        # if eager_start:
+        #     stats.state.asyncio.total_eager_tasks_count += 1
+        # else:
+        #     stats.state.asyncio.total_scheduled_tasks_count += 1

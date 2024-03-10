@@ -1,5 +1,6 @@
 # pylint: disable-all
 
+import ast
 import asyncio
 import collections
 import gc
@@ -8,17 +9,17 @@ import itertools
 import logging
 import sys
 import time
+import timeit
 from contextlib import ContextDecorator, contextmanager
-
-# from functools import _Wrapped, _Wrapper, partial, reduce, wraps
 from functools import partial, reduce, wraps
 from inspect import isawaitable, isfunction
 from types import FrameType
-from typing import Any, Awaitable, Callable, ParamSpec, Sized, TypeGuard, TypeVar, overload
+from typing import Any, Awaitable, Callable, ParamSpec, TypeGuard, TypeVar, overload
 
 if len(logging.root.handlers) == 0:
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
+gc.disable()
 default_min_duration = 0.2
 default_best_of = 3
 default_iterations = 1000000
@@ -116,7 +117,21 @@ async def autorange_async[R](func: AsyncCallable[[], R], min_duration=default_mi
     raise ValueError("autorange_async: no result")
 
 
-class bench:
+template = """
+{async_stmt}def inner(_it, _timer{init}):
+    {setup}
+    _t0 = _timer()
+    for _i in _it:
+        {stmt}
+        pass
+    _t1 = _timer()
+    return _t1 - _t0
+"""
+
+
+class bench[**P, R](ContextDecorator):
+    local_ns = {}
+
     def __init__(
         self,
         label: str | None = None,
@@ -134,26 +149,60 @@ class bench:
 
         self.ops = 0.0
 
-    def __call__(self, func, *args, **kwargs):  # only called when used as a decorator
+    def _recreate_cm(self):
+        """Return a recreated instance of self.
+
+        Allows an otherwise one-shot context manager like
+        _GeneratorContextManager to support use as
+        a decorator via implicit recreation.
+
+        This is a private interface just for _GeneratorContextManager.
+        See issue #11647 for details.
+        """
+        return self
+
+    def make_runnable(self, func: MaybeAsyncCallable[P, R]):
+        local_ns = {}
+        init = ""
+
+        local_ns["_stmt"] = func
+        init += ", _stmt=_stmt"
+        if asyncio.iscoroutinefunction(func):
+            async_stmt = "async "
+            stmt = "await _stmt()"
+        else:
+            async_stmt = ""
+            stmt = "_stmt()"
+
+        src = template.format(stmt=stmt, async_stmt=async_stmt, init=init)
+        self.src = src
+        code = compile(src, "<timeit-src>", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+        exec(code, globals(), local_ns)
+        return local_ns["inner"]
+
+    def __call__(self, func: MaybeAsyncCallable[P, R]):
         self.label = self.label or func.__name__
+
         self.func = func
+        self.runnable = self.make_runnable(func)
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs):
             self.args = args
             self.kwargs = kwargs
 
-            handle = func
-
             if isnotasynccallable(func):
-                with self:
-                    self.ops, res = autorange_sync(handle)
+                with self._recreate_cm():
+                    h = to_handle(func, *args, **kwargs)
+                    self.ops, res = autorange_sync(h)
                     return res
             elif isasynccallable(func):
 
                 async def tmp():
-                    with self:
-                        self.ops, res = await autorange_async(handle)
+                    with self._recreate_cm():
+                        h = to_handle(func, *args, **kwargs)
+                        assert isasynccallable(h)
+                        self.ops, res = await autorange_async(h)
                         return res
 
                 return tmp()
@@ -192,11 +241,8 @@ def format_ops(ops: float) -> str:
 
 
 def _repr(arg):
-    if isinstance(arg, Sized):
-        l = len(arg)
-        if l > 10:
-            return f"{type(arg).__name__}[{l}]"
-        return repr(arg)
+    if isinstance(arg, list | dict | tuple | set | collections.deque):
+        return f"{type(arg).__name__}[{len(arg)}]"
     else:
         return repr(arg)
 
