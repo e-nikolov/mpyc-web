@@ -66,22 +66,25 @@ def autorange(func):
         i *= 10
 
 
-def bench(func):
-    def wrapper(*args, **kwargs):
-        maxOpS = 0
-        res = None
+def bench():
+    def _bench(func):
+        def wrapper(*args, **kwargs):
+            maxOpS = 0
+            res = None
 
-        def handle():
-            return func(*args, **kwargs)
+            def handle():
+                return func(*args, **kwargs)
 
-        for _ in range(bench_best_of):
-            ops, res = autorange(handle)
-            maxOpS = max(maxOpS, ops)
+            for _ in range(bench_best_of):
+                ops, res = autorange(handle)
+                maxOpS = max(maxOpS, ops)
 
-        print_bench(func.__name__, maxOpS, *args, **kwargs)
-        return res
+            print_bench(func.__name__, maxOpS, *args, **kwargs)
+            return res
 
-    return wrapper
+        return wrapper
+
+    return _bench
 
 
 def print_bench(name, t, *args, **kwargs):
@@ -91,38 +94,38 @@ def print_bench(name, t, *args, **kwargs):
     print(f"{name}({args_fmt}): {t:,} ops/sec")
 
 
-@bench
+@bench()
 def assign(iters=bench_input_size):
     for _ in range_fn(iters):
         x = 1
 
 
-@bench
+@bench()
 def multiply(iters=bench_input_size):
     a, b = 17, 41
     for _ in range_fn(iters):
         x = a * b
 
 
-@bench
+@bench()
 def nothing(iters=bench_input_size):
     for _ in range_fn(iters):
         pass
 
 
-@bench
+@bench()
 def nothing2(iters=bench_input_size):
     pass
 
 
-@bench
+@bench()
 def bigints(iters=bench_input_size):
     n = 60
     for _ in range_fn(iters):
         2**n
 
 
-@bench
+@bench()
 def randlist(size=bench_input_size):
     return [random.randint(0, size) for _ in range(size)]
 
@@ -130,22 +133,22 @@ def randlist(size=bench_input_size):
 l = None
 
 
-@bench
+@bench()
 def cpylist():
     return l.copy()
 
 
-@bench
+@bench()
 def cpylist2():
     return l[:]
 
 
-@bench
+@bench()
 def sortlist():
     return l.copy().sort()
 
 
-@bench
+@bench()
 def fibonacci(n=bench_input_size):
     if n < 2:
         return n
@@ -156,7 +159,7 @@ def fibonacci(n=bench_input_size):
     return a
 
 
-@bench
+@bench()
 def primes(n=bench_input_size):
     if n == 2:
         return [2]

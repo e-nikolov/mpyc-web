@@ -1,15 +1,36 @@
-// Transcrypt'ed from Python, 2024-03-08 13:39:36
+// Transcrypt'ed from Python, 2024-03-10 20:26:25
+var inspect = {};
 var itertools = {};
+var logging = {};
 var random = {};
+var sys = {};
 var time = {};
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as __module_time__ from './time.js';
 __nest__ (time, '', __module_time__);
+import * as __module_sys__ from './sys.js';
+__nest__ (sys, '', __module_sys__);
 import * as __module_random__ from './random.js';
 __nest__ (random, '', __module_random__);
+import * as __module_logging__ from './logging.js';
+__nest__ (logging, '', __module_logging__);
 import * as __module_itertools__ from './itertools.js';
 __nest__ (itertools, '', __module_itertools__);
+import * as __module_inspect__ from './inspect.js';
+__nest__ (inspect, '', __module_inspect__);
 var __name__ = '__main__';
+export var bench_input_size = 100000;
+export var bench_min_duration = 0.2;
+export var bench_best_of = 2;
+export var range_fn = range;
+export var default_timer = time.time;
+export var default_time_diff = (function __lambda__ (a, b) {
+	return a - b;
+});
+export var l = null;
+export var print = function (s) {
+	document.getElementById ('output').innerHTML += s + '<br />';
+};
 
     
     var counter = 0;
@@ -44,18 +65,6 @@ var __name__ = '__main__';
       });
     }
 
-export var print = function (s) {
-	document.getElementById ('output').innerHTML += s + '<br />';
-};
-export var bench_input_size = 100000;
-export var bench_min_duration = 0.2;
-export var bench_best_of = 2;
-export var range_fn = range;
-export var default_timer = time.time;
-export var default_time_diff = (function __lambda__ (a, b) {
-	return a - b;
-});
-export var l = null;
 export var timeit = function (func, iterations, timer, time_diff) {
 	if (typeof iterations == 'undefined' || (iterations != null && iterations.hasOwnProperty ("__kwargtrans__"))) {;
 		var iterations = bench_input_size;
@@ -308,4 +317,4 @@ sortlist2 ();
 fibonacci ();
 primes ();
 
-//# sourceMappingURL=bench.map
+//# sourceMappingURL=bench2.map

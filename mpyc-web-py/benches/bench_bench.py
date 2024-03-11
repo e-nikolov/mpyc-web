@@ -1,20 +1,7 @@
 import asyncio
-from functools import wraps
+import time
 
-from lib.rstats.rstats.bench_timeit3 import bench
-
-# from lib.rstats.rstats.bench2 import bench
-
-
-def dec(a, b, c):
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper2(*args, **kwargs):
-            return fn(*args, **kwargs)
-
-        return wrapper2
-
-    return decorator
+from lib.rstats.rstats.bench import bench
 
 
 def fast_func():
@@ -22,6 +9,16 @@ def fast_func():
 
 
 sfi = 0
+
+
+@bench()
+def time_time():
+    time.time()
+
+
+@bench()
+def time_perf():
+    time.perf_counter()
 
 
 def slow_func():
@@ -44,14 +41,12 @@ def pprint(msg="test"):
     print(msg)
 
 
-@dec(1, 2, 3)
 @bench()
 def add(aaa, a=11):
     return 2 + 2
 
 
 @bench(verbose=False)
-@dec(1, 2, 3)
 def add3(fast=False):
     _ = 2 + 2
     if fast:
@@ -63,7 +58,6 @@ def add3(fast=False):
 loop = asyncio.get_event_loop()
 
 
-@dec(1, 2, 3)
 @bench()
 def call_soon():
     loop.call_soon(fast_func)
@@ -72,7 +66,6 @@ def call_soon():
 csi = 0
 
 
-@dec(1, 2, 3)
 @bench(verbose=False)
 async def call_soon_async():
     global csi
@@ -83,13 +76,11 @@ async def call_soon_async():
     loop.call_soon(fast_func)
 
 
-@dec(1, 2, 3)
 @bench()
 async def sleep(n=0):
     await asyncio.sleep(n)
 
 
-@dec(1, 2, 3)
 @bench()
 def add2():
     return add_rec()
@@ -109,17 +100,49 @@ def add_rec():
     return add_rec()
 
 
+def other():
+    pass
+
+
+import itertools
+
+it = itertools.repeat(None, 10000000)
+it2 = itertools.repeat(None, 10000000)
+it3 = itertools.repeat(None, 10000000)
+
+
+@bench(best_of=1)
+def test():
+    i = 0
+    print(f"start {i=}")
+    print(f"start {it=}")
+    print(f"start {it2=}")
+    print(f"start {it3=}")
+    for _ in it:
+        for _ in it2:
+            for _ in it3:
+                i += 1
+                pass
+    print(f"end {i=}")
+    print(f"end {it=}")
+    print(f"end {it2=}")
+    print(f"end {it3=}")
+
+
 async def main():
-    await call_soon_async()
+    test()
     await sleep(0)
+    await call_soon_async()
+    nothing()
+    time_time()
+    time_perf()
+    add(31)
+    add3(False)
+    add3(True)
+    add2()
+    call_soon()
 
 
 asyncio.get_event_loop().run_until_complete(main())
 
 # pprint("t" * 0)
-nothing()
-add(31)
-add3(False)
-add3(True)
-add2()
-call_soon()

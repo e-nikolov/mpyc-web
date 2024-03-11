@@ -18,6 +18,9 @@ P = ParamSpec("P")
 R = TypeVar("R")
 T = TypeVar("T")
 
+if len(logging.root.handlers) == 0:
+    logging.basicConfig(level=logging.INFO)
+
 AsyncCallable = Callable[P, Awaitable[R]]
 MaybeAsyncCallable = AsyncCallable[P, R] | Callable[P, R]
 
