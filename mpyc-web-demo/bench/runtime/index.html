@@ -5,20 +5,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script type="module">
-    document.title = "MPyC Web - Bench Serializers" + (__BUILD_INFO__.deployment ? ` (${__BUILD_INFO__.deployment})` : "");
+    document.title = "MPyC Web - JS Runtime Bench" + (__BUILD_INFO__.deployment ? ` (${__BUILD_INFO__.deployment})` : "");
   </script>
   <link rel="icon" href="/favicon.ico" />
   <link rel="stylesheet" href="/src/scss/style.scss" />
   <!-- <script src="/mini-coi.js"></script> -->
   <script src="/coi-serviceworker.js"></script>
   <script defer type="module">
-    import * as bench from "./index.ts"
-    await bench.main()
+    import {runBench} from "./index.ts"
+    self.runBench = runBench
   </script>
 </head>
 
 <body style="background: darkslategrey; color:white">
-  <div id="out"> </div>
+  <button id="startBtn" onclick="runBench()">start</button>
+  <code id="output"></code>
 </body>
 
 </html>

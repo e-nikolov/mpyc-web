@@ -28,9 +28,7 @@ class DeepCounter(NestedDict[K, Numeric | Any]):
     ```
     """
 
-    # def __init__(self, state: NestedDict[K, Numeric | Any] = {}) -> None:
-    # self.state = state
-    def get_path(self, *path: K, default=None) -> Numeric | Any:
+    def get(self, *path: K, default=None) -> Numeric | Any:
         d = self
         for key in path[:-1]:
             d = d.setdefault(key, {})
@@ -39,11 +37,11 @@ class DeepCounter(NestedDict[K, Numeric | Any]):
 
         if path[-1] in d:
             return d[path[-1]]
-        else:
-            d[path[-1]] = default
-            return default
 
-    def set_path(self, value: Numeric, *path: K):
+        d[path[-1]] = default
+        return default
+
+    def set(self, value: Numeric, *path: K):
         d = self
         for key in path[:-1]:
             d = d.setdefault(key, {})
@@ -52,7 +50,7 @@ class DeepCounter(NestedDict[K, Numeric | Any]):
 
         d[path[-1]] = value
 
-    def acc_path(self, value: Numeric, *path: K):
+    def increment(self, value: Numeric, *path: K):
         # d = self.state
         d = self
         for key in path[:-1]:
@@ -61,48 +59,20 @@ class DeepCounter(NestedDict[K, Numeric | Any]):
             if not isinstance(d, dict):
                 raise TypeError(f"Cannot set {type(value)} to {type(d)} for key {key}")
         last_key = path[-1]
-        d.setdefault(last_key, 0)
-        old_val = d[last_key]
+
+        old_val = d.setdefault(last_key, 0)
 
         if not isinstance(old_val, Numeric):
             raise TypeError(f"Cannot add {type(value)} and {type(old_val)} for key {last_key}")
 
         d[last_key] = old_val + value
 
-    def set(self, iterable: NestedDict[K, Numeric]):
-        """
-        Recursively sets the values of the nested dictionary to the values of the given iterable.
+    def apply(self, func, *path: K):
+        d = self
+        for key in path[:-1]:
+            d = d.setdefault(key, {})
+            if not isinstance(d, dict):
+                raise TypeError(f"Cannot apply {func} to {type(d)} for key {key}")
 
-        Args:
-            iterable (NestedDict[K, Numeric]): A nested dictionary containing the values to set.
-        """
-        self._set_recursive(self, iterable)
-
-    def _set_recursive(self, target: NestedDict[K, Numeric], source: NestedDict[K, Numeric]):
-        for key, value in source.items():
-            if key in target:
-                target_val = target[key]
-                if isinstance(target_val, dict) and isinstance(value, dict):
-                    self._set_recursive(target_val, value)
-                elif isinstance(target_val, Numeric) and isinstance(value, Numeric):
-                    target[key] = value
-                else:
-                    raise TypeError(f"Cannot set {type(value)} to {type(target[key])} for key {key}")
-            else:
-                target[key] = value
-
-    def update(self, iterable: NestedDict[K, Numeric]):
-        self._update_recursive(self, iterable)
-
-    def _update_recursive(self, target: NestedDict[K, Numeric], source: NestedDict[K, Numeric]):
-        for key, value in source.items():
-            if key in target:
-                target_val = target[key]
-                if isinstance(target_val, dict) and isinstance(value, dict):
-                    self._update_recursive(target_val, value)
-                elif isinstance(target_val, Numeric) and isinstance(value, Numeric):
-                    target[key] = target_val + value
-                else:
-                    raise TypeError(f"Cannot add {type(value)} and {type(target_val)} for key {key}")
-            else:
-                target[key] = value
+        last_key = path[-1]
+        d[last_key] = func(d[last_key])

@@ -8,7 +8,22 @@
         document.title = "MPyC Web - Transcrypt bench" + (__BUILD_INFO__.deployment ? ` (${__BUILD_INFO__.deployment})` : "");
     </script>
     <script type="module">
-        import * as bench from './__target__/bench2.js'; 
+        import * as bench from './__target__/bench.js'; 
+        
+        let currentBench = null;
+        
+        self.runBench = async ()=> {
+            if (currentBench) {
+                currentBench.cancel()
+                document.getElementById('output').innerHTML = '';
+            }
+            
+            bench.set_best_of(1)
+            bench.set_min_duration(0.2)
+
+            currentBench = new bench.Bench()
+            await currentBench.run()
+        }
     </script>
 
     <link rel="icon" href="/favicon.ico" />
@@ -18,7 +33,9 @@
 </head>
 
 <body style="background: darkslategrey; color:white">
-    <div id="output"></div>
+    <button id="startBtn" onclick="runBench()">start</button>
+    <br />
+    <code id="output"></code>
 </body>
 
 </html>

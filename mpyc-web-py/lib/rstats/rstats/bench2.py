@@ -10,16 +10,15 @@ import sys
 import textwrap
 import time
 from contextlib import ContextDecorator
-from functools import partial, wraps
-from types import FrameType
-from typing import Any, Awaitable, Callable, Concatenate, Coroutine, Iterable, Iterator, ParamSpec, Sized, TypeGuard, TypeVar, Union, overload
+from functools import wraps
+from typing import Awaitable, Callable, ParamSpec, Sized, TypeGuard, TypeVar, overload
+
+if len(logging.root.handlers) == 0:
+    logging.basicConfig(level=logging.INFO)
 
 P = ParamSpec("P")
 R = TypeVar("R")
 T = TypeVar("T")
-
-if len(logging.root.handlers) == 0:
-    logging.basicConfig(level=logging.INFO)
 
 AsyncCallable = Callable[P, Awaitable[R]]
 MaybeAsyncCallable = AsyncCallable[P, R] | Callable[P, R]
@@ -36,74 +35,127 @@ def isnotasynccallable(func: MaybeAsyncCallable[P, R]) -> TypeGuard[Callable[P, 
 default_iterations = 1000000
 default_best_of = 2
 default_min_duration = 0.2
-default_timer = time.perf_counter
+default_timer = time.time
 
 
-class bench:
-    func: Callable
+def bench(_globals=None, best_of=default_best_of, verbose=False, min_duration=default_min_duration, timer: Callable[[], float] = default_timer):
+    @overload
+    def _bench(func: AsyncCallable[P, R]) -> AsyncCallable[P, R]: ...
 
-    def __init__(self, label: str | None = None, best_of=default_best_of, min_duration=default_min_duration, timer=default_timer, verbose=False, _globals=None):
-        self.label = label
-        self.best_of = best_of
-        self.min_duration = min_duration
-        self.timer = timer
-        self.args = []
-        self.kwargs = {}
-        self.verbose = verbose
-        self._glob = _globals
+    @overload
+    def _bench(func: Callable[P, R]) -> Callable[P, R]: ...
 
-    def __call__(self, func, *args, **kwargs):  # only called when used as a decorator
-        self.label = self.label or func.__name__
-        self.func = func
+    def _bench(func: MaybeAsyncCallable[P, R]) -> MaybeAsyncCallable[P, R]:
+        if isasynccallable(func):
+            return _bench_async(func, _glob=_globals, best_of=best_of, verbose=verbose, min_duration=min_duration, timer=timer)
+        elif isnotasynccallable(func):
+            return _bench_sync(func, _glob=_globals, best_of=best_of, verbose=verbose, min_duration=min_duration, timer=timer)
 
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            self.args = args
-            self.kwargs = kwargs
-            runnable, src = make_runnable(func, _globals=get_caller_globals(self._glob))
-            if self.verbose:
-                print(src)
+        raise TypeError("Invalid function type")
 
-            if isnotasynccallable(func):
-                with self:
-                    for _ in range(self.best_of):
-                        for iterations in autorange_generator():
-                            with GCManager():
-                                time_taken = runnable(iterations, self.timer, *args, **kwargs)
-                                if time_taken >= self.min_duration:
-                                    self.maxOpS = max(self.maxOpS, iterations / time_taken)
-                                    break
-                    return func(*args, **kwargs)
-            elif isasynccallable(func):
+    return _bench
 
-                async def tmp():
-                    with self:
-                        for _ in range(self.best_of):
-                            for iterations in autorange_generator():
-                                with GCManager():
-                                    time_taken = await runnable(iterations, self.timer, *args, **kwargs)
-                                    if time_taken >= self.min_duration:
-                                        self.maxOpS = max(self.maxOpS, iterations / time_taken)
-                                        break
-                    return await func(*args, **kwargs)
 
-                return tmp()
+# @overload
+# def to_bench_func(self, func: AsyncCallable[P, R], _globals) -> AsyncBenchFunc[P]: ...
 
-        return wrapper
+# @overload
+# def to_bench_func(self, func: Callable[P, R], _globals) -> SyncBenchFunc[P]: ...
 
-    def __enter__(self):
-        self.maxOpS = 0.0
-        self.label = self.label or label_from_frame(sys._getframe())
-        if self.func is None:
-            self.start_time = self.timer()
-        return self
+# def to_bench_func(self, func: MaybeAsyncCallable[P, R], _globals=None) -> MaybeAsyncBenchFunc[P]:
+#     func_name = f"___bench_{func.__name__}"
+#     src = make_timeit_source(func_name, func)
+#     if self.verbose:
+#         logging.info(src)
+#     local_ns = {}
+#     exec(compile(src, "<timeit-src>", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT), _globals, local_ns)
+#     return local_ns[func_name]
 
-    def __exit__(self, *exc):
-        if self.func is None:
-            self.maxOpS = 1 / (self.timer() - self.start_time)
+# def autorange_generator(self, *args, **kwargs):
+#     min_time_taken = float("inf")
 
-        print_bench(self.label or "default", self.maxOpS, *self.args, **self.kwargs)
-        self.ops = 0.0
+#     for _ in range(self.best_of):
+#         i = 1
+#         while True:
+#             for j in 1, 2, 5:
+#                 iterations = i * j
+#                 with GCManager():
+#                     time_taken = yield iterations
+
+#                 if time_taken >= self.min_duration:
+#                     min_time_taken = min(min_time_taken, time_taken / iterations)
+#                     break
+#             else:
+#                 i *= 10
+#                 continue
+#             break
+#     self.print_bench(min_time_taken, args=args, kwargs=kwargs)
+
+# def print_bench(self, time, tabsize=20, args=[], kwargs={}):
+#     label = f"{self.label}{format_args(*args, **kwargs)}:"
+#     logging.info(f"{self.label:<{tabsize}}{metric(time, 's', skip_trailing_zeroes=False):>{8}} {format_ops(1/time):>{tabsize}}")
+
+
+def to_runnable(src, func_name, _globals=None):
+    local_ns = {}
+    code = compile(src, "<timeit-src>", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+
+    exec(code, _globals, local_ns)
+    return local_ns[func_name]
+
+
+def _bench_sync(
+    func: Callable[P, R], _glob=None, best_of=default_best_of, verbose=False, min_duration=default_min_duration, timer: Callable[[], float] = default_timer
+) -> Callable[P, R]:
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs):
+        # _globals = sys._getframe().f_back.f_globals
+        print_bench_start(func.__name__, *args, **kwargs)
+
+        maxOpS = 0.0
+        src, func_name = make_timeit_source(func)
+        if verbose:
+            print(src)
+
+        runnable = to_runnable(src, func_name, _globals=get_caller_globals(_glob))
+        for _ in range(best_of):
+            for iterations in autorange_generator():
+                with GCManager():
+                    time_taken = runnable(iterations, timer, *args, **kwargs)
+                if time_taken >= default_min_duration:
+                    maxOpS = max(maxOpS, iterations / time_taken)
+                    break
+        res = func(*args, **kwargs)
+        print_bench_end(func.__name__, maxOpS, *args, **kwargs)
+        return res
+
+    return wrapper
+
+
+def _bench_async(
+    func: AsyncCallable[P, R], _glob=None, best_of=default_best_of, verbose=False, min_duration=default_min_duration, timer: Callable[[], float] = default_timer
+) -> AsyncCallable[P, R]:
+    @wraps(func)
+    async def wrapper(*args: P.args, **kwargs: P.kwargs):
+        print_bench_start(func.__name__, *args, **kwargs)
+        maxOpS = 0.0
+        src, func_name = make_timeit_source(func)
+        if verbose:
+            print(src)
+        runnable = to_runnable(src, func_name, _globals=get_caller_globals(_glob))
+        for _ in range(best_of):
+            for iterations in autorange_generator():
+                with GCManager():
+                    time_taken = await runnable(iterations, timer, *args, **kwargs)
+                if time_taken >= min_duration:
+                    maxOpS = max(maxOpS, iterations / time_taken)
+                    break
+
+        res = await func(*args, **kwargs)
+        print_bench_end(func.__name__, maxOpS, *args, **kwargs)
+        return res
+
+    return wrapper
 
 
 try:
@@ -116,12 +168,16 @@ except:
 
 class GCManager(ContextDecorator):
     def __init__(self, disable_gc=default_disable_gc):
+        # def __init__(self, func, _globals, iters, disable_gc=default_disable_gc):
         self.disable_gc = disable_gc
+        # self.runnable = make_runnable(func, _globals)
 
     def __enter__(self):
         if self.disable_gc:
             self.gcold = gc.isenabled()
             gc.disable()
+
+        # self.runnable = make_runnable()
         return self
 
     def __exit__(self, *exc):
@@ -138,12 +194,15 @@ def autorange_generator():
         i *= 10
 
 
+import rich
+
+
 def get_caller_globals(_globals):
     g = sys._getframe(2).f_globals if _globals is None else _globals()
     return g | {"itertools": globals()["itertools"]}
 
 
-def transform_ast_func(f):
+def transform_ast_func(f, doc_string=False):
     code = textwrap.dedent(inspect.getsource(f))
     module_tree = ast.parse(code).body[0]  # this creates a module
     if not isinstance(module_tree, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -161,8 +220,14 @@ def transform_ast_func(f):
 
 def rewrite_returns(body):
     class ReturnToContinueTransformer(ast.NodeTransformer):
+        def visit_FunctionDef(self, node: ast.FunctionDef):
+            if node is body:
+                self.generic_visit(node)
+            else:
+                return node
+
         def visit_Return(self, node):
-            return [ast.Assign(targets=[ast.Name(id="_", ctx=ast.Store())], value=node.value), ast.Continue()]
+            return [ast.Assign(targets=[ast.Name(id="_", ctx=ast.Store())], value=node.value), ast.Raise(exc=ast.Name(id="FakeReturnException"), cause=None)]
 
     ReturnToContinueTransformer().visit(body)
     ast.fix_missing_locations(body)
@@ -174,19 +239,22 @@ def reindent(src, indent):
 
 
 template = """
-{async_stmt}def {func_name}(iters, _timer{init}):
-    it = itertools.repeat(None, iters)
-    
+{async_stmt}def {func_name}(___iters, _timer{init}):
+    ___it = itertools.repeat(None, ___iters)
+    class FakeReturnException(Exception): ...
+
     __t0 = _timer()
-    for _ in it:
-        {stmt}
+    for _ in ___it:
+        try:
+            {stmt}
+        except FakeReturnException:
+            pass
     __t1 = _timer()
     return __t1 - __t0
 """
 
 
-def make_runnable(func: MaybeAsyncCallable[P, R], _globals):
-    local_ns = {}
+def make_timeit_source(func: MaybeAsyncCallable[P, R]):
     init = ""
     func_name, func_args, func_body = transform_ast_func(func)
     if func_args != "":
@@ -195,33 +263,15 @@ def make_runnable(func: MaybeAsyncCallable[P, R], _globals):
         async_stmt = "async "
     else:
         async_stmt = ""
-    stmt = reindent(func_body, 8)
+    stmt = reindent(func_body, 12)
 
     if stmt == "":
         stmt = "pass"
-
-    src = template.format(func_name=func_name, func_args=func_args, stmt=stmt, async_stmt=async_stmt, init=init)
-    code = compile(src, "<timeit-src>", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
-
-    exec(code, _globals, local_ns)
-    return local_ns[func_name], src
+    return template.format(func_name=func_name, func_args=func_args, stmt=stmt, async_stmt=async_stmt, init=init), func_name
 
 
 def format_ops(ops: float) -> str:
     return f"{round(ops):,} ops/sec"
-
-
-def label_from_frame(frame: FrameType):
-    f = frame.f_back
-
-    if f is not None:
-        func_name = f"{f.f_code.co_name}"
-        if func_name == "<module>" or func_name == "<lambda>":
-            func_name = ""
-        else:
-            func_name = f":{func_name}"
-
-        return f"{f.f_code.co_filename}:{f.f_lineno}{func_name}"
 
 
 def _repr(arg):
@@ -243,5 +293,9 @@ def format_args(*args, **kwargs):
     return args_fmt
 
 
-def print_bench(label: str, ops: float, *args, **kwargs):
+def print_bench_start(label: str, *args, **kwargs):
+    logging.info(f"{label}{format_args(*args, **kwargs)}: Starting...")
+
+
+def print_bench_end(label: str, ops: float, *args, **kwargs):
     logging.info(f"{label}{format_args(*args, **kwargs)}: {format_ops(ops)}")

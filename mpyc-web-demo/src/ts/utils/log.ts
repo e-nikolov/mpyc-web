@@ -1,6 +1,6 @@
 
 
-export const tableLogger = (selector = "#out", columns = ["Data"]) => (...data: any[]) => {
+export const tableLogger = (selector = "#output", columns = ["Data"]) => (...data: any[]) => {
     const table = ensureLogTable(selector, columns)
 
 
@@ -13,7 +13,7 @@ export const tableLogger = (selector = "#out", columns = ["Data"]) => (...data: 
     }
 }
 
-export const ensureLogTable = (selector = "#out", columns = ["Data"]) => {
+export const ensureLogTable = (selector = "#output", columns = ["Data"]) => {
     const div = document.querySelector<HTMLDivElement>(selector)!
     let existingTable = div.querySelector<HTMLTableElement>("table")
     if (existingTable) {
@@ -30,5 +30,5 @@ export const ensureLogTable = (selector = "#out", columns = ["Data"]) => {
     return newTable
 }
 
-export const logTable = tableLogger("#out")
+export const logTable = tableLogger("#output")
 

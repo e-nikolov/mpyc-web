@@ -4,7 +4,7 @@ import random
 import sys
 import time
 
-from lib.rstats.rstats.bench import bench
+from lib.rstats.rstats.bench_class_no_types import bench
 
 bench_input_size = 100000
 bench_min_duration = 0.2

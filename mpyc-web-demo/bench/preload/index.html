@@ -15,7 +15,7 @@
     
     window.onload = bench.main
     
-    document.querySelector("#out").innerHTML = `
+    document.querySelector("#output").innerHTML = `
       bla0: ${sessionStorage.bla0}
       <br />
       bla1: ${sessionStorage.bla1}
@@ -24,7 +24,7 @@
       <br />
     `
     setTimeout(() => {
-      document.querySelector("#out").innerHTML+= `
+      document.querySelector("#output").innerHTML+= `
         bla0: ${sessionStorage.bla0}
         <br />
         bla1: ${sessionStorage.bla1}
@@ -34,7 +34,7 @@
       `
     }, 1000)
     setTimeout(() => {
-      document.querySelector("#out").innerHTML+= `
+      document.querySelector("#output").innerHTML+= `
         bla0: ${sessionStorage.bla0}
         <br />
         bla1: ${sessionStorage.bla1}
@@ -45,7 +45,7 @@
     }, 2000)
     
     setTimeout(() => {
-      document.querySelector("#out").innerHTML+= `
+      document.querySelector("#output").innerHTML+= `
         bla0: ${sessionStorage.bla0}
         <br />
         bla1: ${sessionStorage.bla1}
@@ -58,7 +58,7 @@
 </head>
 
 <body style="background: darkslategrey; color:white">
-  <div id="out"> </div>
+  <div id="output"> </div>
 </body>
 
 </html>

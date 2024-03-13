@@ -2,7 +2,7 @@
 
 export function main() {
 
-    let out = document.querySelector<HTMLDivElement>("#out")
+    let out = document.querySelector<HTMLDivElement>("#output")
 
     let n = 11111
     let ch = new MessageChannel()

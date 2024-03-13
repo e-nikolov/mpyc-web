@@ -109,7 +109,7 @@ class MessageStats:
 
 
 class StatsState(BaseStatsState):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.asyncio = AsyncioStats()
@@ -183,7 +183,7 @@ class StatsCollector(BaseStatsCollector):
         if not self.enabled:
             return
 
-        self.state.__dict__.acc_path(value, *path)
+        self.state.__dict__.increment(value, *path)
 
     def sent_to(self, pid: int, msg: bytes) -> NestedDict[str, float]:
         if not self.enabled:

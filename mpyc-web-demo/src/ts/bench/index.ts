@@ -1,5 +1,5 @@
 import "reflect-metadata"
-import { tableLogger } from "../utils"
+import { sleep, tableLogger } from "../utils"
 
 // Ported from Go's testing.B: https://cs.opensource.google/go/go/+/refs/tags/go1.21.3:src/testing/benchmark.go;l=293
 
@@ -13,29 +13,38 @@ type benchOpts = Required<{
 }>
 
 export abstract class BenchSuite {
-    static run(opts: Partial<benchOpts> = {}, instance?: BenchSuite): Promise<void> {
+    cancelled: boolean = false
+
+    cancel() {
+        this.cancelled = true
+    }
+    static async run(opts: Partial<benchOpts> = {}, instance?: BenchSuite): Promise<void> {
         const target = instance ? Object.getPrototypeOf(instance) : this.prototype
-        let p = []
+        let p: Promise<any>[] = []
 
         for (const methodName of Object.getOwnPropertyNames(target)) {
+            await sleep(100)
             if (methodName == "constructor") continue
+            if (instance.cancelled) {
+                return
+            }
 
             const fn = target[methodName].bind(instance || target)
-            const handle = () => {
-                return bench(fn, { ...opts, name: `${opts.name || target.constructor.name} - ${methodName}` })
-            }
 
             if (fn[Symbol.toStringTag] === 'AsyncFunction') {
-                p.push(handle)
+                await bench(fn, { ...opts, name: `${opts.name || target.constructor.name} - ${methodName}` })
             } else {
-                handle()
+                const handle = async () => {
+                    bench(fn, { ...opts, name: `${opts.name || target.constructor.name} - ${methodName}` })
+                }
+
+                await handle()
             }
         }
-        return p.reduce((p, fn) => p.then(fn), Promise.resolve())
     }
 
-    run(opts: Partial<benchOpts> = {}) {
-        return BenchSuite.run(opts, this)
+    async run(opts: Partial<benchOpts> = {}) {
+        return await BenchSuite.run(opts, this)
     }
 }
 function isAsyncBenchFunc<T>(fn: AsyncBenchFunc<T> | SyncBenchFunc<T>): fn is AsyncBenchFunc<T> {
@@ -57,7 +66,7 @@ const defaultOpts = {
     name: "",
     // setupFn: () => { },
     logEnabled: true,
-    logSelector: "#out",
+    logSelector: "#output",
     runtimeGoalMS: 500,
     this: undefined,
 }
@@ -148,18 +157,37 @@ export abstract class BaseBenchmark {
         return n
     }
 
+
     toString() {
-        return `${this.name}\t\t${Math.round(1000 * this.N / (this.duration + 1)).toLocaleString()} ops/sec`
+        return `${this.name}\t\t${formatNumber(this.duration / this.N)} ms \t${formatNumber(1000 * this.N / (this.duration + 1))} ops/s`
     }
 
     toStrings() {
-        return [this.name, `${Math.round(1000 * this.N / (this.duration + 1)).toLocaleString()} ops/sec`]
+        return [this.name, `${formatNumber(this.duration / this.N)} ms`, `${formatNumber(1000 * this.N / (this.duration + 1))} ops/s`]
     }
 
-    logTable(selector = "#out") {
-        tableLogger(selector, ["Name", "Ops/sec"])(...this.toStrings())
+    logTable(selector = "#output") {
+        tableLogger(selector, ["Name", "ms/op", "ops/s"])(...this.toStrings())
     }
 }
+
+export const formatNumber = (n: number) => {
+    let precision = 0;
+    if (n < 0.00001) {
+        precision = 6
+    } else if (n < 0.0001) {
+        precision = 5
+    } else if (n < 0.001) {
+        precision = 4
+    } else if (n < 0.01) {
+        precision = 3
+    } else if (n < 10) {
+        precision = 2
+    }
+
+    return n.toLocaleString('en', { maximumFractionDigits: precision, useGrouping: true })
+}
+
 export class AsyncBenchmark<T> extends BaseBenchmark {
     protected benchFunc: AsyncBenchFunc<T>;
     constructor(fn: AsyncBenchFunc<T>, opts: Partial<benchOpts> = {}) {

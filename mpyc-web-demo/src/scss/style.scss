@@ -41,6 +41,13 @@ body {
   overflow: auto;
 }
 
+code#output {
+  white-space: pre;
+  // background: gray;
+  min-height: 100px;
+  min-width: 100px;
+}
+
 .col-xl-2,
 .col-xl-10 {
   padding-left: 5px;

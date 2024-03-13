@@ -58,7 +58,7 @@ __all__ = [
 # type: ignore=all
 
 
-FUNC_ARG: str = "$func"
+# FUNC_ARG: str = "$func"
 DEFAULT_TIMER_LABEL: str = "default"
 
 
@@ -81,10 +81,12 @@ class TimingStats(dict[str, TimeStats]):
 
 
 class BaseStatsState:
-    # __dict__ = DeepCounter[str]({})
+    __dict__: DeepCounter[str]
+    # raw: DeepCounter[str]
 
     def __init__(self):
         self.__dict__ = DeepCounter[str]({})
+        # self.raw = self.__dict__
         self.timings = TimingStats()
 
 
@@ -107,19 +109,16 @@ class BaseStatsCollector:
         self.on_before_get_stats_hooks = on_before_get_stats_hooks
         self.formatters = formatters
 
-    def get_path(self, *path: str, default=None):
-        return self.state.__dict__.get_path(*path, default=default)
+    def get(self, *path: str, default=None):
+        return self.state.__dict__.get(*path, default=default)
 
-    def set_path(self, value: Any, *path: str):
+    def set(self, value: Any, *path: str):
         if self.enabled:
-            self.state.__dict__.set_path(value, *path)
+            self.state.__dict__.set(value, *path)
 
-    def acc_path(self, value: Any, *path: str):
+    def increment(self, value: Any, *path: str):
         if self.enabled:
-            self.state.__dict__.acc_path(value, *path)
-
-    def time(self, label=DEFAULT_TIMER_LABEL):
-        return TimingContext(self, label)
+            self.state.__dict__.increment(value, *path)
 
     def reset(self, state=BaseStatsState()):
         """
@@ -133,7 +132,7 @@ class BaseStatsCollector:
             return ""
 
         tree = Tree("", style="gray50", hide_root=True)
-        self._to_tree(self.get_stats(), tree)
+        self._to_tree(self.get_raw(), tree)
 
         return rich_to_ansi(Panel.fit(tree, title="stats", subtitle=time_delta_fmt(datetime.now(), self.start_time), border_style="blue"))
 
@@ -155,10 +154,13 @@ class BaseStatsCollector:
                     tree.add(f"{k}: {v}")
 
         if isinstance(s, list):
-            for index, item in enumerate(s):
+            for _, item in enumerate(s):
                 tree.add(f"{json.dumps(item)}")
 
-    def get_stats(self):
+    def time(self, label=DEFAULT_TIMER_LABEL):
+        return TimingContext(self, label)
+
+    def get_raw(self):
         """
         Returns the statistics collected so far.
 

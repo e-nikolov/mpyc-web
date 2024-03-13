@@ -1,7 +1,7 @@
 'use strict';
 
 export function main() {
-    let out = document.querySelector("#out")
+    let out = document.querySelector("#output")
     function log(msg, t, n) {
         out.innerHTML += `${msg}, ${toString(t / 1000)}, ${toString(1000 * n / t)} <br>`
     }
