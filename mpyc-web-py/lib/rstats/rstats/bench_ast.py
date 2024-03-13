@@ -19,16 +19,17 @@ def reindent(src, indent):
 
 
 template = """
+import itertools
+
+@goto
 {async_stmt}def {func_name}(___iters, ___timer{args_src}):
     ___it = itertools.repeat(None, ___iters)
     class FakeReturnException(Exception): ...
-
     ___t0 = ___timer()
+    label .___start
+    
     for _ in ___it:
-        try:
-            {body_src}
-        except FakeReturnException:
-            pass
+        {body_src}
     ___t1 = ___timer()
     return ___t1 - ___t0
 """
@@ -36,7 +37,7 @@ template = """
 
 def make_timeit_source[**P, R](func_name: str, func: MaybeAsyncCallable[P, R]):
     func_ast = parse_func_ast(func)
-    transform_func_ast(func_ast)
+    has_returns = transform_func_ast(func_ast)
     async_stmt = "async " if isasynccallable(func) else ""
     return template.format(func_name=func_name, args_src=unparse_func_args(func_ast.args), body_src=unparse_func_body(func_ast.body), async_stmt=async_stmt)
 
@@ -54,11 +55,21 @@ def unparse_func_args(args_ast: ast.arguments):
     return f", {args_src}" if args_src != "" else ""
 
 
-def unparse_func_body(func_body: list[ast.stmt]):
+def unparse_func_body(func_body: list[ast.stmt], has_returns=False):
     src_lines = [ast.unparse(code_line).strip() for code_line in func_body]
     body_src = "\n".join(src_lines).strip()
-    body_src = reindent(body_src, 12)
     body_src = body_src or "pass"
+
+    if has_returns:
+        body_src = reindent(body_src, 12)
+        body_src = f"""
+try:
+    {body_src}
+except FakeReturnException:
+    pass
+"""
+    else:
+        body_src = reindent(body_src, 8)
 
     return body_src
 
@@ -69,6 +80,7 @@ def transform_func_ast(func_ast):
             self,
         ):
             self.inside_inner_loop = False
+            self.has_returns = False
 
             super().__init__()
 
@@ -93,16 +105,21 @@ def transform_func_ast(func_ast):
             return res
 
         def visit_Return(self, node):
+            self.has_returns = True
             stmts = []
             if node.value is not None:  # if the return has a value, we assign it to "_" to make sure it's evaluated
                 stmts.append(ast.Assign(targets=[ast.Name(id="_", ctx=ast.Store())], value=node.value))
 
-            if not self.inside_inner_loop:  # we are inside our own loop, so we transform the return into a "continue", which is cheaper than a "raise"
-                stmts.append(ast.Continue())
-            else:  # if we transform the "return" to "continue", we'll only continue the inner loop, so we raise instead
-                stmts.append(ast.Raise(exc=ast.Name(id="FakeReturnException"), cause=None))
+            # stmts.append(ast.BinOp(left="goto", op="", right="start"))
+            stmts.append(ast.Expr(value=ast.Attribute(value=ast.Name(id="goto", ctx=ast.Load()), attr="___start", ctx=ast.Load())))
+            # if not self.inside_inner_loop:  # we are inside our own loop, so we transform the return into a "continue", which is cheaper than a "raise"
+            #     stmts.append(ast.Continue())
+            # else:  # if we transform the "return" to "continue", we'll only continue the inner loop, so we raise instead
+            #     stmts.append(ast.Raise(exc=ast.Name(id="FakeReturnException"), cause=None))
 
             return stmts
 
-    FuncReturnTransformer().visit(func_ast)
+    t = FuncReturnTransformer()
+    t.visit(func_ast)
     ast.fix_missing_locations(func_ast)
+    return t.has_returns

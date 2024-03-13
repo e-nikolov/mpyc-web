@@ -17,6 +17,7 @@ import rich
 
 from .bench_ast import make_timeit_source, parse_func_ast
 from .bench_context import transform_ast_func
+from .bench_with_goto import goto
 from .context import GCManager
 from .format import format_args, format_ops, metric
 from .types import AsyncCallable, MaybeAsyncCallable, R, TimerFunc, isasynccallable, isnotasynccallable
@@ -70,7 +71,7 @@ class bench:
     ):
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs):
-            bench_func = self.to_bench_func(func, _globals=get_caller_globals(self._globals))
+            bench_func = self.to_bench_func(func, _globals=get_caller_globals(self._globals, ["itertools", "goto"]))
             ss = self.autorange(*args, **kwargs)
             iterations = ss.send(None)
             while True:
@@ -88,7 +89,7 @@ class bench:
 
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs):
-            bench_func = self.to_bench_func(func, _globals=get_caller_globals(self._globals))
+            bench_func = self.to_bench_func(func, _globals=get_caller_globals(self._globals, ["itertools", "goto"]))
             ss = self.autorange()
             iterations = ss.send(None)
             while True:
@@ -129,7 +130,7 @@ class bench:
         func_name = f"___bench_{func.__name__}"
         src = make_timeit_source(func_name, func)
         if self.verbose:
-            logging.info(src)
+            print(src)
         local_ns = {}
         exec(compile(src, "<timeit-src>", "exec", ast.PyCF_ALLOW_TOP_LEVEL_AWAIT), _globals, local_ns)
         return local_ns[func_name]
@@ -139,6 +140,9 @@ class bench:
         logging.info(f"{self.label:<{tabsize}}{metric(time, 's', skip_trailing_zeroes=False):>{8}} {format_ops(1/time):>{tabsize}}")
 
 
-def get_caller_globals(_globals):
+def get_caller_globals(_globals, extras=[]):
     g = sys._getframe(2).f_globals if _globals is None else _globals()
-    return g | {"itertools": globals()["itertools"]}
+    gg = globals()
+    for e in extras:
+        g[e] = gg[e]
+    return g

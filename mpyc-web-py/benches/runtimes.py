@@ -6,7 +6,7 @@ import time
 
 bench_input_size = 100000
 bench_min_duration = 0.2
-bench_best_of = 12
+bench_best_of = 1
 
 
 def is_brython():
@@ -364,7 +364,7 @@ def itertools_repeat():
 @bench("range_fn_bench")
 def range_fn_bench():
     for _ in range_fn(bench_input_size):
-        range_fn(bench_input_size)
+        range_fn(111)
 
 
 @bench("range_fn_bench_no_loop")
@@ -373,33 +373,32 @@ def range_fn_bench_no_loop():
 
 
 @bench("ret")
-def ret():
-    return True
+def ret(): ...
 
 
 ret()
-tryexcept()
-callfunc()
 
 
 nothing()
-nothing_no_loop()
-itertools_repeat_no_loop()
-itertools_repeat()
-range_fn_bench()
-range_fn_bench_no_loop()
+callfunc()
+# nothing_no_loop()
+# itertools_repeat_no_loop()
+# itertools_repeat()
+# # range_fn_bench()
+# range_fn_bench_no_loop()
 
-assign()
-multiply()
+# assign()
+# multiply()
 bigint_add()
 
 # if not is_micropython():
-bigint_mult()
+# bigint_mult()
 
-bigint_old()
+# bigint_old()
 l = randlist()
 # cpylist()
 # cpylist2()
 sortlist()
 fibonacci()
 primes()
+tryexcept()

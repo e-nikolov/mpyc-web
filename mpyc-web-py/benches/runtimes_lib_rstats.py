@@ -8,66 +8,78 @@ from lib.rstats.rstats.bench import bench
 
 bench_input_size = 100000
 bench_min_duration = 0.2
-bench_best_of = 12
+bench_best_of = 1
 
 range_fn = lambda iters: itertools.repeat(None, iters)  # Pyodide
-
-
-@bench("assign")
-def assign(iters=bench_input_size):
-    for _ in itertools.repeat(None, iters):
-        x = 1
-
-
-@bench("multiply")
-def multiply(iters=bench_input_size):
-    for _ in itertools.repeat(None, iters):
-        17 * 41
-
-
-@bench("nothing")
-def nothing(iters=bench_input_size):
-    for _ in itertools.repeat(None, iters):
-        pass
-
-
-@bench("nothing_no_loop")
-def nothing_no_loop(iters=bench_input_size): ...
-
-
-@bench("bigint_add")
-def bigint_add(iters=bench_input_size):
-    x = 1
-    for _ in itertools.repeat(None, iters):
-        x += 2**600
-    return x
-
-
-@bench("bigint_mult")
-def bigint_mult(iters=1000):
-    x = 1
-    for _ in itertools.repeat(None, iters):
-        x *= 2**600
-    return x
-
-
-@bench("bigints_old")
-def bigint_old(iters=bench_input_size):
-    for _ in itertools.repeat(None, iters):
-        2**60
-
-
-@bench("randlist")
-def randlist(size=bench_input_size):
-    return [random.randint(0, size) for _ in itertools.repeat(None, size)]
 
 
 l = None
 
 
-@bench("sortlist", verbose=True)
+@bench("assign")
+def assign():
+    for _ in range_fn(bench_input_size):
+        x = 1
+
+
+@bench("multiply")
+def multiply():
+    for _ in range_fn(bench_input_size):
+        17 * 41
+
+
+@bench("nothing", verbose=True)
+def nothing():
+    for _ in itertools.repeat(bench_input_size):
+        pass
+
+
+@bench("nothing_no_loop", verbose=True)
+def nothing_no_loop(): ...
+
+
+@bench("bigint_add")
+def bigint_add():
+    x = 1
+    for _ in range_fn(bench_input_size):
+        x += 2**600
+    return x
+
+
+@bench("bigint_mult")
+def bigint_mult():
+    x = 1
+    for _ in range_fn(1000):
+        x *= 2**600
+    return x
+
+
+@bench("bigints_old")
+def bigint_old():
+    for _ in range_fn(bench_input_size):
+        2**60
+
+
+@bench("randlist")
+def randlist():
+    return [random.randint(0, bench_input_size) for _ in range(bench_input_size)]
+
+
+l = None
+
+
+@bench("cpylist")
+def cpylist():
+    return l.copy()
+
+
+@bench("cpylist2")
+def cpylist2():
+    return l[:]
+
+
+@bench("sortlist")
 def sortlist():
-    print(len(l))
     return l.copy().sort()
 
 
@@ -119,24 +131,24 @@ def fn(): ...
 
 @bench("callfunc")
 def callfunc():
-    for _ in itertools.repeat(None, bench_input_size):
+    for _ in range_fn(bench_input_size):
         fn()
 
 
 @bench("itertools_repeat_no_loop")
-def itertools_repeat_no_loop():
+def ittr_no_loop():
     itertools.repeat(None, bench_input_size)
 
 
 @bench("itertools_repeat")
-def itertools_repeat():
-    for _ in itertools.repeat(None, bench_input_size):
+def ittr():
+    for _ in range_fn(bench_input_size):
         itertools.repeat(None, bench_input_size)
 
 
 @bench("range_fn_bench")
 def range_fn_bench():
-    for _ in itertools.repeat(None, bench_input_size):
+    for _ in range_fn(bench_input_size):
         range_fn(bench_input_size)
 
 
@@ -147,42 +159,27 @@ def range_fn_bench_no_loop():
 
 @bench("ret")
 def ret():
-    return
+    pass
 
 
-# ret()
-# callfunc()
-# tryexcept()
-import asyncio
-
-
-@bench("sleep", verbose=True)
-async def sleep():
-    await asyncio.sleep(0.01)
-    return 123
-
-
-x = await sleep()
-
-nothing()
 nothing_no_loop()
-# itertools_repeat_no_loop()
-# itertools_repeat()
-# range_fn_bench()
-# range_fn_bench_no_loop()
+nothing()
+callfunc()
 
-# assign()
-# multiply()
+assign()
+multiply()
 bigint_add()
 
-# if not is_micropython():
 bigint_mult()
 
 bigint_old()
 l = randlist()
-print(f"{len(l)=}")
-# cpylist()
-# cpylist2()
 sortlist()
 fibonacci()
 primes()
+tryexcept()
+
+# ittr()
+# ittr_no_loop()
+# range_fn_bench()
+# range_fn_bench_no_loop()
